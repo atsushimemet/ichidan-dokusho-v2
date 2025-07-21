@@ -3,6 +3,7 @@ import { Link, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
 import InputForm from './components/InputForm';
 import MyPage from './components/MyPage';
+import Timeline from './components/Timeline';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,6 +47,13 @@ function App() {
                 >
                   📚 マイページ
                 </Link>
+                <Link
+                  to="/timeline"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  🌟 タイムライン
+                </Link>
               </div>
             </div>
           )}
@@ -56,6 +64,7 @@ function App() {
           <Routes>
             <Route path="/" element={<InputForm />} />
             <Route path="/mypage" element={<MyPage />} />
+            <Route path="/timeline" element={<Timeline />} />
           </Routes>
         </div>
       </div>
