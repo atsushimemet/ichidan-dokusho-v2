@@ -42,8 +42,27 @@ function App() {
     setIsSubmitting(true);
 
     try {
-      // TODO: API呼び出しを実装
-      console.log('送信データ:', formData);
+      // バックエンドAPIを呼び出し
+      const response = await fetch('http://localhost:3001/api/reading-records', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          link: formData.link,
+          reading_amount: formData.readingAmount,
+          learning: formData.learning,
+          action: formData.action
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('送信成功:', result);
       
       // 成功時の処理
       alert('投稿が完了しました！');
