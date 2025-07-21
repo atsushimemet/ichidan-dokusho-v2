@@ -79,7 +79,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-          <h1 className="text-4xl font-bold text-center text-orange-800 mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
             📖 今日も1段、読んだ？
           </h1>
           
