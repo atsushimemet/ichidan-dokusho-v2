@@ -1,204 +1,65 @@
 import { useState } from 'react';
+import { Link, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
-
-interface FormData {
-  title: string;
-  link: string;
-  readingAmount: string;
-  learning: string;
-  action: string;
-}
+import InputForm from './components/InputForm';
+import MyPage from './components/MyPage';
 
 function App() {
-  const [formData, setFormData] = useState<FormData>({
-    title: '',
-    link: '',
-    readingAmount: '',
-    learning: '',
-    action: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      link: '',
-      readingAmount: '',
-      learning: '',
-      action: ''
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      // バックエンドAPIを呼び出し
-      const response = await fetch('http://localhost:3001/api/reading-records', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: formData.title,
-          link: formData.link,
-          reading_amount: formData.readingAmount,
-          learning: formData.learning,
-          action: formData.action
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('送信成功:', result);
-      
-      // 成功時の処理
-      alert('投稿が完了しました！');
-      resetForm();
-    } catch (error) {
-      console.error('送信エラー:', error);
-      alert('投稿に失敗しました。もう一度お試しください。');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-            📖 今日も1段、読んだ？
-          </h1>
+    <Router>
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+        {/* ハンバーガーメニュー */}
+        <div className="fixed top-4 right-4 z-50">
+          <button
+            onClick={toggleMenu}
+            className="bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg hover:bg-white transition-colors"
+            aria-label="メニュー"
+          >
+            <div className="w-6 h-6 flex flex-col justify-center items-center space-y-1">
+              <span className={`block w-5 h-0.5 bg-orange-600 transition-transform ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+              <span className={`block w-5 h-0.5 bg-orange-600 transition-opacity ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+              <span className={`block w-5 h-0.5 bg-orange-600 transition-transform ${isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+            </div>
+          </button>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 1. 読んだ本、文章のタイトル */}
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                1. 読んだ本、文章のタイトル
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                placeholder="例：『7つの習慣』"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                required
-              />
+          {/* ドロップダウンメニュー */}
+          {isMenuOpen && (
+            <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-orange-100 min-w-48">
+              <div className="py-2">
+                <Link
+                  to="/"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  📖 入力画面
+                </Link>
+                <Link
+                  to="/mypage"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  📚 マイページ
+                </Link>
+              </div>
             </div>
+          )}
+        </div>
 
-            {/* 2. 読んだ本、文章のリンク */}
-            <div>
-              <label htmlFor="link" className="block text-sm font-medium text-gray-700 mb-2">
-                2. 読んだ本、文章のリンク
-              </label>
-              <input
-                type="url"
-                id="link"
-                name="link"
-                value={formData.link}
-                onChange={handleInputChange}
-                placeholder="例：https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=あなたのアソシエイトID"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                ※ 書籍の場合はamazonリンク。開発者のアフィリエイトリンクに変換されます。
-              </p>
-            </div>
-
-            {/* 3. 今日読んだ量 */}
-            <div>
-              <label htmlFor="readingAmount" className="block text-sm font-medium text-gray-700 mb-2">
-                3. 今日読んだ量
-              </label>
-              <select
-                id="readingAmount"
-                name="readingAmount"
-                value={formData.readingAmount}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                required
-              >
-                <option value="">選択してください</option>
-                <option value="1文だけ">1文だけ</option>
-                <option value="1段落">1段落</option>
-                <option value="1章">1章</option>
-                <option value="1冊・全文">1冊・全文</option>
-              </select>
-            </div>
-
-            {/* 4. 今日の学び or 気づき */}
-            <div>
-              <label htmlFor="learning" className="block text-sm font-medium text-gray-700 mb-2">
-                4. 今日の学び or 気づき
-              </label>
-              <textarea
-                id="learning"
-                name="learning"
-                value={formData.learning}
-                onChange={handleInputChange}
-                placeholder="例：「人の話を聴くとは、同意することではない」"
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
-                required
-              />
-            </div>
-
-            {/* 5. 明日の小さなアクション */}
-            <div>
-              <label htmlFor="action" className="block text-sm font-medium text-gray-700 mb-2">
-                5. 明日の小さなアクション
-              </label>
-              <textarea
-                id="action"
-                name="action"
-                value={formData.action}
-                onChange={handleInputChange}
-                placeholder="例：「朝会で相手の話をさえぎらずに聞く」"
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
-                required
-              />
-            </div>
-
-            {/* 送信ボタン */}
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-semibold py-4 px-6 rounded-lg hover:from-orange-600 hover:to-yellow-600 focus:ring-4 focus:ring-orange-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>送信中...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>✅ 完了</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+        {/* メインコンテンツ */}
+        <div className="container mx-auto px-4 py-8 max-w-2xl">
+          <Routes>
+            <Route path="/" element={<InputForm />} />
+            <Route path="/mypage" element={<MyPage />} />
+          </Routes>
         </div>
       </div>
-    </div>
+    </Router>
   );
 }
 
