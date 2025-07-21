@@ -1,11 +1,13 @@
 import cors from 'cors';
 import express from 'express';
 import {
+    addLike,
     createReadingRecord,
     deleteReadingRecord,
     getAllReadingRecords,
     getReadingRecordById,
     ReadingRecord,
+    removeLike,
     testConnection,
     updateReadingRecord
 } from './database';
@@ -16,6 +18,11 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// セッションIDを生成する関数
+const generateSessionId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
 // データベース接続テスト
 app.get('/api/test-db', async (req, res) => {
@@ -40,10 +47,11 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// 全ての読書記録を取得
+// 全ての読書記録を取得（いいね情報付き）
 app.get('/api/reading-records', async (req, res) => {
   try {
-    const result = await getAllReadingRecords();
+    const sessionId = req.query.sessionId as string;
+    const result = await getAllReadingRecords(sessionId);
     if (result.success) {
       res.json({ 
         message: 'Reading records retrieved successfully', 
@@ -206,6 +214,81 @@ app.delete('/api/reading-records/:id', async (req, res) => {
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
   }
+});
+
+// いいねを追加
+app.post('/api/reading-records/:id/like', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid ID' });
+    }
+
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID is required' });
+    }
+
+    const result = await addLike(id, sessionId);
+    if (result.success) {
+      res.json({ 
+        message: result.data ? 'Like added successfully' : 'Already liked',
+        data: result.data 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Failed to add like', 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error adding like', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// いいねを削除
+app.delete('/api/reading-records/:id/like', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid ID' });
+    }
+
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID is required' });
+    }
+
+    const result = await removeLike(id, sessionId);
+    if (result.success) {
+      res.json({ 
+        message: 'Like removed successfully',
+        data: result.data 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Failed to remove like', 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error removing like', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// セッションIDを生成
+app.post('/api/session', (req, res) => {
+  const sessionId = generateSessionId();
+  res.json({ 
+    message: 'Session created successfully', 
+    sessionId 
+  });
 });
 
 // Health check

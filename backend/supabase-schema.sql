@@ -10,8 +10,19 @@ CREATE TABLE IF NOT EXISTS reading_records (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- いいねテーブルの作成
+CREATE TABLE IF NOT EXISTS likes (
+    id SERIAL PRIMARY KEY,
+    reading_record_id INTEGER NOT NULL REFERENCES reading_records(id) ON DELETE CASCADE,
+    session_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(reading_record_id, session_id)
+);
+
 -- インデックスの作成
 CREATE INDEX IF NOT EXISTS idx_reading_records_created_at ON reading_records(created_at);
+CREATE INDEX IF NOT EXISTS idx_likes_reading_record_id ON likes(reading_record_id);
+CREATE INDEX IF NOT EXISTS idx_likes_session_id ON likes(session_id);
 
 -- 更新日時を自動更新するトリガー関数
 CREATE OR REPLACE FUNCTION update_updated_at_column()

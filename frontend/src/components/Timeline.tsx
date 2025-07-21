@@ -9,21 +9,57 @@ interface ReadingRecord {
   action: string;
   created_at: string;
   updated_at: string;
+  like_count?: number;
+  is_liked?: boolean;
 }
 
 function Timeline() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string>('');
 
   useEffect(() => {
-    fetchRecords();
+    initializeSession();
   }, []);
+
+  useEffect(() => {
+    if (sessionId) {
+      fetchRecords();
+    }
+  }, [sessionId]);
+
+  const initializeSession = async () => {
+    try {
+      // ローカルストレージからセッションIDを取得
+      let storedSessionId = localStorage.getItem('sessionId');
+      
+      if (!storedSessionId) {
+        // 新しいセッションIDを生成
+        const response = await fetch('http://localhost:3001/api/session', {
+          method: 'POST',
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          storedSessionId = result.sessionId;
+          if (storedSessionId) {
+            localStorage.setItem('sessionId', storedSessionId);
+          }
+        }
+      }
+      
+      setSessionId(storedSessionId || '');
+    } catch (error) {
+      console.error('Session initialization error:', error);
+      setError('セッションの初期化に失敗しました。');
+    }
+  };
 
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/reading-records');
+      const response = await fetch(`http://localhost:3001/api/reading-records?sessionId=${sessionId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -36,6 +72,28 @@ function Timeline() {
       setError('レコードの取得に失敗しました。');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLike = async (recordId: number, isLiked: boolean) => {
+    try {
+      const url = `http://localhost:3001/api/reading-records/${recordId}/like`;
+      const method = isLiked ? 'DELETE' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      if (response.ok) {
+        // サーバーから最新データを再取得
+        await fetchRecords();
+      }
+    } catch (error) {
+      console.error('いいねエラー:', error);
     }
   };
 
@@ -134,9 +192,25 @@ function Timeline() {
                     <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReadingAmountColor(record.reading_amount)}`}>
-                  {record.reading_amount}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReadingAmountColor(record.reading_amount)}`}>
+                    {record.reading_amount}
+                  </span>
+                  {/* いいねボタン */}
+                  <button
+                    onClick={() => handleLike(record.id, record.is_liked || false)}
+                    className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      record.is_liked 
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span className={record.is_liked ? 'text-red-500' : 'text-gray-400'}>
+                      {record.is_liked ? '❤️' : '🤍'}
+                    </span>
+                    <span>{record.like_count || 0}</span>
+                  </button>
+                </div>
               </div>
 
               {/* リンク */}
