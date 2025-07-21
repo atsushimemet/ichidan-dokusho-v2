@@ -1,3 +1,4 @@
+import axios from 'axios';
 import cors from 'cors';
 import express from 'express';
 import {
@@ -22,6 +23,88 @@ app.use(express.json());
 // セッションIDを生成する関数
 const generateSessionId = () => {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+// Amazonリンクをアフィリエイトリンクに変換する関数
+const convertToAffiliateLink = async (link: string): Promise<string> => {
+  if (!link) return link;
+  
+  // Amazon.co.jpまたはamzn.asiaのリンクかチェック
+  if (!link.includes('amazon.co.jp') && !link.includes('amzn.asia')) {
+    return link;
+  }
+
+  try {
+    // リンクにアクセスしてリダイレクト後のURLを取得
+    const response = await axios.get(link, {
+      maxRedirects: 5,
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Cache-Control': 'max-age=0'
+      },
+      validateStatus: function (status) {
+        return status < 500; // 500エラー以外は受け入れる
+      }
+    });
+
+    const finalUrl = response.request.res.responseUrl || link;
+    console.log(`Original URL: ${link}`);
+    console.log(`Final URL: ${finalUrl}`);
+    console.log(`Response status: ${response.status}`);
+
+    // 404エラーの場合は元のリンクを返す
+    if (response.status === 404) {
+      console.log('404 error - returning original link');
+      return link;
+    }
+
+    // ASINを抽出する正規表現パターン
+    const asinPatterns = [
+      /\/dp\/([A-Z0-9]{10})/, // /dp/ASIN パターン
+      /\/gp\/product\/([A-Z0-9]{10})/, // /gp/product/ASIN パターン
+      /\/exec\/obidos\/ASIN\/([A-Z0-9]{10})/, // /exec/obidos/ASIN/ASIN パターン
+      /\/o\/ASIN\/([A-Z0-9]{10})/, // /o/ASIN/ASIN パターン
+      /\/ASIN\/([A-Z0-9]{10})/, // /ASIN/ASIN パターン
+    ];
+
+    let asin = null;
+    
+    // 各パターンでASINを検索
+    for (const pattern of asinPatterns) {
+      const match = finalUrl.match(pattern);
+      if (match) {
+        asin = match[1];
+        break;
+      }
+    }
+
+    // ASINが見つからない場合は元のリンクを返す
+    if (!asin) {
+      console.log('ASIN not found in final URL');
+      return link;
+    }
+
+    // アフィリエイトリンクを生成
+    const affiliateId = 'tbooks47579-22';
+    const affiliateLink = `https://www.amazon.co.jp/dp/${asin}/ref=nosim?tag=${affiliateId}`;
+    console.log(`Generated affiliate link: ${affiliateLink}`);
+    return affiliateLink;
+
+  } catch (error) {
+    console.error('Error converting link:', error);
+    // エラーの場合は元のリンクを返す
+    return link;
+  }
 };
 
 // データベース接続テスト
@@ -115,9 +198,12 @@ app.post('/api/reading-records', async (req, res) => {
       });
     }
 
+    // Amazonリンクをアフィリエイトリンクに変換
+    const convertedLink = await convertToAffiliateLink(link);
+
     const record: ReadingRecord = {
       title,
-      link,
+      link: convertedLink,
       reading_amount,
       learning,
       action
@@ -155,7 +241,10 @@ app.put('/api/reading-records/:id', async (req, res) => {
     const updateData: Partial<ReadingRecord> = {};
 
     if (title) updateData.title = title;
-    if (link !== undefined) updateData.link = link;
+    if (link !== undefined) {
+      // Amazonリンクをアフィリエイトリンクに変換
+      updateData.link = await convertToAffiliateLink(link);
+    }
     if (reading_amount) updateData.reading_amount = reading_amount;
     if (learning) updateData.learning = learning;
     if (action) updateData.action = action;
