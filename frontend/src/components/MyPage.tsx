@@ -60,6 +60,16 @@ function MyPage() {
     }
   };
 
+  const getReadingAmountColor = (amount: string) => {
+    switch (amount) {
+      case '1文だけ': return 'bg-blue-500';
+      case '1段落': return 'bg-green-500';
+      case '1章': return 'bg-orange-500';
+      case '1冊・全文': return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
@@ -119,9 +129,7 @@ function MyPage() {
                     <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
                   </div>
                 </div>
-                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
-                  {record.reading_amount}
-                </span>
+                <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
               </div>
 
               {/* リンク */}

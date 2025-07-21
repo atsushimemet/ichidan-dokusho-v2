@@ -31,7 +31,7 @@ function App() {
           
           {/* ドロップダウンメニュー */}
           {isMenuOpen && (
-            <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-orange-100 min-w-48">
+            <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-orange-100 min-w-64 max-w-80">
               <div className="py-2">
                 <Link
                   to="/"
@@ -54,6 +54,38 @@ function App() {
                 >
                   🌟 タイムライン
                 </Link>
+                
+                {/* 区切り線 */}
+                <div className="border-t border-orange-100 my-2"></div>
+                
+                {/* Q&A セクション */}
+                <div className="px-4 py-3">
+                  <h3 className="font-semibold text-gray-800 mb-3">❓ Q&A</h3>
+                  
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <h4 className="font-medium text-gray-700 mb-2">読んだ量の色について</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
+                          <span className="text-gray-600">1文だけ</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 rounded-full bg-green-500 flex-shrink-0"></div>
+                          <span className="text-gray-600">1段落</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 rounded-full bg-orange-500 flex-shrink-0"></div>
+                          <span className="text-gray-600">1章</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 rounded-full bg-purple-500 flex-shrink-0"></div>
+                          <span className="text-gray-600">1冊・全文</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}

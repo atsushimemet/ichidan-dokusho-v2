@@ -120,11 +120,11 @@ function Timeline() {
 
   const getReadingAmountColor = (amount: string) => {
     switch (amount) {
-      case '1文だけ': return 'bg-blue-100 text-blue-700';
-      case '1段落': return 'bg-green-100 text-green-700';
-      case '1章': return 'bg-orange-100 text-orange-700';
-      case '1冊・全文': return 'bg-purple-100 text-purple-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case '1文だけ': return 'bg-blue-500';
+      case '1段落': return 'bg-green-500';
+      case '1章': return 'bg-orange-500';
+      case '1冊・全文': return 'bg-purple-500';
+      default: return 'bg-gray-500';
     }
   };
 
@@ -193,9 +193,7 @@ function Timeline() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getReadingAmountColor(record.reading_amount)}`}>
-                    {record.reading_amount}
-                  </span>
+                  <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                   {/* いいねボタン */}
                   <button
                     onClick={() => handleLike(record.id, record.is_liked || false)}
