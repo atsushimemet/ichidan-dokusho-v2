@@ -105,9 +105,22 @@ function MyPage() {
   // noteでシェア
   const shareOnNote = (learning: string, action: string, title: string) => {
     const text = generateSocialText(learning, action, title);
-    const encodedText = encodeURIComponent(text);
-    const url = `https://note.com/n/new?body=${encodedText}`;
-    window.open(url, '_blank');
+    
+    // クリップボードにコピー
+    navigator.clipboard.writeText(text).then(() => {
+      // noteのトップページに遷移
+      window.open('https://note.com/', '_blank');
+    }).catch(err => {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: 古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      window.open('https://note.com/', '_blank');
+    });
   };
 
   if (loading) {
@@ -253,9 +266,14 @@ function MyPage() {
                   
                   if (!isWithinCharLimit) {
                     return (
-                      <p className="text-xs text-orange-500 mt-2">
-                        ※ 140文字を超えているため、noteでシェアします。
-                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-orange-500">
+                          ※ 140文字を超えているため、noteでシェアします。
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          ※ 内容がクリップボードにコピーされ、noteのトップページが開きます。
+                        </p>
+                      </div>
                     );
                   }
                   return null;
