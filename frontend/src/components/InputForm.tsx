@@ -41,8 +41,11 @@ function InputForm() {
     setIsSubmitting(true);
 
     try {
+      // 環境変数からAPI URLを取得
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      
       // バックエンドAPIを呼び出し
-      const response = await fetch('http://localhost:3001/api/reading-records', {
+      const response = await fetch(`${API_BASE_URL}/api/reading-records`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
