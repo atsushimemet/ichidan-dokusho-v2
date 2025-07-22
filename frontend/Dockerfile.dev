@@ -1,0 +1,15 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+# キャッシュをクリアするためのダミーファイル
+COPY package*.json ./
+
+# 既存のnode_modulesを削除してからインストール
+RUN rm -rf node_modules package-lock.json && npm install
+
+COPY . .
+
+EXPOSE 3002
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3002"] 
