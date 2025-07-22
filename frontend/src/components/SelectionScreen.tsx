@@ -13,8 +13,8 @@ const SelectionScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center px-4">
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 max-w-md w-full">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-start sm:items-center justify-center px-4 pt-8 sm:pt-0">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 max-w-md w-full mt-8 sm:mt-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-center text-orange-800 mb-6">
           📖 1段読書へようこそ
         </h1>

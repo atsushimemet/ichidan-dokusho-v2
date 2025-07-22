@@ -122,7 +122,7 @@ function AppContent() {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
         <Routes>
           <Route path="/" element={<SelectionScreen />} />
           <Route path="/auth" element={<AuthScreen />} />
