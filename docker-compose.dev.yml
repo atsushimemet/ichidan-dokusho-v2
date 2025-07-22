@@ -12,6 +12,8 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+    env_file:
+      - ./frontend/.env
     depends_on:
       - backend
 
@@ -24,9 +26,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgresql://postgres:password@db:5432/ichidan_dokusho
+    env_file:
+      - ./backend/.env
     depends_on:
       - db
 

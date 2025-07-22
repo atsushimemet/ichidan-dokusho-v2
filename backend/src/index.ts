@@ -384,10 +384,7 @@ app.delete('/api/reading-records/:id/like', async (req, res) => {
 // セッションIDを生成
 app.post('/api/session', (req, res) => {
   const sessionId = generateSessionId();
-  res.json({ 
-    message: 'Session created successfully', 
-    sessionId 
-  });
+  res.json({ sessionId });
 });
 
 // Google認証エンドポイント

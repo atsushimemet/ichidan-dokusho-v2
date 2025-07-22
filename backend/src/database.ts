@@ -75,16 +75,16 @@ export const getAllReadingRecords = async (sessionId?: string) => {
       SELECT 
         r.*,
         COUNT(l.id) as like_count,
-        CASE WHEN EXISTS (
+        CASE WHEN $1::text IS NOT NULL AND $1::text != '' AND EXISTS (
           SELECT 1 FROM likes 
-          WHERE reading_record_id = r.id AND session_id = $1
+          WHERE reading_record_id = r.id AND session_id = $1::text
         ) THEN true ELSE false END as is_liked
       FROM reading_records r
       LEFT JOIN likes l ON r.id = l.reading_record_id
       GROUP BY r.id
       ORDER BY r.created_at DESC
     `;
-    const result = await pool.query(query, [sessionId || '']);
+    const result = await pool.query(query, [sessionId || null]);
     return { success: true, data: result.rows };
   } catch (error) {
     console.error('Get reading records error:', error);
