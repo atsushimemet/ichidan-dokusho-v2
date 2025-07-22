@@ -83,6 +83,46 @@ function MyPage() {
     }
   };
 
+  // 学びとアクションを統合して140文字以内のテキストを生成
+  const generateSocialText = (learning: string, action: string, title: string) => {
+    const combinedText = `📖 ${title}\n💡 ${learning}\n🎯 ${action}\n#1段読書 #読書習慣\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
+    return combinedText;
+  };
+
+  // 文字数チェック（140文字以内かどうか）
+  const isWithinLimit = (text: string) => {
+    return text.length <= 140;
+  };
+
+  // X（Twitter）でシェア
+  const shareOnTwitter = (learning: string, action: string, title: string) => {
+    const text = generateSocialText(learning, action, title);
+    const encodedText = encodeURIComponent(text);
+    const url = `https://twitter.com/intent/tweet?text=${encodedText}`;
+    window.open(url, '_blank');
+  };
+
+  // noteでシェア
+  const shareOnNote = (learning: string, action: string, title: string) => {
+    const text = generateSocialText(learning, action, title);
+    
+    // クリップボードにコピー
+    navigator.clipboard.writeText(text).then(() => {
+      // noteのトップページに遷移
+      window.open('https://note.com/', '_blank');
+    }).catch(err => {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: 古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      window.open('https://note.com/', '_blank');
+    });
+  };
+
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
@@ -168,11 +208,76 @@ function MyPage() {
               </div>
 
               {/* アクション */}
-              <div>
+              <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">🎯 明日のアクション</h4>
                 <p className="text-gray-800 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
                   {record.action}
                 </p>
+              </div>
+
+              {/* ソーシャルメディアシェア */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700">📱 シェア</h4>
+                  <div className="text-sm text-gray-500">
+                    {(() => {
+                      const text = generateSocialText(record.learning, record.action, record.title);
+                      const charCount = text.length;
+                      const isWithinCharLimit = isWithinLimit(text);
+                      return (
+                        <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
+                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+                
+                {(() => {
+                  const text = generateSocialText(record.learning, record.action, record.title);
+                  const isWithinCharLimit = isWithinLimit(text);
+                  
+                  return (
+                    <div className="flex space-x-2">
+                      {isWithinCharLimit ? (
+                        // 140文字以内の場合：Xでシェア
+                        <button
+                          onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
+                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                        >
+                          Xでシェア
+                        </button>
+                      ) : (
+                        // 140文字を超える場合：noteでシェア
+                        <button
+                          onClick={() => shareOnNote(record.learning, record.action, record.title)}
+                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        >
+                          noteでシェア
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+                
+                {(() => {
+                  const text = generateSocialText(record.learning, record.action, record.title);
+                  const isWithinCharLimit = isWithinLimit(text);
+                  
+                  if (!isWithinCharLimit) {
+                    return (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-orange-500">
+                          ※ 140文字を超えているため、noteでシェアします。
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          ※ 内容がクリップボードにコピーされ、noteのトップページが開きます。
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
           ))}
