@@ -1,4 +1,12 @@
 import { Pool } from 'pg';
+console.log("=== DB connection parameters ===");
+console.log({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+  env: process.env.NODE_ENV,
+});
 
 // データベース接続プールの作成
 const pool = new Pool({
