@@ -210,48 +210,58 @@ function MyPage() {
                     {(() => {
                       const text = generateSocialText(record.learning, record.action, record.title);
                       const charCount = text.length;
+                      const isWithinCharLimit = isWithinLimit(text);
                       return (
-                        <span className={charCount > 140 ? 'text-red-500' : 'text-green-500'}>
-                          {charCount}/140文字
+                        <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
+                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
                         </span>
                       );
                     })()}
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
-                    disabled={!isWithinLimit(generateSocialText(record.learning, record.action, record.title))}
-                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      isWithinLimit(generateSocialText(record.learning, record.action, record.title))
-                        ? 'bg-blue-500 text-white hover:bg-blue-600'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>𝕏</span>
-                    <span>Xでシェア</span>
-                  </button>
+                {(() => {
+                  const text = generateSocialText(record.learning, record.action, record.title);
+                  const isWithinCharLimit = isWithinLimit(text);
                   
-                  <button
-                    onClick={() => shareOnNote(record.learning, record.action, record.title)}
-                    disabled={!isWithinLimit(generateSocialText(record.learning, record.action, record.title))}
-                    className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      isWithinLimit(generateSocialText(record.learning, record.action, record.title))
-                        ? 'bg-green-500 text-white hover:bg-green-600'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>📝</span>
-                    <span>noteでシェア</span>
-                  </button>
-                </div>
+                  return (
+                    <div className="flex space-x-2">
+                      {isWithinCharLimit ? (
+                        // 140文字以内の場合：Xでシェア
+                        <button
+                          onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
+                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                        >
+                          <span>𝕏</span>
+                          <span>Xでシェア</span>
+                        </button>
+                      ) : (
+                        // 140文字を超える場合：noteでシェア
+                        <button
+                          onClick={() => shareOnNote(record.learning, record.action, record.title)}
+                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                        >
+                          <span>📝</span>
+                          <span>noteでシェア</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
                 
-                {!isWithinLimit(generateSocialText(record.learning, record.action, record.title)) && (
-                  <p className="text-xs text-red-500 mt-2">
-                    ※ 140文字を超えているため、シェアできません。内容を短縮してください。
-                  </p>
-                )}
+                {(() => {
+                  const text = generateSocialText(record.learning, record.action, record.title);
+                  const isWithinCharLimit = isWithinLimit(text);
+                  
+                  if (!isWithinCharLimit) {
+                    return (
+                      <p className="text-xs text-orange-500 mt-2">
+                        ※ 140文字を超えているため、noteでシェアします。
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
           ))}
