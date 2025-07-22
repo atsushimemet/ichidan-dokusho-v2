@@ -230,19 +230,17 @@ function MyPage() {
                         // 140文字以内の場合：Xでシェア
                         <button
                           onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
-                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
                         >
-                          <span>𝕏</span>
-                          <span>Xでシェア</span>
+                          Xでシェア
                         </button>
                       ) : (
                         // 140文字を超える場合：noteでシェア
                         <button
                           onClick={() => shareOnNote(record.learning, record.action, record.title)}
-                          className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
                         >
-                          <span>📝</span>
-                          <span>noteでシェア</span>
+                          noteでシェア
                         </button>
                       )}
                     </div>
