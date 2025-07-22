@@ -1,6 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { useState } from 'react';
-import { Link, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import AuthScreen from './components/AuthScreen';
 import InputForm from './components/InputForm';
@@ -12,6 +12,29 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+// Google Analytics の型定義
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
+
+// Google Analytics ページビュー追跡コンポーネント
+function PageTracker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // Google Analytics ページビューを送信
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('config', 'G-NEMWYXHV2P', {
+        page_path: location.pathname + location.search,
+      });
+    }
+  }, [location]);
+
+  return null;
+}
+
 function AppContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
@@ -22,6 +45,9 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+      {/* Google Analytics ページビュー追跡 */}
+      <PageTracker />
+      
       {/* ハンバーガーメニュー */}
       <div className="fixed top-4 right-4 z-50">
         <button

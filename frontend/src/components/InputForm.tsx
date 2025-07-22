@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { trackError, trackPostCreation } from '../utils/analytics';
 
 interface FormData {
   title: string;
@@ -69,11 +70,15 @@ function InputForm() {
       const result = await response.json();
       console.log('送信成功:', result);
       
+      // Google Analytics 投稿作成追跡
+      trackPostCreation(formData.readingAmount);
+      
       // 成功時の処理
       alert('投稿が完了しました！');
       resetForm();
     } catch (error) {
       console.error('送信エラー:', error);
+      trackError('post_creation_failed', error instanceof Error ? error.message : 'Unknown error');
       alert('投稿に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);

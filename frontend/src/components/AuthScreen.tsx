@@ -2,6 +2,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { trackError, trackUserLogin } from '../utils/analytics';
 
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -30,16 +31,21 @@ const AuthScreen: React.FC = () => {
       // 認証情報を保存
       login(data.token, data.user);
       
+      // Google Analytics ログイン追跡
+      trackUserLogin('google');
+      
       // 入力画面に遷移
       navigate('/input');
     } catch (error) {
       console.error('Authentication error:', error);
+      trackError('authentication_failed', error instanceof Error ? error.message : 'Unknown error');
       alert('認証に失敗しました。もう一度お試しください。');
     }
   };
 
   const handleGoogleError = () => {
     console.error('Google login failed');
+    trackError('google_login_failed', 'Google OAuth error');
     alert('Google認証に失敗しました。もう一度お試しください。');
   };
 

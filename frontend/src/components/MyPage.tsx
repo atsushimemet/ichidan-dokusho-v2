@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { trackShare } from '../utils/analytics';
 
 interface ReadingRecord {
   id: number;
@@ -99,12 +100,19 @@ function MyPage() {
     const text = generateSocialText(learning, action, title);
     const encodedText = encodeURIComponent(text);
     const url = `https://twitter.com/intent/tweet?text=${encodedText}`;
+    
+    // Google Analytics シェア追跡
+    trackShare('twitter', text.length);
+    
     window.open(url, '_blank');
   };
 
   // noteでシェア
   const shareOnNote = (learning: string, action: string, title: string) => {
     const text = generateSocialText(learning, action, title);
+    
+    // Google Analytics シェア追跡
+    trackShare('note', text.length);
     
     // クリップボードにコピー
     navigator.clipboard.writeText(text).then(() => {
