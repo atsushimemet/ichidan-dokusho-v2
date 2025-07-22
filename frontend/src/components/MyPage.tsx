@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { trackShare } from '../utils/analytics';
+import BookIcon from './BookIcon';
 
 interface ReadingRecord {
   id: number;
@@ -134,9 +135,12 @@ function MyPage() {
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-          📚 マイページ
-        </h1>
+        <div className="flex items-center justify-center mb-8">
+          <BookIcon size={48} />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+            マイページ
+          </h1>
+        </div>
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
@@ -147,9 +151,12 @@ function MyPage() {
   if (error) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-          📚 マイページ
-        </h1>
+        <div className="flex items-center justify-center mb-8">
+          <BookIcon size={48} />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+            マイページ
+          </h1>
+        </div>
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -165,9 +172,12 @@ function MyPage() {
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-        📚 マイページ
-      </h1>
+      <div className="flex items-center justify-center mb-8">
+        <BookIcon size={48} />
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+          マイページ
+        </h1>
+      </div>
       
       {records.length === 0 ? (
         <div className="text-center py-12">
