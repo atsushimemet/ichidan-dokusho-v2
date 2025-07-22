@@ -388,9 +388,12 @@ app.get('/health', (req, res) => {
 // アプリケーション起動時のエラーハンドリング
 const startServer = async () => {
   try {
+    console.log('=== Server Startup Debug ===');
     console.log('Starting server...');
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Port:', PORT);
+    console.log('Database URL exists:', !!process.env.DATABASE_URL);
+    console.log('CORS Origin:', process.env.CORS_ORIGIN);
     
     // データベース接続テスト（非同期で実行）
     console.log('Testing database connection...');
@@ -408,7 +411,9 @@ const startServer = async () => {
 
     // サーバー起動
     app.listen(PORT, () => {
+      console.log(`=== Server Started Successfully ===`);
       console.log(`Server is running on port ${PORT}`);
+      console.log(`Health check: http://localhost:${PORT}/health`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
