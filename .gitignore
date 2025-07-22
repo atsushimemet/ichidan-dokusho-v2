@@ -102,3 +102,4 @@ Thumbs.db
 # Database
 *.sqlite
 *.db 
+frontend/.vite/
