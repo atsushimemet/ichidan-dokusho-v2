@@ -53,6 +53,8 @@
 - **Root Directory**: `backend`
 - **Runtime**: `Docker`
 - **Dockerfile**: `Dockerfile.prod`
+- **Build Command**: `docker build -f Dockerfile.prod -t ichidan-dokusho-backend .`
+- **Start Command**: `docker run -p 3001:3001 ichidan-dokusho-backend`
 - **Plan**: `Free`
 
 ### 2.3 環境変数の設定
@@ -263,4 +265,5 @@ Build failed
 ## 更新履歴
 - 2025年7月22日: 初版作成
 - 2025年7月22日: RenderデプロイをDocker方式に変更
-- 2025年7月22日: Node.jsバージョンを22に統一 
+- 2025年7月22日: Node.jsバージョンを22に統一
+- 2025年7月22日: RenderのDocker設定にBuild CommandとStart Commandを追加 
