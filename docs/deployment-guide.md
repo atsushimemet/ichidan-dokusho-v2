@@ -50,12 +50,17 @@
 
 ### 2.2 設定
 - **Name**: `ichidan-dokusho-backend`
+- **Language**: `Docker`（重要：ここでDockerを選択）
 - **Root Directory**: `backend`
-- **Runtime**: `Docker`
 - **Dockerfile**: `Dockerfile.prod`
-- **Build Command**: `docker build -f Dockerfile.prod -t ichidan-dokusho-backend .`
-- **Start Command**: `docker run -p 3001:3001 ichidan-dokusho-backend`
+- **Build Command**: `npm install && npm run build`
+- **Start Command**: `npm start`
 - **Plan**: `Free`
+
+**注意**: 
+- **Language**で「Docker」を選択することが重要です
+- これによりRenderがDockerfileを自動で検出・解析します
+- Build CommandとStart Commandは必須ですが、実際の処理はDockerfile内で定義されます
 
 ### 2.3 環境変数の設定
 「Environment」タブで以下を設定：
@@ -202,6 +207,26 @@ Build failed
 - ビルドコマンドを確認
 - Dockerイメージのビルドログを確認
 
+#### Dockerコマンドが見つからないエラー
+```
+bash: line 1: docker: command not found
+```
+**解決策**: 
+- **Language**で「Docker」を選択していることを確認
+- Build CommandとStart Commandは必須
+- Dockerコマンドではなく、Node.jsコマンド（npm install、npm start等）を指定する
+- Dockerfile内でDockerの設定が定義される
+
+#### Dockerfileが読み込まれないエラー
+```
+==> Using Node.js version 22.16.0 (default)
+==> Running build command 'npm install && npm run build'...
+```
+**解決策**: 
+- **Language**で「Docker」を選択していない可能性
+- 「New Web Service」作成時に「Language」→「Docker」を選択
+- 既存のサービスは削除して再作成が必要
+
 ### 8.2 ログの確認方法
 1. **Render**: ダッシュボードの「Logs」タブ
 2. **Netlify**: ダッシュボードの「Deploys」→「View deploy log」
@@ -266,4 +291,6 @@ Build failed
 - 2025年7月22日: 初版作成
 - 2025年7月22日: RenderデプロイをDocker方式に変更
 - 2025年7月22日: Node.jsバージョンを22に統一
-- 2025年7月22日: RenderのDocker設定にBuild CommandとStart Commandを追加 
+- 2025年7月22日: RenderのDocker設定にBuild CommandとStart Commandを追加
+- 2025年7月22日: RenderのDocker設定を修正（Build/Start Commandは必須パラメータ）
+- 2025年7月22日: RenderのLanguage設定でDockerを選択する手順を追加 
