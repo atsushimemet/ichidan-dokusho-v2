@@ -1,6 +1,7 @@
 import axios from 'axios';
 import cors from 'cors';
 import express from 'express';
+import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
     addLike,
     createReadingRecord,
@@ -12,6 +13,15 @@ import {
     testConnection,
     updateReadingRecord
 } from './database';
+
+// Request型の拡張
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -377,6 +387,48 @@ app.post('/api/session', (req, res) => {
   res.json({ 
     message: 'Session created successfully', 
     sessionId 
+  });
+});
+
+// Google認証エンドポイント
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    
+    if (!idToken) {
+      return res.status(400).json({ message: 'ID token is required' });
+    }
+
+    // Google IDトークンを検証
+    const googleUser = await verifyGoogleToken(idToken);
+    
+    // JWTトークンを生成
+    const token = generateToken(googleUser.userId || '', googleUser.email || '');
+    
+    res.json({
+      message: 'Authentication successful',
+      token,
+      user: {
+        userId: googleUser.userId,
+        email: googleUser.email,
+        name: googleUser.name,
+        picture: googleUser.picture
+      }
+    });
+  } catch (error) {
+    console.error('Google authentication error:', error);
+    res.status(401).json({ 
+      message: 'Authentication failed', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// 認証状態確認エンドポイント
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+  res.json({
+    message: 'Token is valid',
+    user: req.user
   });
 });
 
