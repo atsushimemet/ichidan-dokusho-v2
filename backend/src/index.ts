@@ -385,6 +385,49 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-}); 
+// アプリケーション起動時のエラーハンドリング
+const startServer = async () => {
+  try {
+    console.log('Starting server...');
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Port:', PORT);
+    
+    // データベース接続テスト（非同期で実行）
+    console.log('Testing database connection...');
+    testConnection().then(result => {
+      if (result.success) {
+        console.log('Database connection successful');
+      } else {
+        console.error('Database connection failed:', result.error);
+        console.log('Continuing without database connection...');
+      }
+    }).catch(error => {
+      console.error('Database connection error:', error);
+      console.log('Continuing without database connection...');
+    });
+
+    // サーバー起動
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    // エラーが発生してもサーバーを起動
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT} (with errors)`);
+    });
+  }
+};
+
+// グレースフルシャットダウン
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
+
+startServer();
