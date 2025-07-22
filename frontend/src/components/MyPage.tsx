@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ReadingRecord {
   id: number;
@@ -7,6 +8,8 @@ interface ReadingRecord {
   reading_amount: string;
   learning: string;
   action: string;
+  user_id?: string;
+  user_email?: string;
   created_at: string;
   updated_at: string;
 }
@@ -15,17 +18,25 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   useEffect(() => {
-    fetchRecords();
-  }, []);
+    if (token) {
+      fetchRecords();
+    }
+  }, [token]);
 
   const fetchRecords = async () => {
     try {
       setLoading(true);
       // 環境変数からAPI URLを取得
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/reading-records`);
+      const response = await fetch(`${API_BASE_URL}/api/my-records`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

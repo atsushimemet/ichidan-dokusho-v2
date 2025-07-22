@@ -37,6 +37,8 @@ export interface ReadingRecord {
   reading_amount: string;
   learning: string;
   action: string;
+  user_id?: string;
+  user_email?: string;
   created_at?: string;
   updated_at?: string;
   like_count?: number;
@@ -55,11 +57,11 @@ export interface Like {
 export const createReadingRecord = async (record: ReadingRecord) => {
   try {
     const query = `
-      INSERT INTO reading_records (title, link, reading_amount, learning, action)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO reading_records (title, link, reading_amount, learning, action, user_id, user_email)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
-    const values = [record.title, record.link, record.reading_amount, record.learning, record.action];
+    const values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.user_id, record.user_email];
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
   } catch (error) {
@@ -179,6 +181,31 @@ export const getLikeStatus = async (readingRecordId: number, sessionId: string) 
     return { success: true, data: result.rows[0] };
   } catch (error) {
     console.error('Get like status error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// ユーザー固有の読書記録を取得（マイページ用）
+export const getUserReadingRecords = async (userId: string, sessionId?: string) => {
+  try {
+    const query = `
+      SELECT 
+        r.*,
+        COUNT(l.id) as like_count,
+        CASE WHEN $2::text IS NOT NULL AND $2::text != '' AND EXISTS (
+          SELECT 1 FROM likes 
+          WHERE reading_record_id = r.id AND session_id = $2::text
+        ) THEN true ELSE false END as is_liked
+      FROM reading_records r
+      LEFT JOIN likes l ON r.id = l.reading_record_id
+      WHERE r.user_id = $1
+      GROUP BY r.id
+      ORDER BY r.created_at DESC
+    `;
+    const result = await pool.query(query, [userId, sessionId || null]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get user reading records error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

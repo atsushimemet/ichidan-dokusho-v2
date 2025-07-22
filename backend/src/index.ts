@@ -8,6 +8,7 @@ import {
     deleteReadingRecord,
     getAllReadingRecords,
     getReadingRecordById,
+    getUserReadingRecords,
     ReadingRecord,
     removeLike,
     testConnection,
@@ -196,15 +197,23 @@ app.get('/api/reading-records/:id', async (req, res) => {
   }
 });
 
-// 新しい読書記録を作成
-app.post('/api/reading-records', async (req, res) => {
+// 新しい読書記録を作成（認証必須）
+app.post('/api/reading-records', authenticateToken, async (req, res) => {
   try {
     const { title, link, reading_amount, learning, action } = req.body;
+    const userId = req.user?.userId;
+    const userEmail = req.user?.email;
 
     // バリデーション
     if (!title || !reading_amount || !learning || !action) {
       return res.status(400).json({ 
         message: 'Missing required fields: title, reading_amount, learning, action' 
+      });
+    }
+
+    if (!userId || !userEmail) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
       });
     }
 
@@ -216,7 +225,9 @@ app.post('/api/reading-records', async (req, res) => {
       link: convertedLink,
       reading_amount,
       learning,
-      action
+      action,
+      user_id: userId,
+      user_email: userEmail
     };
 
     const result = await createReadingRecord(record);
@@ -427,6 +438,34 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
     message: 'Token is valid',
     user: req.user
   });
+});
+
+// ユーザー固有の読書記録を取得（マイページ用）
+app.get('/api/my-records', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const sessionId = req.query.sessionId as string | undefined;
+    if (!userId) {
+      return res.status(401).json({ message: 'User ID is required' });
+    }
+    const result = await getUserReadingRecords(userId, sessionId);
+    if (result.success) {
+      res.json({
+        message: 'User reading records retrieved successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to retrieve user reading records',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving user reading records',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Health check
