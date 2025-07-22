@@ -35,8 +35,10 @@ function Timeline() {
       let storedSessionId = localStorage.getItem('sessionId');
       
       if (!storedSessionId) {
+        // 環境変数からAPI URLを取得
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
         // 新しいセッションIDを生成
-        const response = await fetch('http://localhost:3001/api/session', {
+        const response = await fetch(`${API_BASE_URL}/api/session`, {
           method: 'POST',
         });
         
