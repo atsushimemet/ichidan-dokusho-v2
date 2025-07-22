@@ -70,7 +70,10 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
+# public
+# frontend/public/*
+# !frontend/public/favicon-removebg-preview.png
+# !frontend/public/_redirects
 
 # Storybook build outputs
 .out
