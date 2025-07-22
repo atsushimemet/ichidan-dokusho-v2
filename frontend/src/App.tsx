@@ -4,6 +4,7 @@ import { Link, Route, BrowserRouter as Router, Routes, useLocation } from 'react
 import './App.css';
 import AuthScreen from './components/AuthScreen';
 import InputForm from './components/InputForm';
+import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import SelectionScreen from './components/SelectionScreen';
@@ -72,6 +73,13 @@ function AppContent() {
                 className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
               >
                 🏠 ホーム
+              </Link>
+              <Link
+                to="/landing_page"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+              >
+                📖 ランディングページ
               </Link>
               {isAuthenticated && (
                 <>
@@ -148,29 +156,44 @@ function AppContent() {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
-        <Routes>
-          <Route path="/" element={<SelectionScreen />} />
-          <Route path="/auth" element={<AuthScreen />} />
-          <Route 
-            path="/input" 
-            element={
+      <Routes>
+        <Route path="/landing_page" element={<LandingPage />} />
+        <Route path="/" element={
+          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <SelectionScreen />
+          </div>
+        } />
+        <Route path="/auth" element={
+          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <AuthScreen />
+          </div>
+        } />
+        <Route 
+          path="/input" 
+          element={
+            <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
               <ProtectedRoute>
                 <InputForm />
               </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/mypage" 
-            element={
+            </div>
+          } 
+        />
+        <Route 
+          path="/mypage" 
+          element={
+            <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
               <ProtectedRoute>
                 <MyPage />
               </ProtectedRoute>
-            } 
-          />
-          <Route path="/timeline" element={<Timeline />} />
-        </Routes>
-      </div>
+            </div>
+          } 
+        />
+        <Route path="/timeline" element={
+          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <Timeline />
+          </div>
+        } />
+      </Routes>
     </div>
   );
 }
