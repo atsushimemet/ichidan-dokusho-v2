@@ -67,7 +67,7 @@ const LandingPage: React.FC = () => {
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100">
               <h4 className="text-xl font-semibold text-orange-800 mb-3">👥 誰かに褒められたい、だけど匿名性は維持したい</h4>
-              <p className="text-gray-600">いいね機能と匿名性機能（ユーザーはランダムな識別子の名前しか持てない）。</p>
+              <p className="text-gray-600">いいね機能と匿名性機能。</p>
             </div>
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100">
               <h4 className="text-xl font-semibold text-orange-800 mb-3">📖 本以外の感想も書きたい</h4>
