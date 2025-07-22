@@ -23,7 +23,9 @@ function MyPage() {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3001/api/reading-records');
+      // 環境変数からAPI URLを取得
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/reading-records`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

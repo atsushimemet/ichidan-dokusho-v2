@@ -59,7 +59,9 @@ function Timeline() {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3001/api/reading-records?sessionId=${sessionId}`);
+      // 環境変数からAPI URLを取得
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/reading-records?sessionId=${sessionId}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -77,7 +79,9 @@ function Timeline() {
 
   const handleLike = async (recordId: number, isLiked: boolean) => {
     try {
-      const url = `http://localhost:3001/api/reading-records/${recordId}/like`;
+      // 環境変数からAPI URLを取得
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const url = `${API_BASE_URL}/api/reading-records/${recordId}/like`;
       const method = isLiked ? 'DELETE' : 'POST';
       
       const response = await fetch(url, {
