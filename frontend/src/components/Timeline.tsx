@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import BookIcon from './BookIcon';
 
 interface ReadingRecord {
   id: number;
@@ -137,9 +138,12 @@ function Timeline() {
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-          🌟 タイムライン
-        </h1>
+        <div className="flex items-center justify-center mb-8">
+          <BookIcon size={48} />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+            タイムライン
+          </h1>
+        </div>
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
@@ -150,9 +154,12 @@ function Timeline() {
   if (error) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-          🌟 タイムライン
-        </h1>
+        <div className="flex items-center justify-center mb-8">
+          <BookIcon size={48} />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+            タイムライン
+          </h1>
+        </div>
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -168,9 +175,12 @@ function Timeline() {
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-        🌟 タイムライン
-      </h1>
+      <div className="flex items-center justify-center mb-8">
+        <BookIcon size={48} />
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+          タイムライン
+        </h1>
+      </div>
       
       <div className="text-center mb-6">
         <p className="text-gray-600">みんなの読書記録をチェックしよう！</p>
