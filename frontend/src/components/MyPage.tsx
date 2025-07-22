@@ -85,7 +85,7 @@ function MyPage() {
 
   // 学びとアクションを統合して140文字以内のテキストを生成
   const generateSocialText = (learning: string, action: string, title: string) => {
-    const combinedText = `📖 ${title}\n💡 ${learning}\n🎯 ${action}`;
+    const combinedText = `📖 ${title}\n💡 ${learning}\n🎯 ${action}\n#1段読書 #読書習慣\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
     return combinedText;
   };
 
@@ -98,7 +98,7 @@ function MyPage() {
   const shareOnTwitter = (learning: string, action: string, title: string) => {
     const text = generateSocialText(learning, action, title);
     const encodedText = encodeURIComponent(text);
-    const url = `https://twitter.com/intent/tweet?text=${encodedText}&hashtags=1段読書,読書習慣`;
+    const url = `https://twitter.com/intent/tweet?text=${encodedText}`;
     window.open(url, '_blank');
   };
 
