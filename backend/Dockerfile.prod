@@ -4,11 +4,15 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --only=production
+# ビルド用にdevDependenciesもインストール
+RUN npm install
 
 COPY . .
 
 RUN npm run build
+
+# 本番用にdevDependenciesを削除
+RUN npm prune --production
 
 EXPOSE 3001
 
