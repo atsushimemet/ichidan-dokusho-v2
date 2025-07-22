@@ -79,9 +79,13 @@ function InputForm() {
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 mb-8 leading-tight">
-        📖 今日も1段、読んだ？
+      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-orange-800 mb-4 leading-tight">
+        📖 今日も1ページ読んだ？
       </h1>
+      <p className="text-center text-gray-600 mb-8 text-xs sm:text-sm">
+        完璧じゃなくていい。<br />
+        1ページの前進が、思考と行動を変えていく。
+      </p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 1. 読んだ本、文章のタイトル */}
