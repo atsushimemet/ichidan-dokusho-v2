@@ -392,7 +392,10 @@ const startServer = async () => {
     console.log('Starting server...');
     console.log('Environment:', process.env.NODE_ENV);
     console.log('Port:', PORT);
-    console.log('Database URL exists:', !!process.env.DATABASE_URL);
+    console.log('Database Host:', process.env.DB_HOST);
+    console.log('Database Port:', process.env.DB_PORT);
+    console.log('Database User:', process.env.DB_USER);
+    console.log('Database Name:', process.env.DB_NAME);
     console.log('CORS Origin:', process.env.CORS_ORIGIN);
     
     // データベース接続テスト（非同期で実行）
