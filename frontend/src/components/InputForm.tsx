@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { trackError, trackPostCreation } from '../utils/analytics';
+import BookIcon from './BookIcon';
 
 interface FormData {
   title: string;
@@ -87,9 +88,12 @@ function InputForm() {
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-orange-800 mb-4 leading-tight">
-        📖 今日も1ページ読んだ？
-      </h1>
+      <div className="flex items-center justify-center mb-4">
+        <BookIcon size={48} />
+        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+          今日も1ページ読んだ？
+        </h1>
+      </div>
       <p className="text-center text-gray-600 mb-8 text-xs sm:text-sm">
         完璧じゃなくていい。<br />
         1ページの前進が、思考と行動を変えていく。
