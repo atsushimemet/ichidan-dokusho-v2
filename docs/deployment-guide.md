@@ -51,9 +51,8 @@
 ### 2.2 設定
 - **Name**: `ichidan-dokusho-backend`
 - **Root Directory**: `backend`
-- **Runtime**: `Node`
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `npm start`
+- **Runtime**: `Docker`
+- **Dockerfile**: `Dockerfile.prod`
 - **Plan**: `Free`
 
 ### 2.3 環境変数の設定
@@ -68,8 +67,23 @@ CORS_ORIGIN=https://[your-netlify-domain].netlify.app
 
 ### 2.4 デプロイ
 1. 「Create Web Service」をクリック
-2. デプロイ完了まで待機（約5-10分）
-3. 生成されたURLをメモ（例: `https://ichidan-dokusho-backend.onrender.com`）
+2. Dockerイメージのビルドとデプロイが開始される
+3. デプロイ完了まで待機（約10-15分）
+4. 生成されたURLをメモ（例: `https://ichidan-dokusho-backend.onrender.com`）
+
+### 2.5 Dockerfile.prodの確認
+Renderで使用する`backend/Dockerfile.prod`の内容を確認：
+
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3001
+CMD ["npm", "start"]
+```
 
 ## 3. Netlify（フロントエンド）デプロイ
 
@@ -83,7 +97,7 @@ CORS_ORIGIN=https://[your-netlify-domain].netlify.app
 - **Base directory**: `frontend`
 - **Build command**: `npm run build`
 - **Publish directory**: `dist`
-- **Node version**: `18`（または最新のLTS）
+- **Node version**: `22`（Dockerfileと統一）
 
 ### 3.3 環境変数の設定
 「Site settings」→「Environment variables」で以下を設定：
@@ -180,9 +194,11 @@ Connection terminated unexpectedly
 Build failed
 ```
 **解決策**: 
+- Dockerfile.prodの構文を確認
 - Node.jsバージョンを確認
 - 依存関係のインストールを確認
 - ビルドコマンドを確認
+- Dockerイメージのビルドログを確認
 
 ### 8.2 ログの確認方法
 1. **Render**: ダッシュボードの「Logs」タブ
@@ -242,7 +258,9 @@ Build failed
 ---
 
 ## 作成日
-2025年1月21日
+2025年7月22日
 
 ## 更新履歴
-- 2025年1月21日: 初版作成 
+- 2025年7月22日: 初版作成
+- 2025年7月22日: RenderデプロイをDocker方式に変更
+- 2025年7月22日: Node.jsバージョンを22に統一 
