@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Link, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import AuthScreen from './components/AuthScreen';
-import BookIcon from './components/BookIcon';
 import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
@@ -73,20 +72,14 @@ function AppContent() {
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
               >
-                <div className="flex items-center space-x-2">
-                  <BookIcon size={20} />
-                  <span>ホーム</span>
-                </div>
+                🏠 ホーム
               </Link>
               <Link
                 to="/landing_page"
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
               >
-                <div className="flex items-center space-x-2">
-                  <BookIcon size={20} />
-                  <span>私たちについて</span>
-                </div>
+                📖 私たちについて
               </Link>
               {isAuthenticated && (
                 <>
@@ -95,20 +88,14 @@ function AppContent() {
                     onClick={() => setIsMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                   >
-                    <div className="flex items-center space-x-2">
-                      <BookIcon size={20} />
-                      <span>入力画面</span>
-                    </div>
+                    📝 入力画面
                   </Link>
                   <Link
                     to="/mypage"
                     onClick={() => setIsMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                   >
-                    <div className="flex items-center space-x-2">
-                      <BookIcon size={20} />
-                      <span>マイページ</span>
-                    </div>
+                    📚 マイページ
                   </Link>
                 </>
               )}
@@ -117,10 +104,7 @@ function AppContent() {
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
               >
-                <div className="flex items-center space-x-2">
-                  <BookIcon size={20} />
-                  <span>タイムライン</span>
-                </div>
+                🌟 タイムライン
               </Link>
               
               {isAuthenticated && (
@@ -131,10 +115,7 @@ function AppContent() {
                   }}
                   className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                 >
-                  <div className="flex items-center space-x-2">
-                    <BookIcon size={20} />
-                    <span>ログアウト</span>
-                  </div>
+                  🚪 ログアウト
                 </button>
               )}
               
