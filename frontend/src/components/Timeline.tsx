@@ -105,12 +105,15 @@ function Timeline() {
                   ...record,
                   is_liked: !isLiked,
                   like_count: isLiked 
-                    ? Math.max(0, (record.like_count || 0) - 1)
-                    : (record.like_count || 0) + 1
+                    ? Math.max(0, (record.like_count ?? 0) - 1)
+                    : (record.like_count ?? 0) + 1
                 }
               : record
           )
         );
+        
+        // デバッグ用ログ
+        console.log('Like action:', { recordId, isLiked, newLikeCount: isLiked ? Math.max(0, (records.find(r => r.id === recordId)?.like_count ?? 0) - 1) : (records.find(r => r.id === recordId)?.like_count ?? 0) + 1 });
       }
     } catch (error) {
       console.error('いいねエラー:', error);
@@ -235,7 +238,7 @@ function Timeline() {
                     <span className={record.is_liked ? 'text-red-500' : 'text-gray-400'}>
                       {record.is_liked ? '❤️' : '🤍'}
                     </span>
-                    <span>{record.like_count || 0}</span>
+                    <span>{record.like_count ?? 0}</span>
                   </button>
                 </div>
               </div>
