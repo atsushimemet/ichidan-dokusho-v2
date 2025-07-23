@@ -17,7 +17,8 @@ export const isAmazonLink = (url: string): boolean => {
            hostname.includes('amazon.it') ||
            hostname.includes('amazon.es') ||
            hostname.includes('amazon.ca') ||
-           hostname.includes('amazon.com.au');
+           hostname.includes('amazon.com.au') ||
+           hostname === 'amzn.to'; // Amazonの短縮URL
   } catch (error) {
     // URLの形式が不正な場合はfalseを返す
     return false;
