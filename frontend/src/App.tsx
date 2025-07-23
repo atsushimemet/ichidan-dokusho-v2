@@ -74,13 +74,15 @@ function AppContent() {
         {isMenuOpen && (
           <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-orange-100 min-w-64 max-w-80">
             <div className="py-2">
-              <Link
-                to="/"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-              >
-                {isAuthenticated ? '🏠 タイムライン' : '🏠 ホーム'}
-              </Link>
+              {!isAuthenticated && (
+                <Link
+                  to="/"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  🏠 ホーム
+                </Link>
+              )}
               <Link
                 to="/landing_page"
                 onClick={() => setIsMenuOpen(false)}
