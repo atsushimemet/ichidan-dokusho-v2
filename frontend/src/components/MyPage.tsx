@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isAmazonLink } from '../utils/amazonUtils';
 import { trackShare } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
@@ -201,14 +202,21 @@ function MyPage() {
               {/* リンク */}
               {record.link && (
                 <div className="mb-4">
-                  <a
-                    href={record.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 text-sm underline break-all"
-                  >
-                    📎 リンクを開く
-                  </a>
+                  <div className="flex items-center space-x-2">
+                    <a
+                      href={record.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-sm underline break-all"
+                    >
+                      📎 リンクを開く
+                    </a>
+                    {isAmazonLink(record.link) && (
+                      <span className="text-gray-500 text-xs bg-gray-100 px-2 py-1 rounded">
+                        PR
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 
