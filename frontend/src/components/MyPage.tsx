@@ -140,7 +140,6 @@ function MyPage() {
   const openGoogleTodo = (action: string, title: string) => {
     // Google TodoのURLを生成
     const todoText = `${action} (${title}より)`;
-    const encodedText = encodeURIComponent(todoText);
     const googleTodoUrl = `https://tasks.google.com/`;
     
     // Google Analytics 追跡（必要に応じて）
