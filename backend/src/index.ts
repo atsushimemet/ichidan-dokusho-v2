@@ -299,7 +299,7 @@ app.get('/api/reading-records/:id', async (req, res) => {
 // 新しい読書記録を作成（認証必須）
 app.post('/api/reading-records', async (req, res) => {
   try {
-    const { title, reading_amount, learning, action } = req.body;
+    const { title, reading_amount, learning, action, isNotBook, customLink } = req.body;
     // 開発用のダミーユーザー情報
     const userId = 'dev-user-123';
     const userEmail = 'dev@example.com';
@@ -311,12 +311,20 @@ app.post('/api/reading-records', async (req, res) => {
       });
     }
 
-    // タイトルからAmazonリンクを自動取得
-    const amazonLink = await getAmazonLinkFromTitle(title);
+    let finalLink: string | undefined;
+
+    if (isNotBook && customLink) {
+      // 書籍以外でカスタムリンクが入力されている場合
+      finalLink = customLink;
+    } else if (!isNotBook) {
+      // 書籍の場合、タイトルからAmazonリンクを自動取得
+      const amazonLink = await getAmazonLinkFromTitle(title);
+      finalLink = amazonLink || undefined;
+    }
 
     const record: ReadingRecord = {
       title,
-      link: amazonLink || undefined,
+      link: finalLink,
       reading_amount,
       learning,
       action,

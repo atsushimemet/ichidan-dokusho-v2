@@ -7,6 +7,8 @@ interface FormData {
   readingAmount: string;
   learning: string;
   action: string;
+  isNotBook: boolean;
+  customLink: string;
 }
 
 function InputForm() {
@@ -14,11 +16,14 @@ function InputForm() {
     title: '',
     readingAmount: '',
     learning: '',
-    action: ''
+    action: '',
+    isNotBook: false,
+    customLink: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
   const [amazonLinkFound, setAmazonLinkFound] = useState(false);
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
   // タイトルからAmazonリンクを検索する関数
   const searchAmazonByTitle = async (title: string) => {
@@ -58,8 +63,8 @@ function InputForm() {
       [name]: value
     }));
 
-    // タイトルが入力された場合、Amazonリンクを自動検索
-    if (name === 'title' && value && value.length >= 3) {
+    // タイトルが入力された場合、Amazonリンクを自動検索（書籍の場合のみ）
+    if (name === 'title' && value && value.length >= 3 && !formData.isNotBook) {
       // デバウンス処理（2秒後に実行）
       setTimeout(() => {
         if (formData.title === value) {
@@ -74,9 +79,12 @@ function InputForm() {
       title: '',
       readingAmount: '',
       learning: '',
-      action: ''
+      action: '',
+      isNotBook: false,
+      customLink: ''
     });
     setAmazonLinkFound(false);
+    setIsAccordionOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +105,9 @@ function InputForm() {
           title: formData.title,
           reading_amount: formData.readingAmount,
           learning: formData.learning,
-          action: formData.action
+          action: formData.action,
+          isNotBook: formData.isNotBook,
+          customLink: formData.customLink
         }),
       });
 
@@ -145,25 +155,40 @@ function InputForm() {
               （書籍タイトルを入力するとAmazonリンクが自動で取得されます）
             </span>
           </label>
-          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
-                  正確な書籍タイトルを入力してください
-                </h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>• 正確な書籍タイトルを入力してください（例：「7つの習慣」「星の王子さま」）</p>
-                  <p>• 曖昧なタイトルや存在しないタイトルを入力すると、異なる書籍が検索される可能性があります</p>
-                  <p>• 書籍が見つからない場合は、タイトルを確認して再度お試しください</p>
+          {!formData.isNotBook && (
+            <div className="mb-3">
+              <button
+                type="button"
+                onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                className="w-full flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium text-blue-800">
+                    正確な書籍タイトルを入力してください
+                  </span>
                 </div>
-              </div>
+                <svg
+                  className={`h-5 w-5 text-blue-400 transition-transform ${isAccordionOpen ? 'rotate-180' : ''}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {isAccordionOpen && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-sm text-blue-700 space-y-2">
+                    <p>• 正確な書籍タイトルを入力してください（例：「7つの習慣」「星の王子さま」）</p>
+                    <p>• 曖昧なタイトルや存在しないタイトルを入力すると、異なる書籍が検索される可能性があります</p>
+                    <p>• 書籍が見つからない場合は、タイトルを確認して再度お試しください</p>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          )}
           <div className="relative">
             <input
               type="text"
@@ -181,10 +206,54 @@ function InputForm() {
               </div>
             )}
           </div>
-          {amazonLinkFound && (
+          {amazonLinkFound && !formData.isNotBook && (
             <p className="text-xs text-green-600 mt-1">
               ✓ Amazonリンクが自動取得されました
             </p>
+          )}
+        </div>
+
+        {/* 書籍以外の場合はAmazon検索をスキップ */}
+        <div className="mb-4">
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, isNotBook: !prev.isNotBook }))}
+              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                formData.isNotBook
+                  ? 'bg-orange-100 border-orange-300 text-orange-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {formData.isNotBook ? '✓ 書籍じゃありません' : '📚 書籍じゃありません'}
+            </button>
+            <span className="text-xs text-gray-500">
+              （記事、ブログ、YouTubeなど書籍以外の場合はチェックしてください）
+            </span>
+          </div>
+          {formData.isNotBook && (
+            <div className="mt-3">
+              <p className="text-xs text-orange-600 mb-2">
+                ✓ Amazonリンクの自動取得をスキップします
+              </p>
+              <div>
+                <label htmlFor="customLink" className="block text-sm font-medium text-gray-700 mb-2">
+                  リンクを直接入力（任意）
+                </label>
+                <textarea
+                  id="customLink"
+                  name="customLink"
+                  value={formData.customLink}
+                  onChange={handleInputChange}
+                  placeholder="https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={2}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます
+                </p>
+              </div>
+            </div>
           )}
         </div>
 
