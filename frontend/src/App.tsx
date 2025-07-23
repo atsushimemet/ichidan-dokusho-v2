@@ -6,7 +6,6 @@ import AuthScreen from './components/AuthScreen';
 import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
-import ProtectedRoute from './components/ProtectedRoute';
 import SelectionScreen from './components/SelectionScreen';
 import Timeline from './components/Timeline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -172,9 +171,7 @@ function AppContent() {
           path="/input" 
           element={
             <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
-              <ProtectedRoute>
-                <InputForm />
-              </ProtectedRoute>
+              <InputForm />
             </div>
           } 
         />
@@ -182,9 +179,7 @@ function AppContent() {
           path="/mypage" 
           element={
             <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
-              <ProtectedRoute>
-                <MyPage />
-              </ProtectedRoute>
+              <MyPage />
             </div>
           } 
         />

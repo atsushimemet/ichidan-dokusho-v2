@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { trackShare } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
@@ -20,13 +19,10 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
 
   useEffect(() => {
-    if (token) {
-      fetchRecords();
-    }
-  }, [token]);
+    fetchRecords();
+  }, []);
 
   const fetchRecords = async () => {
     try {
@@ -35,7 +31,6 @@ function MyPage() {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const response = await fetch(`${API_BASE_URL}/api/my-records`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
