@@ -128,6 +128,25 @@ function MyPage() {
     });
   };
 
+  // Google Todoを開く
+  const openGoogleTodo = (action: string, title: string) => {
+    // Google TodoのURLを生成
+    const todoText = `${action} (${title}より)`;
+    const encodedText = encodeURIComponent(todoText);
+    const googleTodoUrl = `https://tasks.google.com/`;
+    
+    // Google Analytics 追跡（必要に応じて）
+    // trackShare('google-todo', todoText.length);
+    
+    // Google Todoを新しいタブで開く
+    window.open(googleTodoUrl, '_blank');
+    
+    // ユーザーにタスクを手動で追加するよう案内
+    setTimeout(() => {
+      alert(`Google Todoが開きました。以下のタスクを手動で追加してください：\n\n${todoText}`);
+    }, 1000);
+  };
+
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
@@ -234,6 +253,15 @@ function MyPage() {
                 <p className="text-gray-800 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
                   {record.action}
                 </p>
+                <div className="mt-3">
+                  <button
+                    onClick={() => openGoogleTodo(record.action, record.title)}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                  >
+                    <span>📝</span>
+                    <span>Google Todoに追加</span>
+                  </button>
+                </div>
               </div>
 
               {/* ソーシャルメディアシェア */}
