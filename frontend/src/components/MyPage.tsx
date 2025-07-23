@@ -319,17 +319,41 @@ function MyPage() {
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-700">📱 シェア</h4>
-                  <div className="text-sm text-gray-500">
-                    {(() => {
-                      const text = generateSocialText(record.learning, record.action, record.title);
-                      const charCount = text.length;
-                      const isWithinCharLimit = isWithinLimit(text);
-                      return (
-                        <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
-                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
-                        </span>
-                      );
-                    })()}
+                  <div className="flex items-center space-x-2">
+                    <div className="text-sm text-gray-500">
+                      {(() => {
+                        const text = generateSocialText(record.learning, record.action, record.title);
+                        const charCount = text.length;
+                        const isWithinCharLimit = isWithinLimit(text);
+                        return (
+                          <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
+                            {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <div className="relative">
+                      <button
+                        onClick={() => toggleTooltip(record.id + 1000)} // シェア用のユニークID
+                        className="text-gray-500 hover:text-gray-700 transition-colors"
+                        title="シェア機能の使い方を表示"
+                      >
+                        <span className="text-lg">ℹ️</span>
+                      </button>
+                      {tooltipStates[record.id + 1000] && (
+                        <div className="absolute bottom-full right-0 mb-2 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
+                          <div className="mb-2 font-medium">シェア機能の使い方：</div>
+                          <ul className="space-y-1">
+                            <li>• 140文字以内：X（Twitter）でシェア</li>
+                            <li>• 140文字超過：noteでシェア</li>
+                            <li>• 読書の学びとアクションを自動生成</li>
+                            <li>• ハッシュタグ #1段読書 #読書習慣 付き</li>
+                            <li>• アプリのURLも自動で含まれます</li>
+                          </ul>
+                          <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
