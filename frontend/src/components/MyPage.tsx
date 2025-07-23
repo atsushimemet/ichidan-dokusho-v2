@@ -20,6 +20,14 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tooltipStates, setTooltipStates] = useState<{ [key: number]: boolean }>({});
+
+  const toggleTooltip = (recordId: number) => {
+    setTooltipStates(prev => ({
+      ...prev,
+      [recordId]: !prev[recordId]
+    }));
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -274,25 +282,34 @@ function MyPage() {
                   {record.action}
                 </p>
                 <div className="mt-3">
-                  <button
-                    onClick={() => openGoogleTodo(record.action, record.title)}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                  >
-                    <span>📝</span>
-                    <span>Google Todoに追加</span>
-                  </button>
-                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-start space-x-2">
-                      <span className="text-blue-600 text-lg">💡</span>
-                      <div className="text-sm text-blue-800">
-                        <p className="font-medium mb-1">使い方：</p>
-                        <ul className="list-disc list-inside space-y-1 text-xs">
-                          <li>ボタンを押すと明日のアクションがクリップボードにコピーされます</li>
-                          <li>Google Todoが自動で開きます</li>
-                          <li>Ctrl+V（Macの場合はCmd+V）でタスクを貼り付けてください</li>
-                          <li>読書から得た学びを実際の行動に移すことができます</li>
-                        </ul>
-                      </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openGoogleTodo(record.action, record.title)}
+                      className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                    >
+                      <span>📝</span>
+                      <span>Google Todoに追加</span>
+                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => toggleTooltip(record.id)}
+                        className="text-blue-500 hover:text-blue-700 transition-colors"
+                        title="使い方を表示"
+                      >
+                        <span className="text-lg">ℹ️</span>
+                      </button>
+                      {tooltipStates[record.id] && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 bg-blue-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
+                          <div className="mb-2 font-medium">使い方：</div>
+                          <ul className="space-y-1">
+                            <li>• ボタンを押すと明日のアクションがクリップボードにコピーされます</li>
+                            <li>• Google Todoが自動で開きます</li>
+                            <li>• Ctrl+V（Macの場合はCmd+V）でタスクを貼り付けてください</li>
+                            <li>• 読書から得た学びを実際の行動に移すことができます</li>
+                          </ul>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-900"></div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
