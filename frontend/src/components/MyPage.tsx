@@ -20,10 +20,10 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tooltipStates, setTooltipStates] = useState<{ [key: number]: boolean }>({});
+  const [expandedAccordions, setExpandedAccordions] = useState<{ [key: number]: boolean }>({});
 
-  const toggleTooltip = (recordId: number) => {
-    setTooltipStates(prev => ({
+  const toggleAccordion = (recordId: number) => {
+    setExpandedAccordions(prev => ({
       ...prev,
       [recordId]: !prev[recordId]
     }));
@@ -282,79 +282,30 @@ function MyPage() {
                   {record.action}
                 </p>
                 <div className="mt-3">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => openGoogleTodo(record.action, record.title)}
-                      className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                    >
-                      <span>📝</span>
-                      <span>Google Todoに追加</span>
-                    </button>
-                    <div className="relative">
-                      <button
-                        onClick={() => toggleTooltip(record.id)}
-                        className="text-blue-500 hover:text-blue-700 transition-colors"
-                        title="使い方を表示"
-                      >
-                        <span className="text-lg">ℹ️</span>
-                      </button>
-                      {tooltipStates[record.id] && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-80 bg-blue-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
-                          <div className="mb-2 font-medium">使い方：</div>
-                          <ul className="space-y-1">
-                            <li>• ボタンを押すと明日のアクションがクリップボードにコピーされます</li>
-                            <li>• Google Todoが自動で開きます</li>
-                            <li>• Ctrl+V（Macの場合はCmd+V）でタスクを貼り付けてください</li>
-                            <li>• 読書から得た学びを実際の行動に移すことができます</li>
-                          </ul>
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-900"></div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => openGoogleTodo(record.action, record.title)}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                  >
+                    <span>📝</span>
+                    <span>Google Todoに追加</span>
+                  </button>
                 </div>
               </div>
 
               {/* ソーシャルメディアシェア */}
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex items-center justify-end mb-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="text-sm text-gray-500">
-                      {(() => {
-                        const text = generateSocialText(record.learning, record.action, record.title);
-                        const charCount = text.length;
-                        const isWithinCharLimit = isWithinLimit(text);
-                        return (
-                          <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
-                            {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                    <div className="relative">
-                      <button
-                        onClick={() => toggleTooltip(record.id + 1000)} // シェア用のユニークID
-                        className="text-gray-500 hover:text-gray-700 transition-colors"
-                        title="シェア機能の使い方を表示"
-                      >
-                        <span className="text-lg">ℹ️</span>
-                      </button>
-                      {tooltipStates[record.id + 1000] && (
-                        <div className="absolute bottom-full right-0 mb-2 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-lg z-10">
-                          <div className="mb-2 font-medium">シェア機能の使い方：</div>
-                          <ul className="space-y-1">
-                            <li>• 140文字以内：X（Twitter）でシェア</li>
-                            <li>• 140文字超過：noteでシェア</li>
-                            <li>• 読書の学びとアクションを自動生成</li>
-                            <li>• ハッシュタグ #1段読書 #読書習慣 付き</li>
-                            <li>• アプリのURLも自動で含まれます</li>
-                            <li>• シェア内容はクリップボードにコピーされます</li>
-                            <li>• noteの場合：コピー後にnoteのトップページが開きます</li>
-                          </ul>
-                          <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                        </div>
-                      )}
-                    </div>
+                  <div className="text-sm text-gray-500">
+                    {(() => {
+                      const text = generateSocialText(record.learning, record.action, record.title);
+                      const charCount = text.length;
+                      const isWithinCharLimit = isWithinLimit(text);
+                      return (
+                        <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
+                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
                 
@@ -403,6 +354,49 @@ function MyPage() {
                   }
                   return null;
                 })()}
+              </div>
+
+              {/* アコーディオン - 使い方ガイド */}
+              <div className="border-t border-gray-200 pt-4">
+                <button
+                  onClick={() => toggleAccordion(record.id)}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <span className="font-medium text-gray-700">📖 機能の使い方</span>
+                  <span className={`transform transition-transform ${expandedAccordions[record.id] ? 'rotate-180' : ''}`}>
+                    ▼
+                  </span>
+                </button>
+                {expandedAccordions[record.id] && (
+                  <div className="mt-3 p-4 bg-gray-50 rounded-lg">
+                    <div className="space-y-4">
+                      {/* Google Todo */}
+                      <div>
+                        <h5 className="font-medium text-gray-800 mb-2">📝 Google Todoに追加</h5>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• ボタンを押すと明日のアクションがクリップボードにコピーされます</li>
+                          <li>• Google Todoが自動で開きます</li>
+                          <li>• Ctrl+V（Macの場合はCmd+V）でタスクを貼り付けてください</li>
+                          <li>• 読書から得た学びを実際の行動に移すことができます</li>
+                        </ul>
+                      </div>
+                      
+                      {/* シェア機能 */}
+                      <div>
+                        <h5 className="font-medium text-gray-800 mb-2">📱 シェア機能</h5>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• 140文字以内：X（Twitter）でシェア</li>
+                          <li>• 140文字超過：noteでシェア</li>
+                          <li>• 読書の学びとアクションを自動生成</li>
+                          <li>• ハッシュタグ #1段読書 #読書習慣 付き</li>
+                          <li>• アプリのURLも自動で含まれます</li>
+                          <li>• シェア内容はクリップボードにコピーされます</li>
+                          <li>• noteの場合：コピー後にnoteのトップページが開きます</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
