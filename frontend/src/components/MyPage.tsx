@@ -348,6 +348,8 @@ function MyPage() {
                             <li>• 読書の学びとアクションを自動生成</li>
                             <li>• ハッシュタグ #1段読書 #読書習慣 付き</li>
                             <li>• アプリのURLも自動で含まれます</li>
+                            <li>• シェア内容はクリップボードにコピーされます</li>
+                            <li>• noteの場合：コピー後にnoteのトップページが開きます</li>
                           </ul>
                           <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                         </div>
