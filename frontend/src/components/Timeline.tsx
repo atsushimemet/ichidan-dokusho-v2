@@ -97,8 +97,20 @@ function Timeline() {
       });
 
       if (response.ok) {
-        // サーバーから最新データを再取得
-        await fetchRecords();
+        // ローカル状態を更新してページの再レンダリングを防ぐ
+        setRecords(prevRecords => 
+          prevRecords.map(record => 
+            record.id === recordId 
+              ? {
+                  ...record,
+                  is_liked: !isLiked,
+                  like_count: isLiked 
+                    ? Math.max(0, (record.like_count || 0) - 1)
+                    : (record.like_count || 0) + 1
+                }
+              : record
+          )
+        );
       }
     } catch (error) {
       console.error('いいねエラー:', error);
