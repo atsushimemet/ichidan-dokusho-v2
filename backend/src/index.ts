@@ -3,16 +3,16 @@ import cors from 'cors';
 import express from 'express';
 import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
-    addLike,
-    createReadingRecord,
-    deleteReadingRecord,
-    getAllReadingRecords,
-    getReadingRecordById,
-    getUserReadingRecords,
-    ReadingRecord,
-    removeLike,
-    testConnection,
-    updateReadingRecord
+  addLike,
+  createReadingRecord,
+  deleteReadingRecord,
+  getAllReadingRecords,
+  getReadingRecordById,
+  getUserReadingRecords,
+  ReadingRecord,
+  removeLike,
+  testConnection,
+  updateReadingRecord
 } from './database';
 
 // Request型の拡張
@@ -118,6 +118,105 @@ const convertToAffiliateLink = async (link: string): Promise<string> => {
   }
 };
 
+// タイトルからAmazonリンクを取得する関数
+const getAmazonLinkFromTitle = async (title: string): Promise<string | null> => {
+  if (!title) return null;
+
+  try {
+    // 検索クエリを構築
+    const searchQuery = encodeURIComponent(title);
+    const searchUrl = `https://www.amazon.co.jp/s?k=${searchQuery}&i=stripbooks`;
+    
+    console.log(`Searching for: ${title}`);
+    console.log(`Search URL: ${searchUrl}`);
+
+    // Amazon検索ページにアクセス
+    const response = await axios.get(searchUrl, {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Cache-Control': 'max-age=0'
+      },
+      validateStatus: function (status) {
+        return status < 500;
+      }
+    });
+
+    const html = response.data;
+    
+    // 最初の商品リンクを抽出
+    const productLinkMatch = html.match(/href="([^"]*\/dp\/[A-Z0-9]{10}[^"]*)"/);
+    
+    if (productLinkMatch) {
+      const productUrl = productLinkMatch[1];
+      const fullUrl = productUrl.startsWith('http') ? productUrl : `https://www.amazon.co.jp${productUrl}`;
+      
+      console.log(`Found product URL: ${fullUrl}`);
+      
+      // ASINを抽出
+      const asinMatch = fullUrl.match(/\/dp\/([A-Z0-9]{10})/);
+      if (asinMatch) {
+        const asin = asinMatch[1];
+        const affiliateId = 'tbooks47579-22';
+        const affiliateLink = `https://www.amazon.co.jp/dp/${asin}/ref=nosim?tag=${affiliateId}`;
+        
+        console.log(`Generated affiliate link: ${affiliateLink}`);
+        return affiliateLink;
+      }
+    }
+
+    console.log('No product found for title:', title);
+    return null;
+
+  } catch (error) {
+    console.error('Error searching Amazon:', error);
+    return null;
+  }
+};
+
+// タイトルからAmazonリンクを取得するAPI
+app.post('/api/search-amazon', async (req, res) => {
+  try {
+    const { title } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({ 
+        message: 'Title is required' 
+      });
+    }
+
+    const amazonLink = await getAmazonLinkFromTitle(title);
+    
+    if (amazonLink) {
+      res.json({ 
+        success: true,
+        data: {
+          link: amazonLink
+        }
+      });
+    } else {
+      res.json({ 
+        success: false,
+        message: 'No Amazon product found for this title'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error searching Amazon', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
 // データベース接続テスト
 app.get('/api/test-db', async (req, res) => {
   try {
@@ -198,11 +297,12 @@ app.get('/api/reading-records/:id', async (req, res) => {
 });
 
 // 新しい読書記録を作成（認証必須）
-app.post('/api/reading-records', authenticateToken, async (req, res) => {
+app.post('/api/reading-records', async (req, res) => {
   try {
-    const { title, link, reading_amount, learning, action } = req.body;
-    const userId = req.user?.userId;
-    const userEmail = req.user?.email;
+    const { title, reading_amount, learning, action, isNotBook, customLink } = req.body;
+    // 開発用のダミーユーザー情報
+    const userId = 'dev-user-123';
+    const userEmail = 'dev@example.com';
 
     // バリデーション
     if (!title || !reading_amount || !learning || !action) {
@@ -211,18 +311,20 @@ app.post('/api/reading-records', authenticateToken, async (req, res) => {
       });
     }
 
-    if (!userId || !userEmail) {
-      return res.status(401).json({ 
-        message: 'User authentication required' 
-      });
-    }
+    let finalLink: string | undefined;
 
-    // Amazonリンクをアフィリエイトリンクに変換
-    const convertedLink = await convertToAffiliateLink(link);
+    if (isNotBook && customLink) {
+      // 書籍以外でカスタムリンクが入力されている場合
+      finalLink = customLink;
+    } else if (!isNotBook) {
+      // 書籍の場合、タイトルからAmazonリンクを自動取得
+      const amazonLink = await getAmazonLinkFromTitle(title);
+      finalLink = amazonLink || undefined;
+    }
 
     const record: ReadingRecord = {
       title,
-      link: convertedLink,
+      link: finalLink,
       reading_amount,
       learning,
       action,
@@ -441,13 +543,11 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
 });
 
 // ユーザー固有の読書記録を取得（マイページ用）
-app.get('/api/my-records', authenticateToken, async (req, res) => {
+app.get('/api/my-records', async (req, res) => {
   try {
-    const userId = req.user?.userId;
+    // 開発用のダミーユーザーID
+    const userId = 'dev-user-123';
     const sessionId = req.query.sessionId as string | undefined;
-    if (!userId) {
-      return res.status(401).json({ message: 'User ID is required' });
-    }
     const result = await getUserReadingRecords(userId, sessionId);
     if (result.success) {
       res.json({

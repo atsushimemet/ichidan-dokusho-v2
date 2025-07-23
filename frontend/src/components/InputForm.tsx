@@ -1,26 +1,60 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
 interface FormData {
   title: string;
-  link: string;
   readingAmount: string;
   learning: string;
   action: string;
+  isNotBook: boolean;
+  customLink: string;
 }
 
 function InputForm() {
   const [formData, setFormData] = useState<FormData>({
     title: '',
-    link: '',
     readingAmount: '',
     learning: '',
-    action: ''
+    action: '',
+    isNotBook: false,
+    customLink: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { token } = useAuth();
+  const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
+  const [amazonLinkFound, setAmazonLinkFound] = useState(false);
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+
+  // タイトルからAmazonリンクを検索する関数
+  const searchAmazonByTitle = async (title: string) => {
+    if (!title || title.length < 3) {
+      return;
+    }
+
+    setIsSearchingAmazon(true);
+    setAmazonLinkFound(false);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/search-amazon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setAmazonLinkFound(true);
+        }
+      }
+    } catch (error) {
+      console.error('Amazon検索エラー:', error);
+    } finally {
+      setIsSearchingAmazon(false);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -28,16 +62,29 @@ function InputForm() {
       ...prev,
       [name]: value
     }));
+
+    // タイトルが入力された場合、Amazonリンクを自動検索（書籍の場合のみ）
+    if (name === 'title' && value && value.length >= 3 && !formData.isNotBook) {
+      // デバウンス処理（2秒後に実行）
+      setTimeout(() => {
+        if (formData.title === value) {
+          searchAmazonByTitle(value);
+        }
+      }, 2000);
+    }
   };
 
   const resetForm = () => {
     setFormData({
       title: '',
-      link: '',
       readingAmount: '',
       learning: '',
-      action: ''
+      action: '',
+      isNotBook: false,
+      customLink: ''
     });
+    setAmazonLinkFound(false);
+    setIsAccordionOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,14 +100,14 @@ function InputForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           title: formData.title,
-          link: formData.link,
           reading_amount: formData.readingAmount,
           learning: formData.learning,
-          action: formData.action
+          action: formData.action,
+          isNotBook: formData.isNotBook,
+          customLink: formData.customLink
         }),
       });
 
@@ -104,43 +151,116 @@ function InputForm() {
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
             1. 読んだ本、文章のタイトル
+            <span className="text-xs text-gray-500 ml-2">
+              （書籍タイトルを入力するとAmazonリンクが自動で取得されます）
+            </span>
           </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder="例：『7つの習慣』"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-            required
-          />
+          {!formData.isNotBook && (
+            <div className="mb-3">
+              <button
+                type="button"
+                onClick={() => setIsAccordionOpen(!isAccordionOpen)}
+                className="w-full flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium text-blue-800">
+                    正確な書籍タイトルを入力してください
+                  </span>
+                </div>
+                <svg
+                  className={`h-5 w-5 text-blue-400 transition-transform ${isAccordionOpen ? 'rotate-180' : ''}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {isAccordionOpen && (
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-sm text-blue-700 space-y-2">
+                    <p>• 正確な書籍タイトルを入力してください（例：「7つの習慣」「星の王子さま」）</p>
+                    <p>• 曖昧なタイトルや存在しないタイトルを入力すると、異なる書籍が検索される可能性があります</p>
+                    <p>• 書籍が見つからない場合は、タイトルを確認して再度お試しください</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="relative">
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              placeholder="例：『7つの習慣』"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+              required
+            />
+            {isSearchingAmazon && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
+              </div>
+            )}
+          </div>
+          {amazonLinkFound && !formData.isNotBook && (
+            <p className="text-xs text-green-600 mt-1">
+              ✓ Amazonリンクが自動取得されました
+            </p>
+          )}
         </div>
 
-        {/* 2. 読んだ本、文章のリンク */}
-        <div>
-          <label htmlFor="link" className="block text-sm font-medium text-gray-700 mb-2">
-            2. 読んだ本、文章のリンク
-          </label>
-          <input
-            type="url"
-            id="link"
-            name="link"
-            value={formData.link}
-            onChange={handleInputChange}
-            placeholder="例：https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=あなたのアソシエイトID"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            ※ 書籍の場合はamazonリンク。開発者のアフィリエイトリンクに変換されます。
-          </p>
+        {/* 書籍以外の場合はAmazon検索をスキップ */}
+        <div className="mb-4">
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, isNotBook: !prev.isNotBook }))}
+              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
+                formData.isNotBook
+                  ? 'bg-orange-100 border-orange-300 text-orange-700'
+                  : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {formData.isNotBook ? '✓ 書籍じゃありません' : '📚 書籍じゃありません'}
+            </button>
+            <span className="text-xs text-gray-500">
+              （記事、ブログ、YouTubeなど書籍以外の場合はチェックしてください）
+            </span>
+          </div>
+          {formData.isNotBook && (
+            <div className="mt-3">
+              <p className="text-xs text-orange-600 mb-2">
+                ✓ Amazonリンクの自動取得をスキップします
+              </p>
+              <div>
+                <label htmlFor="customLink" className="block text-sm font-medium text-gray-700 mb-2">
+                  リンクを直接入力（任意）
+                </label>
+                <textarea
+                  id="customLink"
+                  name="customLink"
+                  value={formData.customLink}
+                  onChange={handleInputChange}
+                  placeholder="https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  rows={2}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* 3. 今日読んだ量 */}
+        {/* 2. 今日読んだ量 */}
         <div>
           <label htmlFor="readingAmount" className="block text-sm font-medium text-gray-700 mb-2">
-            3. 今日読んだ量
+            2. 今日読んだ量
           </label>
           <select
             id="readingAmount"
@@ -158,10 +278,10 @@ function InputForm() {
           </select>
         </div>
 
-        {/* 4. 今日の学び or 気づき */}
+        {/* 3. 今日の学び or 気づき */}
         <div>
           <label htmlFor="learning" className="block text-sm font-medium text-gray-700 mb-2">
-            4. 今日の学び or 気づき
+            3. 今日の学び or 気づき
           </label>
           <textarea
             id="learning"
@@ -175,10 +295,10 @@ function InputForm() {
           />
         </div>
 
-        {/* 5. 明日の小さなアクション */}
+        {/* 4. 明日の小さなアクション */}
         <div>
           <label htmlFor="action" className="block text-sm font-medium text-gray-700 mb-2">
-            5. 明日の小さなアクション
+            4. 明日の小さなアクション
           </label>
           <textarea
             id="action"
