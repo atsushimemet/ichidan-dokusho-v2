@@ -138,13 +138,33 @@ function MyPage() {
     // Google Analytics 追跡（必要に応じて）
     // trackShare('google-todo', todoText.length);
     
-    // Google Todoを新しいタブで開く
-    window.open(googleTodoUrl, '_blank');
-    
-    // ユーザーにタスクを手動で追加するよう案内
-    setTimeout(() => {
-      alert(`Google Todoが開きました。以下のタスクを手動で追加してください：\n\n${todoText}`);
-    }, 1000);
+    // クリップボードにタスクをコピー
+    navigator.clipboard.writeText(todoText).then(() => {
+      // Google Todoを新しいタブで開く
+      window.open(googleTodoUrl, '_blank');
+      
+      // コピー完了の通知
+      setTimeout(() => {
+        alert(`✅ 明日のアクションをクリップボードにコピーしました！\n\n📝 コピーされた内容：\n${todoText}\n\nGoogle Todoが開きました。Ctrl+V（またはCmd+V）でタスクを貼り付けてください。`);
+      }, 500);
+    }).catch(err => {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: 古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = todoText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      // Google Todoを新しいタブで開く
+      window.open(googleTodoUrl, '_blank');
+      
+      // コピー完了の通知
+      setTimeout(() => {
+        alert(`✅ 明日のアクションをクリップボードにコピーしました！\n\n📝 コピーされた内容：\n${todoText}\n\nGoogle Todoが開きました。Ctrl+V（またはCmd+V）でタスクを貼り付けてください。`);
+      }, 500);
+    });
   };
 
   if (loading) {
@@ -261,6 +281,20 @@ function MyPage() {
                     <span>📝</span>
                     <span>Google Todoに追加</span>
                   </button>
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-blue-600 text-lg">💡</span>
+                      <div className="text-sm text-blue-800">
+                        <p className="font-medium mb-1">使い方：</p>
+                        <ul className="list-disc list-inside space-y-1 text-xs">
+                          <li>ボタンを押すと明日のアクションがクリップボードにコピーされます</li>
+                          <li>Google Todoが自動で開きます</li>
+                          <li>Ctrl+V（Macの場合はCmd+V）でタスクを貼り付けてください</li>
+                          <li>読書から得た学びを実際の行動に移すことができます</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
