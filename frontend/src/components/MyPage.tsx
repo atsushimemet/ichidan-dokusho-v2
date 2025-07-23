@@ -150,11 +150,6 @@ function MyPage() {
     navigator.clipboard.writeText(todoText).then(() => {
       // Google Todoを新しいタブで開く
       window.open(googleTodoUrl, '_blank');
-      
-      // コピー完了の通知
-      setTimeout(() => {
-        alert(`✅ 明日のアクションをクリップボードにコピーしました！\n\n📝 コピーされた内容：\n${todoText}\n\nGoogle Todoが開きました。Ctrl+V（またはCmd+V）でタスクを貼り付けてください。`);
-      }, 500);
     }).catch(err => {
       console.error('クリップボードへのコピーに失敗しました:', err);
       // フォールバック: 古いブラウザ対応
@@ -167,11 +162,6 @@ function MyPage() {
       
       // Google Todoを新しいタブで開く
       window.open(googleTodoUrl, '_blank');
-      
-      // コピー完了の通知
-      setTimeout(() => {
-        alert(`✅ 明日のアクションをクリップボードにコピーしました！\n\n📝 コピーされた内容：\n${todoText}\n\nGoogle Todoが開きました。Ctrl+V（またはCmd+V）でタスクを貼り付けてください。`);
-      }, 500);
     });
   };
 
@@ -270,21 +260,21 @@ function MyPage() {
               {/* 学び */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">💡 今日の学び</h4>
-                <p className="text-gray-800 bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
-                  {record.learning}
-                </p>
+                <div className="min-h-[80px] bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400 flex items-center">
+                  <p className="text-gray-800">{record.learning}</p>
+                </div>
               </div>
 
               {/* アクション */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">🎯 明日のアクション</h4>
-                <p className="text-gray-800 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                  {record.action}
-                </p>
+                <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400 flex items-center">
+                  <p className="text-gray-800">{record.action}</p>
+                </div>
                 <div className="mt-3">
                   <button
                     onClick={() => openGoogleTodo(record.action, record.title)}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                    className="w-full h-12 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
                   >
                     <span>📝</span>
                     <span>Google Todoに追加</span>
@@ -302,7 +292,7 @@ function MyPage() {
                       const isWithinCharLimit = isWithinLimit(text);
                       return (
                         <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
-                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
+                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteのネタに)'}
                         </span>
                       );
                     })()}
@@ -319,48 +309,30 @@ function MyPage() {
                         // 140文字以内の場合：Xでシェア
                         <button
                           onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
-                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
                         >
                           Xでシェア
                         </button>
                       ) : (
-                        // 140文字を超える場合：noteでシェア
+                        // 140文字を超える場合：noteのネタに
                         <button
                           onClick={() => shareOnNote(record.learning, record.action, record.title)}
-                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
                         >
-                          noteでシェア
+                          noteのネタに
                         </button>
                       )}
                     </div>
                   );
                 })()}
                 
-                {(() => {
-                  const text = generateSocialText(record.learning, record.action, record.title);
-                  const isWithinCharLimit = isWithinLimit(text);
-                  
-                  if (!isWithinCharLimit) {
-                    return (
-                      <div className="mt-2 space-y-1">
-                        <p className="text-xs text-orange-500">
-                          ※ 140文字を超えているため、noteでシェアします。
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          ※ 内容がクリップボードにコピーされ、noteのトップページが開きます。
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
               </div>
 
               {/* アコーディオン - 使い方ガイド */}
               <div className="border-t border-gray-200 pt-4">
                 <button
                   onClick={() => toggleAccordion(record.id)}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="w-full h-12 flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <span className="font-medium text-gray-700">📖 機能の使い方</span>
                   <span className={`transform transition-transform ${expandedAccordions[record.id] ? 'rotate-180' : ''}`}>
@@ -374,10 +346,8 @@ function MyPage() {
                       <div>
                         <h5 className="font-medium text-gray-800 mb-2">📝 Google Todoに追加</h5>
                         <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• ボタンを押すと明日のアクションがクリップボードにコピーされます</li>
-                          <li>• Google Todoが自動で開きます</li>
-                          <li>• Ctrl+V（Macの場合はCmd+V）でタスクを貼り付けてください</li>
-                          <li>• 読書から得た学びを実際の行動に移すことができます</li>
+                          <li>• アクションがクリップボードにコピーされます</li>
+                          <li>• Google Todoが開くので、Ctrl+V（MacはCmd+V）で貼り付け</li>
                         </ul>
                       </div>
                       
@@ -385,13 +355,20 @@ function MyPage() {
                       <div>
                         <h5 className="font-medium text-gray-800 mb-2">📱 シェア機能</h5>
                         <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• 140文字以内：X（Twitter）でシェア</li>
-                          <li>• 140文字超過：noteでシェア</li>
-                          <li>• 読書の学びとアクションを自動生成</li>
-                          <li>• ハッシュタグ #1段読書 #読書習慣 付き</li>
-                          <li>• アプリのURLも自動で含まれます</li>
-                          <li>• シェア内容はクリップボードにコピーされます</li>
-                          <li>• noteの場合：コピー後にnoteのトップページが開きます</li>
+                          <li>• 140文字以内：Xでシェア</li>
+                          <li>• 140文字超過：noteのネタに</li>
+                          <li>• 内容は自動でクリップボードにコピー</li>
+                          {(() => {
+                            const text = generateSocialText(record.learning, record.action, record.title);
+                            const isWithinCharLimit = isWithinLimit(text);
+                            
+                            if (!isWithinCharLimit) {
+                              return (
+                                <li className="text-orange-500">• ※ 140文字超過のためnoteのネタに</li>
+                              );
+                            }
+                            return null;
+                          })()}
                         </ul>
                       </div>
                     </div>
