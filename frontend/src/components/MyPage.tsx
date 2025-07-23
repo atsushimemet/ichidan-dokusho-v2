@@ -20,6 +20,14 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedAccordions, setExpandedAccordions] = useState<{ [key: number]: boolean }>({});
+
+  const toggleAccordion = (recordId: number) => {
+    setExpandedAccordions(prev => ({
+      ...prev,
+      [recordId]: !prev[recordId]
+    }));
+  };
 
   useEffect(() => {
     fetchRecords();
@@ -128,6 +136,34 @@ function MyPage() {
     });
   };
 
+  // Google Todoを開く
+  const openGoogleTodo = (action: string, title: string) => {
+    // Google TodoのURLを生成
+    const todoText = `${action} (${title}より)`;
+    const googleTodoUrl = `https://tasks.google.com/`;
+    
+    // Google Analytics 追跡（必要に応じて）
+    // trackShare('google-todo', todoText.length);
+    
+    // クリップボードにタスクをコピー
+    navigator.clipboard.writeText(todoText).then(() => {
+      // Google Todoを新しいタブで開く
+      window.open(googleTodoUrl, '_blank');
+    }).catch(err => {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: 古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = todoText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      // Google Todoを新しいタブで開く
+      window.open(googleTodoUrl, '_blank');
+    });
+  };
+
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
@@ -223,23 +259,31 @@ function MyPage() {
               {/* 学び */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">💡 今日の学び</h4>
-                <p className="text-gray-800 bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
-                  {record.learning}
-                </p>
+                <div className="min-h-[80px] bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400 flex items-center">
+                  <p className="text-gray-800">{record.learning}</p>
+                </div>
               </div>
 
               {/* アクション */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">🎯 明日のアクション</h4>
-                <p className="text-gray-800 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                  {record.action}
-                </p>
+                <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400 flex items-center">
+                  <p className="text-gray-800">{record.action}</p>
+                </div>
+                <div className="mt-3">
+                  <button
+                    onClick={() => openGoogleTodo(record.action, record.title)}
+                    className="w-full h-12 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                  >
+                    <span>📝</span>
+                    <span>Google Todoに追加</span>
+                  </button>
+                </div>
               </div>
 
               {/* ソーシャルメディアシェア */}
               <div className="border-t border-gray-200 pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-700">📱 シェア</h4>
+                <div className="flex items-center justify-end mb-3">
                   <div className="text-sm text-gray-500">
                     {(() => {
                       const text = generateSocialText(record.learning, record.action, record.title);
@@ -247,7 +291,7 @@ function MyPage() {
                       const isWithinCharLimit = isWithinLimit(text);
                       return (
                         <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
-                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteでシェア)'}
+                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteのネタに)'}
                         </span>
                       );
                     })()}
@@ -264,41 +308,71 @@ function MyPage() {
                         // 140文字以内の場合：Xでシェア
                         <button
                           onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
-                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
                         >
                           Xでシェア
                         </button>
                       ) : (
-                        // 140文字を超える場合：noteでシェア
+                        // 140文字を超える場合：noteのネタに
                         <button
                           onClick={() => shareOnNote(record.learning, record.action, record.title)}
-                          className="flex-1 px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
                         >
-                          noteでシェア
+                          noteのネタに
                         </button>
                       )}
                     </div>
                   );
                 })()}
                 
-                {(() => {
-                  const text = generateSocialText(record.learning, record.action, record.title);
-                  const isWithinCharLimit = isWithinLimit(text);
-                  
-                  if (!isWithinCharLimit) {
-                    return (
-                      <div className="mt-2 space-y-1">
-                        <p className="text-xs text-orange-500">
-                          ※ 140文字を超えているため、noteでシェアします。
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          ※ 内容がクリップボードにコピーされ、noteのトップページが開きます。
-                        </p>
+              </div>
+
+              {/* アコーディオン - 使い方ガイド */}
+              <div className="border-t border-gray-200 pt-4">
+                <button
+                  onClick={() => toggleAccordion(record.id)}
+                  className="w-full h-12 flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <span className="font-medium text-gray-700">📖 機能の使い方</span>
+                  <span className={`transform transition-transform ${expandedAccordions[record.id] ? 'rotate-180' : ''}`}>
+                    ▼
+                  </span>
+                </button>
+                {expandedAccordions[record.id] && (
+                  <div className="mt-3 p-4 bg-gray-50 rounded-lg">
+                    <div className="space-y-4">
+                      {/* Google Todo */}
+                      <div>
+                        <h5 className="font-medium text-gray-800 mb-2">📝 Google Todoに追加</h5>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• アクションがクリップボードにコピーされます</li>
+                          <li>• Google Todoが開くので、Ctrl+V（MacはCmd+V）で貼り付け</li>
+                        </ul>
                       </div>
-                    );
-                  }
-                  return null;
-                })()}
+                      
+                      {/* シェア機能 */}
+                      <div>
+                        <h5 className="font-medium text-gray-800 mb-2">📱 シェア機能</h5>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          <li>• 140文字以内：Xでシェア</li>
+                          <li>• 140文字超過：noteのネタに</li>
+                          <li>• 内容は自動でクリップボードにコピー</li>
+                          {(() => {
+                            const text = generateSocialText(record.learning, record.action, record.title);
+                            const isWithinCharLimit = isWithinLimit(text);
+                            
+                            if (!isWithinCharLimit) {
+                              return (
+                                <li className="text-orange-500">• ※ 140文字超過のためnoteのネタに</li>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
