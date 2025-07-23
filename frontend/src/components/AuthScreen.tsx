@@ -34,8 +34,8 @@ const AuthScreen: React.FC = () => {
       // Google Analytics ログイン追跡
       trackUserLogin('google');
       
-      // 入力画面に遷移
-      navigate('/input');
+      // ホームページ（タイムライン）に遷移
+      navigate('/');
     } catch (error) {
       console.error('Authentication error:', error);
       trackError('authentication_failed', error instanceof Error ? error.message : 'Unknown error');

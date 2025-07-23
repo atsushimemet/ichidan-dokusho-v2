@@ -1,6 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useEffect, useState } from 'react';
-import { Link, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
+import { Link, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import AuthScreen from './components/AuthScreen';
 import InputForm from './components/InputForm';
@@ -38,9 +38,17 @@ function PageTracker() {
 function AppContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+    // ログアウト後はホームページ（SelectionScreen）にリダイレクト
+    navigate('/');
   };
 
   return (
@@ -71,7 +79,7 @@ function AppContent() {
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
               >
-                🏠 ホーム
+                {isAuthenticated ? '🏠 タイムライン' : '🏠 ホーム'}
               </Link>
               <Link
                 to="/landing_page"
@@ -108,10 +116,7 @@ function AppContent() {
               
               {isAuthenticated && (
                 <button
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
+                  onClick={handleLogout}
                   className="block w-full text-left px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                 >
                   🚪 ログアウト
@@ -159,7 +164,7 @@ function AppContent() {
         <Route path="/landing_page" element={<LandingPage />} />
         <Route path="/" element={
           <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
-            <SelectionScreen />
+            {isAuthenticated ? <Timeline /> : <SelectionScreen />}
           </div>
         } />
         <Route path="/auth" element={
