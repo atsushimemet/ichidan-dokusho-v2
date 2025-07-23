@@ -317,8 +317,7 @@ function MyPage() {
 
               {/* ソーシャルメディアシェア */}
               <div className="border-t border-gray-200 pt-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-700">📱 シェア</h4>
+                <div className="flex items-center justify-end mb-3">
                   <div className="flex items-center space-x-2">
                     <div className="text-sm text-gray-500">
                       {(() => {
