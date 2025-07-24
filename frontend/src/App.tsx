@@ -6,6 +6,7 @@ import AuthScreen from './components/AuthScreen';
 import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
+import QAPage from './components/QAPage';
 import SelectionScreen from './components/SelectionScreen';
 import Timeline from './components/Timeline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -115,6 +116,13 @@ function AppContent() {
               >
                 🌟 タイムライン
               </Link>
+              <Link
+                to="/qa"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+              >
+                ❓ Q&A
+              </Link>
               
               {isAuthenticated && (
                 <button
@@ -125,37 +133,7 @@ function AppContent() {
                 </button>
               )}
               
-              {/* 区切り線 */}
-              <div className="border-t border-orange-100 my-2"></div>
-              
-              {/* Q&A セクション */}
-              <div className="px-4 py-3">
-                <h3 className="font-semibold text-gray-800 mb-3">❓ Q&A</h3>
-                
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <h4 className="font-medium text-gray-700 mb-2">読んだ量の色について</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
-                        <span className="text-gray-600">1文だけ</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-green-500 flex-shrink-0"></div>
-                        <span className="text-gray-600">1段落</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-orange-500 flex-shrink-0"></div>
-                        <span className="text-gray-600">1章</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-purple-500 flex-shrink-0"></div>
-                        <span className="text-gray-600">1冊・全文</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
         )}
@@ -193,6 +171,11 @@ function AppContent() {
         <Route path="/timeline" element={
           <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
             <Timeline />
+          </div>
+        } />
+        <Route path="/qa" element={
+          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <QAPage />
           </div>
         } />
       </Routes>
