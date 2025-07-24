@@ -91,6 +91,11 @@ function InputForm() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // X (Twitter) イベントピクセル - 入力画面の押下（ボタンクリック時）
+    if (typeof window !== 'undefined' && (window as any).twq) {
+      (window as any).twq('event', 'tw-pyzg5-pyzg5');
+    }
+
     try {
       // 環境変数からAPI URLを取得
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
@@ -120,6 +125,11 @@ function InputForm() {
       
       // Google Analytics 投稿作成追跡
       trackPostCreation(formData.readingAmount);
+      
+      // X (Twitter) イベントピクセル - 入力画面の押下
+      if (typeof window !== 'undefined' && (window as any).twq) {
+        (window as any).twq('event', 'tw-pyzg5-pyzg5');
+      }
       
       // 成功時の処理
       alert('投稿が完了しました！');
