@@ -57,12 +57,36 @@ export interface Like {
 // 新しい読書記録を作成
 export const createReadingRecord = async (record: ReadingRecord) => {
   try {
-    const query = `
-      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, user_id, user_email)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
+    // notesフィールドが存在するかチェック
+    const checkColumnQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'reading_records' AND column_name = 'notes'
     `;
-    const values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.notes, record.user_id, record.user_email];
+    const columnCheck = await pool.query(checkColumnQuery);
+    const hasNotesColumn = columnCheck.rows.length > 0;
+
+    let query: string;
+    let values: any[];
+
+    if (hasNotesColumn) {
+      // notesフィールドが存在する場合
+      query = `
+        INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, user_id, user_email)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
+      `;
+      values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.notes, record.user_id, record.user_email];
+    } else {
+      // notesフィールドが存在しない場合（本番環境の一時的対応）
+      query = `
+        INSERT INTO reading_records (title, link, reading_amount, learning, action, user_id, user_email)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *
+      `;
+      values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.user_id, record.user_email];
+    }
+
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
   } catch (error) {
@@ -110,8 +134,26 @@ export const getReadingRecordById = async (id: number) => {
 // 読書記録を更新
 export const updateReadingRecord = async (id: number, record: Partial<ReadingRecord>) => {
   try {
-    const fields = Object.keys(record).map((key, index) => `${key} = $${index + 2}`).join(', ');
-    const values = Object.values(record);
+    // notesフィールドが存在するかチェック
+    const checkColumnQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'reading_records' AND column_name = 'notes'
+    `;
+    const columnCheck = await pool.query(checkColumnQuery);
+    const hasNotesColumn = columnCheck.rows.length > 0;
+
+    // notesフィールドが存在しない場合は除外
+    const filteredRecord = hasNotesColumn ? record : Object.fromEntries(
+      Object.entries(record).filter(([key]) => key !== 'notes')
+    );
+
+    if (Object.keys(filteredRecord).length === 0) {
+      return { success: true, data: null, message: 'No fields to update' };
+    }
+
+    const fields = Object.keys(filteredRecord).map((key, index) => `${key} = $${index + 2}`).join(', ');
+    const values = Object.values(filteredRecord);
     const query = `UPDATE reading_records SET ${fields} WHERE id = $1 RETURNING *`;
     const result = await pool.query(query, [id, ...values]);
     return { success: true, data: result.rows[0] };
