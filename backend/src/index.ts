@@ -328,6 +328,7 @@ app.post('/api/reading-records', async (req, res) => {
       reading_amount,
       learning,
       action,
+      notes: req.body.notes,
       user_id: userId,
       user_email: userEmail
     };
@@ -360,7 +361,7 @@ app.put('/api/reading-records/:id', async (req, res) => {
       return res.status(400).json({ message: 'Invalid ID' });
     }
 
-    const { title, link, reading_amount, learning, action } = req.body;
+    const { title, link, reading_amount, learning, action, notes } = req.body;
     const updateData: Partial<ReadingRecord> = {};
 
     if (title) updateData.title = title;
@@ -371,6 +372,7 @@ app.put('/api/reading-records/:id', async (req, res) => {
     if (reading_amount) updateData.reading_amount = reading_amount;
     if (learning) updateData.learning = learning;
     if (action) updateData.action = action;
+    if (notes !== undefined) updateData.notes = notes;
 
     const result = await updateReadingRecord(id, updateData);
     if (result.success) {
