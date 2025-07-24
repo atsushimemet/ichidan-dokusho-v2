@@ -37,6 +37,7 @@ export interface ReadingRecord {
   reading_amount: string;
   learning: string;
   action: string;
+  notes?: string;
   user_id?: string;
   user_email?: string;
   created_at?: string;
@@ -57,11 +58,11 @@ export interface Like {
 export const createReadingRecord = async (record: ReadingRecord) => {
   try {
     const query = `
-      INSERT INTO reading_records (title, link, reading_amount, learning, action, user_id, user_email)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, user_id, user_email)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
-    const values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.user_id, record.user_email];
+    const values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.notes, record.user_id, record.user_email];
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
   } catch (error) {

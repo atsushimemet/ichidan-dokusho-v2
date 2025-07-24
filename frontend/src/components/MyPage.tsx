@@ -10,6 +10,7 @@ interface ReadingRecord {
   reading_amount: string;
   learning: string;
   action: string;
+  notes?: string;
   user_id?: string;
   user_email?: string;
   created_at: string;
@@ -280,6 +281,19 @@ function MyPage() {
                   </button>
                 </div>
               </div>
+
+              {/* 備考（マイページでのみ表示） */}
+              {record.notes && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-700 mb-2">📝 備考</h4>
+                  <div className="min-h-[80px] bg-gray-50 p-3 rounded-lg border-l-4 border-gray-400 flex items-center">
+                    <p className="text-gray-800">{record.notes}</p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    この情報はあなたのマイページでのみ表示されています
+                  </p>
+                </div>
+              )}
 
               {/* ソーシャルメディアシェア */}
               <div className="border-t border-gray-200 pt-4">

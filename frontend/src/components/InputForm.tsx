@@ -7,6 +7,7 @@ interface FormData {
   readingAmount: string;
   learning: string;
   action: string;
+  notes: string;
   isNotBook: boolean;
   customLink: string;
 }
@@ -17,6 +18,7 @@ function InputForm() {
     readingAmount: '',
     learning: '',
     action: '',
+    notes: '',
     isNotBook: false,
     customLink: ''
   });
@@ -80,6 +82,7 @@ function InputForm() {
       readingAmount: '',
       learning: '',
       action: '',
+      notes: '',
       isNotBook: false,
       customLink: ''
     });
@@ -111,6 +114,7 @@ function InputForm() {
           reading_amount: formData.readingAmount,
           learning: formData.learning,
           action: formData.action,
+          notes: formData.notes,
           isNotBook: formData.isNotBook,
           customLink: formData.customLink
         }),
@@ -320,6 +324,25 @@ function InputForm() {
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
             required
           />
+        </div>
+
+        {/* 5. 備考（マイページでのみ表示） */}
+        <div>
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+            5. 備考 <span className="text-xs text-gray-500">（マイページでのみ表示）</span>
+          </label>
+          <textarea
+            id="notes"
+            name="notes"
+            value={formData.notes}
+            onChange={handleInputChange}
+            placeholder="どこで読んだのか、何ページ目か、どんなきっかけで読んだのか、教えてくれた人は誰かなど"
+            rows={3}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            この情報はあなたのマイページでのみ表示され、他のユーザーには公開されません
+          </p>
         </div>
 
         {/* 送信ボタン */}
