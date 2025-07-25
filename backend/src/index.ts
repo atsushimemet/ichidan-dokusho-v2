@@ -188,6 +188,35 @@ const getTitleFromAmazonLink = async (amazonUrl: string): Promise<{title: string
   if (!amazonUrl) return null;
 
   try {
+    let finalUrl = amazonUrl;
+    
+    // 短縮URLの場合はリダイレクト先を取得
+    const isShortUrl = amazonUrl.includes('amzn.to') || amazonUrl.includes('amzn.asia');
+    if (isShortUrl) {
+      console.log('Short URL detected, following redirects:', amazonUrl);
+      
+      try {
+        // GETリクエストでリダイレクトを追跡
+        const response = await axios.get(amazonUrl, {
+          maxRedirects: 5,
+          timeout: 15000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          }
+        });
+        
+        // リダイレクト後のURLを取得
+        finalUrl = response.request.res.responseUrl || response.config.url || amazonUrl;
+        console.log('Redirect resolved to:', finalUrl);
+      } catch (redirectError) {
+        console.log('Redirect resolution failed, trying original URL:', redirectError instanceof Error ? redirectError.message : 'Unknown error');
+      }
+    }
+
     // ASINを抽出
     const asinPatterns = [
       /\/dp\/([A-Z0-9]{10})/,
@@ -199,7 +228,7 @@ const getTitleFromAmazonLink = async (amazonUrl: string): Promise<{title: string
 
     let asin = null;
     for (const pattern of asinPatterns) {
-      const match = amazonUrl.match(pattern);
+      const match = finalUrl.match(pattern);
       if (match) {
         asin = match[1];
         break;
@@ -207,9 +236,11 @@ const getTitleFromAmazonLink = async (amazonUrl: string): Promise<{title: string
     }
 
     if (!asin) {
-      console.error('ASIN not found in URL:', amazonUrl);
+      console.error('ASIN not found in URL:', finalUrl, '(original:', amazonUrl, ')');
       return null;
     }
+    
+    console.log('ASIN extracted:', asin, 'from URL:', finalUrl);
 
     // Amazon商品ページを取得
     const productUrl = `https://www.amazon.co.jp/dp/${asin}`;
