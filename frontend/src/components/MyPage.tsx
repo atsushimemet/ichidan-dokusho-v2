@@ -167,7 +167,7 @@ function MyPage() {
 
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
           <BookIcon size={48} />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -183,7 +183,7 @@ function MyPage() {
 
   if (error) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
           <BookIcon size={48} />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -204,7 +204,7 @@ function MyPage() {
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
       <div className="flex items-center justify-center mb-8">
         <BookIcon size={48} />
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -218,7 +218,7 @@ function MyPage() {
           <p className="text-gray-500">最初の読書記録を作成してみましょう！</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 max-h-96 overflow-y-auto">
           {records.map((record) => (
             <div
               key={record.id}
