@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
@@ -28,39 +28,8 @@ function InputForm() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   
   // デバウンス用のref
-  const titleDebounceRef = useRef<NodeJS.Timeout>();
-  const linkDebounceRef = useRef<NodeJS.Timeout>();
-
-  // タイトルからAmazonリンクを検索する関数
-  const searchAmazonByTitle = async (title: string) => {
-    if (!title || title.length < 3) {
-      return;
-    }
-
-    setIsSearchingAmazon(true);
-    setAmazonLinkFound(false);
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/search-amazon`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setAmazonLinkFound(true);
-        }
-      }
-    } catch (error) {
-      console.error('Amazon検索エラー:', error);
-    } finally {
-      setIsSearchingAmazon(false);
-    }
-  };
+  const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // AmazonリンクからタイトルとASINを取得する関数
   const extractTitleFromAmazonLink = async (amazonUrl: string) => {
