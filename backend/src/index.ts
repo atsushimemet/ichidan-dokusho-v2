@@ -183,6 +183,141 @@ const getAmazonLinkFromTitle = async (title: string): Promise<string | null> => 
   }
 };
 
+// AmazonリンクからタイトルとASINを取得する関数
+const getTitleFromAmazonLink = async (amazonUrl: string): Promise<{title: string, asin: string} | null> => {
+  if (!amazonUrl) return null;
+
+  try {
+    // ASINを抽出
+    const asinPatterns = [
+      /\/dp\/([A-Z0-9]{10})/,
+      /\/gp\/product\/([A-Z0-9]{10})/,
+      /\/exec\/obidos\/ASIN\/([A-Z0-9]{10})/,
+      /\/o\/ASIN\/([A-Z0-9]{10})/,
+      /\/ASIN\/([A-Z0-9]{10})/,
+    ];
+
+    let asin = null;
+    for (const pattern of asinPatterns) {
+      const match = amazonUrl.match(pattern);
+      if (match) {
+        asin = match[1];
+        break;
+      }
+    }
+
+    if (!asin) {
+      console.error('ASIN not found in URL:', amazonUrl);
+      return null;
+    }
+
+    // Amazon商品ページを取得
+    const productUrl = `https://www.amazon.co.jp/dp/${asin}`;
+    const response = await axios.get(productUrl, {
+      timeout: 15000,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"macOS"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+        'Connection': 'keep-alive',
+      }
+    });
+
+    const html = response.data;
+    
+    // タイトルを抽出（複数のパターンに対応）
+    const titlePatterns = [
+      /<span[^>]*id="productTitle"[^>]*>\s*(.*?)\s*<\/span>/is,
+      /<h1[^>]*class="[^"]*a-size-large[^"]*"[^>]*>\s*(.*?)\s*<\/h1>/is,
+      /<h1[^>]*data-automation-id="title"[^>]*>\s*(.*?)\s*<\/h1>/is,
+      /<span[^>]*class="[^"]*a-size-large[^"]*product-title-word-break[^"]*"[^>]*>\s*(.*?)\s*<\/span>/is,
+      /<title>\s*(.*?)\s*[\:\-\|]\s*Amazon\.co\.jp/i,
+      /<title>\s*(.*?)\s*Amazon\.co\.jp/i,
+      /<meta[^>]*property="og:title"[^>]*content="([^"]*)"[^>]*>/i,
+      /<meta[^>]*name="title"[^>]*content="([^"]*)"[^>]*>/i,
+    ];
+
+    let title = null;
+    for (const pattern of titlePatterns) {
+      const match = html.match(pattern);
+      if (match) {
+        // HTMLエンティティをデコードし、余分な空白を削除
+        title = match[1]
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&nbsp;/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        if (title && title.length > 3) {
+          break;
+        }
+      }
+    }
+
+    if (!title || title.length < 3) {
+      console.error('Title not found or too short for ASIN:', asin);
+      return null;
+    }
+
+    return { title, asin };
+
+  } catch (error) {
+    console.error('Error extracting title from Amazon URL:', error);
+    return null;
+  }
+};
+
+// AmazonリンクからタイトルとASINを取得するAPI
+app.post('/api/extract-amazon-info', async (req, res) => {
+  try {
+    const { amazonUrl } = req.body;
+    
+    if (!amazonUrl) {
+      return res.status(400).json({ 
+        message: 'Amazon URL is required' 
+      });
+    }
+
+    const result = await getTitleFromAmazonLink(amazonUrl);
+    
+    if (result) {
+      res.json({ 
+        success: true,
+        data: {
+          title: result.title,
+          asin: result.asin
+        }
+      });
+    } else {
+      res.json({ 
+        success: false,
+        message: 'Could not extract title from Amazon URL'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error extracting Amazon info', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
 // タイトルからAmazonリンクを取得するAPI
 app.post('/api/search-amazon', async (req, res) => {
   try {

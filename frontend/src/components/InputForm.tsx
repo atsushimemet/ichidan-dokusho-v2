@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
@@ -26,33 +26,53 @@ function InputForm() {
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
   const [amazonLinkFound, setAmazonLinkFound] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+  
+  // デバウンス用のref
+  const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // タイトルからAmazonリンクを検索する関数
-  const searchAmazonByTitle = async (title: string) => {
-    if (!title || title.length < 3) {
+  // AmazonリンクからタイトルとASINを取得する関数
+  const extractTitleFromAmazonLink = async (amazonUrl: string) => {
+    if (!amazonUrl) {
+      return;
+    }
+
+    // Amazonリンクかどうかチェック
+    const isAmazon = amazonUrl.includes('amazon.co.jp') || 
+                    amazonUrl.includes('amazon.com') || 
+                    amazonUrl.includes('amzn.to') ||
+                    amazonUrl.includes('amzn.asia');
+    
+    if (!isAmazon) {
       return;
     }
 
     setIsSearchingAmazon(true);
-    setAmazonLinkFound(false);
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/search-amazon`, {
+      const response = await fetch(`${API_BASE_URL}/api/extract-amazon-info`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ amazonUrl }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        if (result.success) {
+        if (result.success && result.data.title) {
+          // タイトルが空または異なる場合のみ更新
+          if (!formData.title || formData.title !== result.data.title) {
+            setFormData(prev => ({
+              ...prev,
+              title: result.data.title
+            }));
+          }
           setAmazonLinkFound(true);
         }
       }
     } catch (error) {
-      console.error('Amazon検索エラー:', error);
+      console.error('Amazonタイトル取得エラー:', error);
     } finally {
       setIsSearchingAmazon(false);
     }
@@ -65,14 +85,38 @@ function InputForm() {
       [name]: value
     }));
 
-    // タイトルが入力された場合、Amazonリンクを自動検索（書籍の場合のみ）
-    if (name === 'title' && value && value.length >= 3 && !formData.isNotBook) {
-      // デバウンス処理（2秒後に実行）
-      setTimeout(() => {
-        if (formData.title === value) {
-          searchAmazonByTitle(value);
-        }
-      }, 2000);
+    // タイトルフィールド（Amazonリンク入力）が変更された場合（書籍の場合のみ）
+    if (name === 'title' && value && !formData.isNotBook) {
+      // 既存のタイマーをクリア
+      if (titleDebounceRef.current) {
+        clearTimeout(titleDebounceRef.current);
+      }
+      
+      // Amazonリンクとして処理
+      titleDebounceRef.current = setTimeout(() => {
+        extractTitleFromAmazonLink(value);
+      }, 1000);
+    }
+
+    // customLinkが入力された場合、Amazonリンクからタイトルを自動取得（書籍ではない場合のみ）
+    if (name === 'customLink' && value && formData.isNotBook) {
+      // 既存のタイマーをクリア
+      if (linkDebounceRef.current) {
+        clearTimeout(linkDebounceRef.current);
+      }
+      
+      // Amazonリンクかどうかチェック
+      const isAmazonLink = value.includes('amazon.co.jp') || 
+                          value.includes('amazon.com') || 
+                          value.includes('amzn.to') ||
+                          value.includes('amzn.asia');
+      
+      if (isAmazonLink) {
+        // デバウンス処理（1秒後に実行）
+        linkDebounceRef.current = setTimeout(() => {
+          extractTitleFromAmazonLink(value);
+        }, 1000);
+      }
     }
   };
 
@@ -161,12 +205,12 @@ function InputForm() {
       </p>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 1. 読んだ本、文章のタイトル */}
+        {/* 1. Amazonリンク入力 */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            1. 読んだ本、文章のタイトル
+            1. 読んだ本のAmazonリンクを入力
             <span className="text-xs text-gray-500 ml-2">
-              （書籍タイトルを入力するとAmazonリンクが自動で取得されます）
+              （Amazonリンクから書籍タイトルが自動で取得されます）
             </span>
           </label>
           {!formData.isNotBook && (
@@ -181,7 +225,7 @@ function InputForm() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm font-medium text-blue-800">
-                    正確な書籍タイトルを入力してください
+                    Amazonリンクからタイトルを自動取得
                   </span>
                 </div>
                 <svg
@@ -195,9 +239,10 @@ function InputForm() {
               {isAccordionOpen && (
                 <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="text-sm text-blue-700 space-y-2">
-                    <p>• 正確な書籍タイトルを入力してください（例：「7つの習慣」「星の王子さま」）</p>
-                    <p>• 曖昧なタイトルや存在しないタイトルを入力すると、異なる書籍が検索される可能性があります</p>
-                    <p>• 書籍が見つからない場合は、タイトルを確認して再度お試しください</p>
+                    <p>• Amazonの書籍ページのURLをコピーして貼り付けてください</p>
+                    <p>• 例：https://www.amazon.co.jp/dp/B00KFB5DJC</p>
+                    <p>• リンクを貼り付けると、書籍タイトルが自動で表示されます</p>
+                    <p>• 短縮URL（amzn.to、amzn.asia）にも対応しています</p>
                   </div>
                 </div>
               )}
@@ -210,7 +255,7 @@ function InputForm() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="例：『7つの習慣』"
+              placeholder="https://www.amazon.co.jp/dp/XXXXXXXXXX"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
               required
             />
