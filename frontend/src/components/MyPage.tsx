@@ -22,6 +22,22 @@ function MyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedAccordions, setExpandedAccordions] = useState<{ [key: number]: boolean }>({});
+  const [editingRecord, setEditingRecord] = useState<number | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    title: string;
+    reading_amount: string;
+    learning: string;
+    action: string;
+    notes: string;
+    link: string;
+  }>({
+    title: '',
+    reading_amount: '',
+    learning: '',
+    action: '',
+    notes: '',
+    link: ''
+  });
 
   const toggleAccordion = (recordId: number) => {
     setExpandedAccordions(prev => ({
@@ -87,6 +103,73 @@ function MyPage() {
       console.error('Delete error:', error);
       alert(error instanceof Error ? error.message : '削除中にエラーが発生しました');
     }
+  };
+
+  // 編集開始
+  const startEdit = (record: ReadingRecord) => {
+    setEditingRecord(record.id);
+    setEditFormData({
+      title: record.title,
+      reading_amount: record.reading_amount,
+      learning: record.learning,
+      action: record.action,
+      notes: record.notes || '',
+      link: record.link || ''
+    });
+  };
+
+  // 編集キャンセル
+  const cancelEdit = () => {
+    setEditingRecord(null);
+    setEditFormData({
+      title: '',
+      reading_amount: '',
+      learning: '',
+      action: '',
+      notes: '',
+      link: ''
+    });
+  };
+
+  // 投稿更新処理
+  const updateRecord = async (id: number) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/reading-records/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editFormData),
+      });
+
+      if (response.ok) {
+        const updatedRecord = await response.json();
+        // レコードリストを更新
+        setRecords(prevRecords => 
+          prevRecords.map(record => 
+            record.id === id ? { ...record, ...updatedRecord.data } : record
+          )
+        );
+        setEditingRecord(null);
+        alert('投稿を更新しました。');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      alert(error instanceof Error ? error.message : '更新中にエラーが発生しました');
+    }
+  };
+
+  // 編集フォームの入力変更処理
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -266,6 +349,15 @@ function MyPage() {
                 <div className="flex items-center space-x-2">
                   <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                   <button
+                    onClick={() => startEdit(record)}
+                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded-full transition-colors"
+                    title="投稿を編集"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
                     onClick={() => deleteRecord(record.id, record.title)}
                     className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded-full transition-colors"
                     title="投稿を削除"
@@ -277,7 +369,112 @@ function MyPage() {
                 </div>
               </div>
 
-              {/* リンク */}
+              {/* 編集モード */}
+              {editingRecord === record.id ? (
+                <div className="space-y-4">
+                  {/* 編集フォーム */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      タイトル
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={editFormData.title}
+                      onChange={handleEditInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      読書量・読んだ量
+                    </label>
+                    <select
+                      name="reading_amount"
+                      value={editFormData.reading_amount}
+                      onChange={handleEditInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="1文だけ">💬 1文だけ</option>
+                      <option value="1段落">📝 1段落</option>
+                      <option value="1章">📖 1章</option>
+                      <option value="1冊・全文">📚 1冊・全文</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      学び・気づき
+                    </label>
+                    <textarea
+                      name="learning"
+                      value={editFormData.learning}
+                      onChange={handleEditInputChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      今日のアクション
+                    </label>
+                    <textarea
+                      name="action"
+                      value={editFormData.action}
+                      onChange={handleEditInputChange}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      備考・メモ（任意）
+                    </label>
+                    <textarea
+                      name="notes"
+                      value={editFormData.notes}
+                      onChange={handleEditInputChange}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      リンク
+                    </label>
+                    <input
+                      type="url"
+                      name="link"
+                      value={editFormData.link}
+                      onChange={handleEditInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* 編集ボタン */}
+                  <div className="flex space-x-2 pt-4">
+                    <button
+                      onClick={() => updateRecord(record.id)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                      保存
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      キャンセル
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* 通常表示モード */}
+                  {/* リンク */}
               {record.link && (
                 <div className="mb-4">
                   <div className="flex items-center space-x-2">
@@ -429,6 +626,8 @@ function MyPage() {
                   </div>
                 )}
               </div>
+                </>
+              )}
             </div>
           ))}
         </div>
