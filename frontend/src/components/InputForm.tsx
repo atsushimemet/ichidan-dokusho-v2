@@ -26,7 +26,7 @@ function InputForm() {
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
   const [amazonLinkFound, setAmazonLinkFound] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
-  const [titleExtractionSuccess, setTitleExtractionSuccess] = useState(false);
+  const [, setTitleExtractionSuccess] = useState(false);
   
   // デバウンス用のref
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -189,8 +189,9 @@ function InputForm() {
 
     // 「書籍ではない」チェックボックスが変更された場合
     if (name === 'isNotBook') {
+      const isNotBook = (e.target as HTMLInputElement).checked;
       // 書籍ではない場合は常に有効
-      if (value === true || value === 'true') {
+      if (isNotBook) {
         setTitleExtractionSuccess(true);
       } else {
         // 書籍の場合はタイトルの状態をチェック
