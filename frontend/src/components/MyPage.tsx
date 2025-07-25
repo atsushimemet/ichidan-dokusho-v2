@@ -59,6 +59,36 @@ function MyPage() {
     }
   };
 
+  // 投稿削除処理
+  const deleteRecord = async (id: number, title: string) => {
+    // 削除確認
+    if (!window.confirm(`「${title}」を削除しますか？この操作は取り消せません。`)) {
+      return;
+    }
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/reading-records/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // 削除成功時、レコードリストから削除
+        setRecords(prevRecords => prevRecords.filter(record => record.id !== id));
+        alert('投稿を削除しました。');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '削除に失敗しました');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert(error instanceof Error ? error.message : '削除中にエラーが発生しました');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
@@ -233,7 +263,18 @@ function MyPage() {
                     <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
                   </div>
                 </div>
-                <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
+                <div className="flex items-center space-x-2">
+                  <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
+                  <button
+                    onClick={() => deleteRecord(record.id, record.title)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded-full transition-colors"
+                    title="投稿を削除"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {/* リンク */}
