@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
@@ -26,10 +26,39 @@ function InputForm() {
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
   const [amazonLinkFound, setAmazonLinkFound] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+  const [titleExtractionSuccess, setTitleExtractionSuccess] = useState(false);
   
   // デバウンス用のref
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 初期状態設定
+  useEffect(() => {
+    // 初期状態では書籍ではない場合は常に有効
+    if (formData.isNotBook) {
+      setTitleExtractionSuccess(true);
+    } else {
+      // 書籍の場合は空の場合は無効
+      setTitleExtractionSuccess(formData.title === '' ? false : isValidBookTitle(formData.title));
+    }
+  }, [formData.isNotBook, formData.title]);
+
+  // Amazonリンクかどうかをチェックする関数
+  const isAmazonLink = (url: string): boolean => {
+    return url.includes('amazon.co.jp') || 
+           url.includes('amazon.com') || 
+           url.includes('amzn.to') ||
+           url.includes('amzn.asia');
+  };
+
+  // 書籍タイトルが適切に抽出されているかチェック
+  const isValidBookTitle = (title: string): boolean => {
+    if (!formData.isNotBook && title) {
+      // タイトルがAmazonリンクのままの場合は無効
+      return !isAmazonLink(title);
+    }
+    return true; // 書籍ではない場合は常に有効
+  };
 
   // AmazonリンクからタイトルとASINを取得する関数
   const extractTitleFromAmazonLink = async (amazonUrl: string) => {
@@ -41,10 +70,7 @@ function InputForm() {
     }
 
     // Amazonリンクかどうかチェック
-    const isAmazon = amazonUrl.includes('amazon.co.jp') || 
-                    amazonUrl.includes('amazon.com') || 
-                    amazonUrl.includes('amzn.to') ||
-                    amazonUrl.includes('amzn.asia');
+    const isAmazon = isAmazonLink(amazonUrl);
     
     console.log('🔗 Is Amazon link:', isAmazon, 'for URL:', amazonUrl);
     
@@ -87,15 +113,19 @@ function InputForm() {
             console.log('⏭️ Title already matches, skipping update');
           }
           setAmazonLinkFound(true);
+          setTitleExtractionSuccess(true);
         } else {
           console.log('❌ API call unsuccessful or no title found:', result);
+          setTitleExtractionSuccess(false);
         }
       } else {
         const errorText = await response.text();
         console.error('❌ API response not ok:', response.status, errorText);
+        setTitleExtractionSuccess(false);
       }
     } catch (error) {
       console.error('❌ Amazonタイトル取得エラー:', error);
+      setTitleExtractionSuccess(false);
     } finally {
       setIsSearchingAmazon(false);
     }
@@ -112,18 +142,28 @@ function InputForm() {
     if (name === 'title' && value && !formData.isNotBook) {
       console.log('📝 Title field changed:', value, 'isNotBook:', formData.isNotBook);
       
+      // 状態をリセット
+      setTitleExtractionSuccess(false);
+      setAmazonLinkFound(false);
+      
       // 既存のタイマーをクリア
       if (titleDebounceRef.current) {
         clearTimeout(titleDebounceRef.current);
         console.log('⏰ Cleared existing timer');
       }
       
-      // Amazonリンクとして処理
-      titleDebounceRef.current = setTimeout(() => {
-        console.log('⏰ Timer triggered, calling extractTitleFromAmazonLink');
-        extractTitleFromAmazonLink(value);
-      }, 1000);
-      console.log('⏰ Set new timer for 1 second');
+      // Amazonリンクかどうかをチェック
+      if (isAmazonLink(value)) {
+        // Amazonリンクとして処理
+        titleDebounceRef.current = setTimeout(() => {
+          console.log('⏰ Timer triggered, calling extractTitleFromAmazonLink');
+          extractTitleFromAmazonLink(value);
+        }, 1000);
+        console.log('⏰ Set new timer for 1 second');
+      } else {
+        // Amazonリンクでない場合は即座に有効とする
+        setTitleExtractionSuccess(true);
+      }
     }
 
     // customLinkが入力された場合、Amazonリンクからタイトルを自動取得（書籍ではない場合のみ）
@@ -146,6 +186,17 @@ function InputForm() {
         }, 1000);
       }
     }
+
+    // 「書籍ではない」チェックボックスが変更された場合
+    if (name === 'isNotBook') {
+      // 書籍ではない場合は常に有効
+      if (value === true || value === 'true') {
+        setTitleExtractionSuccess(true);
+      } else {
+        // 書籍の場合はタイトルの状態をチェック
+        setTitleExtractionSuccess(isValidBookTitle(formData.title));
+      }
+    }
   };
 
   const resetForm = () => {
@@ -160,10 +211,24 @@ function InputForm() {
     });
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);
+    setTitleExtractionSuccess(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 書籍の場合、タイトルが適切に取得されているかチェック
+    if (!formData.isNotBook && !isValidBookTitle(formData.title)) {
+      alert('書籍タイトルが正しく取得されていません。Amazonリンクから書籍タイトルが自動取得されるまでお待ちください。');
+      return;
+    }
+    
+    // タイトル取得中の場合は投稿を防ぐ
+    if (isSearchingAmazon) {
+      alert('書籍タイトルを取得中です。しばらくお待ちください。');
+      return;
+    }
+    
     setIsSubmitting(true);
 
     // X (Twitter) イベントピクセル - 入力画面の押下（ボタンクリック時）
@@ -422,13 +487,22 @@ function InputForm() {
         <div className="pt-4">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSearchingAmazon || (!formData.isNotBook && !isValidBookTitle(formData.title))}
             className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white font-semibold py-4 px-6 rounded-lg hover:from-orange-600 hover:to-yellow-600 focus:ring-4 focus:ring-orange-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                 <span>送信中...</span>
+              </>
+            ) : isSearchingAmazon ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>書籍名を取得中...</span>
+              </>
+            ) : (!formData.isNotBook && !isValidBookTitle(formData.title)) ? (
+              <>
+                <span>⏳ 書籍タイトルを取得してください</span>
               </>
             ) : (
               <>
