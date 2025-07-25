@@ -33,7 +33,10 @@ function InputForm() {
 
   // AmazonリンクからタイトルとASINを取得する関数
   const extractTitleFromAmazonLink = async (amazonUrl: string) => {
+    console.log('🔍 extractTitleFromAmazonLink called with:', amazonUrl);
+    
     if (!amazonUrl) {
+      console.log('❌ No amazonUrl provided');
       return;
     }
 
@@ -43,13 +46,19 @@ function InputForm() {
                     amazonUrl.includes('amzn.to') ||
                     amazonUrl.includes('amzn.asia');
     
+    console.log('🔗 Is Amazon link:', isAmazon, 'for URL:', amazonUrl);
+    
     if (!isAmazon) {
+      console.log('❌ Not an Amazon link, skipping');
       return;
     }
 
     setIsSearchingAmazon(true);
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      console.log('🌐 API_BASE_URL:', API_BASE_URL);
+      console.log('📡 Making request to:', `${API_BASE_URL}/api/extract-amazon-info`);
+      
       const response = await fetch(`${API_BASE_URL}/api/extract-amazon-info`, {
         method: 'POST',
         headers: {
@@ -58,21 +67,35 @@ function InputForm() {
         body: JSON.stringify({ amazonUrl }),
       });
 
+      console.log('📨 Response status:', response.status);
+      console.log('📨 Response ok:', response.ok);
+
       if (response.ok) {
         const result = await response.json();
+        console.log('📋 API Response:', result);
+        
         if (result.success && result.data.title) {
+          console.log('✅ Title extracted:', result.data.title);
           // タイトルが空または異なる場合のみ更新
           if (!formData.title || formData.title !== result.data.title) {
+            console.log('🔄 Updating title from:', formData.title, 'to:', result.data.title);
             setFormData(prev => ({
               ...prev,
               title: result.data.title
             }));
+          } else {
+            console.log('⏭️ Title already matches, skipping update');
           }
           setAmazonLinkFound(true);
+        } else {
+          console.log('❌ API call unsuccessful or no title found:', result);
         }
+      } else {
+        const errorText = await response.text();
+        console.error('❌ API response not ok:', response.status, errorText);
       }
     } catch (error) {
-      console.error('Amazonタイトル取得エラー:', error);
+      console.error('❌ Amazonタイトル取得エラー:', error);
     } finally {
       setIsSearchingAmazon(false);
     }
@@ -87,15 +110,20 @@ function InputForm() {
 
     // タイトルフィールド（Amazonリンク入力）が変更された場合（書籍の場合のみ）
     if (name === 'title' && value && !formData.isNotBook) {
+      console.log('📝 Title field changed:', value, 'isNotBook:', formData.isNotBook);
+      
       // 既存のタイマーをクリア
       if (titleDebounceRef.current) {
         clearTimeout(titleDebounceRef.current);
+        console.log('⏰ Cleared existing timer');
       }
       
       // Amazonリンクとして処理
       titleDebounceRef.current = setTimeout(() => {
+        console.log('⏰ Timer triggered, calling extractTitleFromAmazonLink');
         extractTitleFromAmazonLink(value);
       }, 1000);
+      console.log('⏰ Set new timer for 1 second');
     }
 
     // customLinkが入力された場合、Amazonリンクからタイトルを自動取得（書籍ではない場合のみ）
