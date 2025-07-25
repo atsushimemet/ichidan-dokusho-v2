@@ -198,11 +198,6 @@ function Timeline() {
         </h1>
       </div>
       
-      <div className="text-center mb-6">
-        <p className="text-gray-600">みんなの読書記録をチェックしよう！</p>
-        <p className="text-sm text-gray-500 mt-1">新しい発見や学びがきっと見つかります</p>
-      </div>
-      
       {records.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg mb-4">まだ読書記録がありません</p>
