@@ -358,7 +358,7 @@ function MyPage() {
                 <p className="text-sm text-gray-500 mb-2">{formatDate(record.created_at)}</p>
                 
                 {/* 編集・削除・Google TODO・シェアボタン */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 relative">
                   <button
                     onClick={() => startEdit(record)}
                     className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded-full transition-colors"
@@ -409,6 +409,15 @@ function MyPage() {
                       </button>
                     );
                   })()}
+                  <button
+                    onClick={() => toggleAccordion(record.id)}
+                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 p-1 rounded-full transition-colors"
+                    title="機能の使い方"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
@@ -569,53 +578,42 @@ function MyPage() {
 
 
 
-              {/* アコーディオン - 使い方ガイド */}
-              <div className="border-t border-gray-200 pt-4">
-                <button
-                  onClick={() => toggleAccordion(record.id)}
-                  className="w-full h-12 flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <span className="font-medium text-gray-700">📖 機能の使い方</span>
-                  <span className={`transform transition-transform ${expandedAccordions[record.id] ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {expandedAccordions[record.id] && (
-                  <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-                    <div className="space-y-4">
-                      {/* Google Todo */}
-                      <div>
-                        <h5 className="font-medium text-gray-800 mb-2">📝 Google Todoに追加</h5>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• アクションがクリップボードにコピーされます</li>
-                          <li>• Google Todoが開くので、Ctrl+V（MacはCmd+V）で貼り付け</li>
-                        </ul>
-                      </div>
-                      
-                      {/* シェア機能 */}
-                      <div>
-                        <h5 className="font-medium text-gray-800 mb-2">📱 シェア機能</h5>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• 140文字以内：Xでシェア</li>
-                          <li>• 140文字超過：noteのネタに</li>
-                          <li>• 内容は自動でクリップボードにコピー</li>
-                          {(() => {
-                            const text = generateSocialText(record.learning, record.action, record.title);
-                            const isWithinCharLimit = isWithinLimit(text);
-                            
-                            if (!isWithinCharLimit) {
-                              return (
-                                <li className="text-orange-500">• ※ 140文字超過のためnoteのネタに</li>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </ul>
-                      </div>
+              {/* ツールチップ - 使い方ガイド */}
+              {expandedAccordions[record.id] && (
+                <div className="absolute z-10 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-w-sm">
+                  <div className="space-y-3">
+                    {/* Google Todo */}
+                    <div>
+                      <h5 className="font-medium text-gray-800 mb-1 text-sm">📝 Google Todoに追加</h5>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li>• アクションがクリップボードにコピーされます</li>
+                        <li>• Google Todoが開くので、Ctrl+V（MacはCmd+V）で貼り付け</li>
+                      </ul>
+                    </div>
+                    
+                    {/* シェア機能 */}
+                    <div>
+                      <h5 className="font-medium text-gray-800 mb-1 text-sm">📱 シェア機能</h5>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        <li>• 140文字以内：Xでシェア</li>
+                        <li>• 140文字超過：noteのネタに</li>
+                        <li>• 内容は自動でクリップボードにコピー</li>
+                        {(() => {
+                          const text = generateSocialText(record.learning, record.action, record.title);
+                          const isWithinCharLimit = isWithinLimit(text);
+                          
+                          if (!isWithinCharLimit) {
+                            return (
+                              <li className="text-orange-500">• ※ 140文字超過のためnoteのネタに</li>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </ul>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
                 </>
               )}
             </div>
