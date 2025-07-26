@@ -21,7 +21,7 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedAccordions, setExpandedAccordions] = useState<{ [key: number]: boolean }>({});
+  const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<{
     title: string;
@@ -38,13 +38,6 @@ function MyPage() {
     notes: '',
     link: ''
   });
-
-  const toggleAccordion = (recordId: number) => {
-    setExpandedAccordions(prev => ({
-      ...prev,
-      [recordId]: !prev[recordId]
-    }));
-  };
 
   useEffect(() => {
     fetchRecords();
@@ -181,16 +174,6 @@ function MyPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getReadingAmountIcon = (amount: string) => {
-    switch (amount) {
-      case '1文だけ': return '💬';
-      case '1段落': return '📝';
-      case '1章': return '📖';
-      case '1冊・全文': return '📚';
-      default: return '📖';
-    }
   };
 
   const getReadingAmountColor = (amount: string) => {
@@ -338,16 +321,27 @@ function MyPage() {
               className="bg-white rounded-xl shadow-md border border-orange-100 p-6 hover:shadow-lg transition-shadow"
             >
               {/* ヘッダー */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{getReadingAmountIcon(record.reading_amount)}</span>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">{record.title}</h3>
-                    <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
-                  </div>
+              <div className="mb-4">
+                {/* 書籍タイトル */}
+                <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-2">
+                  <span className="sm:hidden">
+                    {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
+                  </span>
+                  <span className="hidden sm:block">
+                    {record.title}
+                  </span>
+                </h3>
+                
+                {/* 読んだ量の丸 */}
+                <div className="mb-2">
+                  <div className={`w-3 h-3 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
+                
+                {/* 登録日 */}
+                <p className="text-sm text-gray-500 mb-2">{formatDate(record.created_at)}</p>
+                
+                {/* 編集・削除・Google TODO・シェアボタン */}
+                <div className="flex items-center space-x-2 relative">
                   <button
                     onClick={() => startEdit(record)}
                     className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded-full transition-colors"
@@ -364,6 +358,47 @@ function MyPage() {
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => openGoogleTodo(record.action, record.title)}
+                    className="text-green-500 hover:text-green-700 hover:bg-green-50 p-1 rounded-full transition-colors"
+                    title="Google TODOに追加"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                  </button>
+                  {(() => {
+                    const text = generateSocialText(record.learning, record.action, record.title);
+                    const isWithinCharLimit = isWithinLimit(text);
+                    
+                    return (
+                      <button
+                        onClick={() => isWithinCharLimit 
+                          ? shareOnTwitter(record.learning, record.action, record.title)
+                          : shareOnNote(record.learning, record.action, record.title)
+                        }
+                        className={`p-1 rounded-full transition-colors ${
+                          isWithinCharLimit 
+                            ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' 
+                            : 'text-green-500 hover:text-green-700 hover:bg-green-50'
+                        }`}
+                        title={isWithinCharLimit ? 'Xでシェア' : 'noteのネタに'}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                      </button>
+                    );
+                  })()}
+                  <button
+                    onClick={() => setHoveredTooltip(hoveredTooltip === record.id ? null : record.id)}
+                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 p-1 rounded-full transition-colors"
+                    title="機能の使い方"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
                 </div>
@@ -509,15 +544,6 @@ function MyPage() {
                 <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400 flex items-center">
                   <p className="text-gray-800">{record.action}</p>
                 </div>
-                <div className="mt-3">
-                  <button
-                    onClick={() => openGoogleTodo(record.action, record.title)}
-                    className="w-full h-12 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                  >
-                    <span>📝</span>
-                    <span>Google Todoに追加</span>
-                  </button>
-                </div>
               </div>
 
               {/* 備考（マイページでのみ表示） */}
@@ -533,99 +559,23 @@ function MyPage() {
                 </div>
               )}
 
-              {/* ソーシャルメディアシェア */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex items-center justify-end mb-3">
-                  <div className="text-sm text-gray-500">
-                    {(() => {
-                      const text = generateSocialText(record.learning, record.action, record.title);
-                      const charCount = text.length;
-                      const isWithinCharLimit = isWithinLimit(text);
-                      return (
-                        <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
-                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteのネタに)'}
-                        </span>
-                      );
-                    })()}
+
+
+              {/* ツールチップ - QAページへのリンク */}
+              {hoveredTooltip === record.id && (
+                <div className="absolute z-10 top-4 right-4 p-3 bg-white border border-gray-200 rounded-lg shadow-lg max-w-xs">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-700 mb-2">機能の使い方が分からない？</p>
+                    <a
+                      href="/qa"
+                      className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                    >
+                      <span>📖</span>
+                      <span className="ml-1">QAページを見る</span>
+                    </a>
                   </div>
                 </div>
-                
-                {(() => {
-                  const text = generateSocialText(record.learning, record.action, record.title);
-                  const isWithinCharLimit = isWithinLimit(text);
-                  
-                  return (
-                    <div className="flex space-x-2">
-                      {isWithinCharLimit ? (
-                        // 140文字以内の場合：Xでシェア
-                        <button
-                          onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
-                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                        >
-                          Xでシェア
-                        </button>
-                      ) : (
-                        // 140文字を超える場合：noteのネタに
-                        <button
-                          onClick={() => shareOnNote(record.learning, record.action, record.title)}
-                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
-                        >
-                          noteのネタに
-                        </button>
-                      )}
-                    </div>
-                  );
-                })()}
-                
-              </div>
-
-              {/* アコーディオン - 使い方ガイド */}
-              <div className="border-t border-gray-200 pt-4">
-                <button
-                  onClick={() => toggleAccordion(record.id)}
-                  className="w-full h-12 flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <span className="font-medium text-gray-700">📖 機能の使い方</span>
-                  <span className={`transform transition-transform ${expandedAccordions[record.id] ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {expandedAccordions[record.id] && (
-                  <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-                    <div className="space-y-4">
-                      {/* Google Todo */}
-                      <div>
-                        <h5 className="font-medium text-gray-800 mb-2">📝 Google Todoに追加</h5>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• アクションがクリップボードにコピーされます</li>
-                          <li>• Google Todoが開くので、Ctrl+V（MacはCmd+V）で貼り付け</li>
-                        </ul>
-                      </div>
-                      
-                      {/* シェア機能 */}
-                      <div>
-                        <h5 className="font-medium text-gray-800 mb-2">📱 シェア機能</h5>
-                        <ul className="text-sm text-gray-600 space-y-1">
-                          <li>• 140文字以内：Xでシェア</li>
-                          <li>• 140文字超過：noteのネタに</li>
-                          <li>• 内容は自動でクリップボードにコピー</li>
-                          {(() => {
-                            const text = generateSocialText(record.learning, record.action, record.title);
-                            const isWithinCharLimit = isWithinLimit(text);
-                            
-                            if (!isWithinCharLimit) {
-                              return (
-                                <li className="text-orange-500">• ※ 140文字超過のためnoteのネタに</li>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
                 </>
               )}
             </div>

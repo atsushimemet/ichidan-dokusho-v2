@@ -121,24 +121,13 @@ function Timeline() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
+    return new Date(dateString).toLocaleDateString('ja-JP', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getReadingAmountIcon = (amount: string) => {
-    switch (amount) {
-      case '1文だけ': return '💬';
-      case '1段落': return '📝';
-      case '1章': return '📖';
-      case '1冊・全文': return '📚';
-      default: return '📖';
-    }
   };
 
   const getReadingAmountColor = (amount: string) => {
@@ -211,17 +200,20 @@ function Timeline() {
               className="bg-white rounded-xl shadow-md border border-orange-100 p-6 hover:shadow-lg transition-shadow"
             >
               {/* ヘッダー */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{getReadingAmountIcon(record.reading_amount)}</span>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">{record.title}</h3>
-                    <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
-                  {/* いいねボタン */}
+              <div className="mb-4">
+                {/* 書籍タイトル */}
+                <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-2">
+                  <span className="sm:hidden">
+                    {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
+                  </span>
+                  <span className="hidden sm:block">
+                    {record.title}
+                  </span>
+                </h3>
+                
+                {/* 読んだ量の丸といいねボタン */}
+                <div className="flex items-center space-x-2 mb-2">
+                  <div className={`w-3 h-3 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                   <button
                     onClick={() => handleLike(record.id, record.is_liked || false)}
                     className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
@@ -236,6 +228,9 @@ function Timeline() {
                     <span>{Number(record.like_count ?? 0)}</span>
                   </button>
                 </div>
+                
+                {/* 登録日 */}
+                <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
               </div>
 
               {/* リンク */}
