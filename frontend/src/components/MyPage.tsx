@@ -582,7 +582,10 @@ function MyPage() {
 
               {/* ツールチップ - 使い方ガイド */}
               {hoveredTooltip === record.id && (
-                <div className="absolute z-10 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-w-sm">
+                <div className="absolute z-10 top-0 right-0 transform translate-x-full -translate-y-1/2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-w-sm">
+                  {/* 吹き出しの矢印 */}
+                  <div className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-200"></div>
+                  <div className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-white" style={{ left: '-1px' }}></div>
                   <div className="space-y-3">
                     {/* Google Todo */}
                     <div>
