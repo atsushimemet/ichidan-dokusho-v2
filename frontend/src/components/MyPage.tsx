@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { isAmazonLink } from '../utils/amazonUtils';
 import { trackShare } from '../utils/analytics';
 import BookIcon from './BookIcon';
@@ -17,12 +18,18 @@ interface ReadingRecord {
   updated_at: string;
 }
 
+interface UserSettings {
+  hideSpoilers: boolean;
+}
+
 function MyPage() {
+  const { token } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
+  const [userSettings, setUserSettings] = useState<UserSettings>({ hideSpoilers: false });
   const [editFormData, setEditFormData] = useState<{
     title: string;
     reading_amount: string;
@@ -41,7 +48,52 @@ function MyPage() {
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+    if (token) {
+      loadUserSettings();
+    }
+  }, [token]);
+
+  const loadUserSettings = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/user-settings`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const settings = await response.json();
+        setUserSettings(settings);
+      }
+    } catch (error) {
+      console.error('設定の読み込みに失敗しました:', error);
+    }
+  };
+
+  const updateSpoilerSettings = async (hideSpoilers: boolean) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/user-settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ hideSpoilers }),
+      });
+
+      if (response.ok) {
+        setUserSettings({ hideSpoilers });
+        alert('ネタバレ設定を更新しました');
+      } else {
+        alert('設定の更新に失敗しました');
+      }
+    } catch (error) {
+      console.error('設定の更新に失敗しました:', error);
+      alert('設定の更新に失敗しました');
+    }
+  };
 
   const fetchRecords = async () => {
     try {
@@ -348,6 +400,27 @@ ${action}
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
           マイページ
         </h1>
+      </div>
+      
+      {/* ネタバレ設定 */}
+      <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium text-gray-900">ネタバレ設定</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              タイムラインでネタバレを含む投稿を非表示にします
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={userSettings.hideSpoilers}
+              onChange={(e) => updateSpoilerSettings(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+          </label>
+        </div>
       </div>
       
       {records.length === 0 ? (
