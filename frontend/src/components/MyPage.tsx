@@ -155,8 +155,12 @@ function MyPage() {
 
   // 編集開始
   const startEdit = (record: ReadingRecord) => {
+    console.log('=== 編集開始 ===');
+    console.log('編集対象レコード:', record);
+    console.log('元のcontainsSpoiler:', record.containsSpoiler);
+    
     setEditingRecord(record.id);
-    setEditFormData({
+    const initialFormData = {
       title: record.title,
       reading_amount: record.reading_amount,
       learning: record.learning,
@@ -164,7 +168,9 @@ function MyPage() {
       notes: record.notes || '',
       link: record.link || '',
       containsSpoiler: record.containsSpoiler || false
-    });
+    };
+    console.log('初期フォームデータ:', initialFormData);
+    setEditFormData(initialFormData);
   };
 
   // 編集キャンセル
@@ -184,18 +190,30 @@ function MyPage() {
   // 投稿更新処理
   const updateRecord = async (id: number) => {
     try {
+      console.log('=== 更新処理開始 ===');
+      console.log('更新対象ID:', id);
       console.log('更新データ:', editFormData);
+      console.log('containsSpoilerの値:', editFormData.containsSpoiler);
+      console.log('containsSpoilerの型:', typeof editFormData.containsSpoiler);
+      
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const requestBody = JSON.stringify(editFormData);
+      console.log('送信するJSON:', requestBody);
+      
       const response = await fetch(`${API_BASE_URL}/api/reading-records/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editFormData),
+        body: requestBody,
       });
 
       if (response.ok) {
         const updatedRecord = await response.json();
+        console.log('更新成功 - レスポンス:', updatedRecord);
+        console.log('更新後のデータ:', updatedRecord.data);
+        console.log('更新後のcontainsSpoiler:', updatedRecord.data.containsSpoiler);
+        
         // レコードリストを更新
         setRecords(prevRecords => 
           prevRecords.map(record => 
@@ -206,6 +224,7 @@ function MyPage() {
         alert('投稿を更新しました。');
       } else {
         const errorData = await response.json();
+        console.error('更新失敗 - エラーレスポンス:', errorData);
         throw new Error(errorData.message || '更新に失敗しました');
       }
     } catch (error) {
@@ -623,10 +642,14 @@ ${action}
                           checked={!editFormData.containsSpoiler}
                           onChange={(e) => {
                             console.log('ネタバレなし選択:', e.target.value);
+                            console.log('設定前のeditFormData:', editFormData);
+                            const newValue = e.target.value === 'true';
+                            console.log('設定する値:', newValue);
                             setEditFormData({
                               ...editFormData,
-                              containsSpoiler: e.target.value === 'true'
+                              containsSpoiler: newValue
                             });
+                            console.log('設定後のeditFormData:', { ...editFormData, containsSpoiler: newValue });
                           }}
                           className="mr-2 text-blue-500 focus:ring-blue-500"
                         />
@@ -640,10 +663,14 @@ ${action}
                           checked={editFormData.containsSpoiler}
                           onChange={(e) => {
                             console.log('ネタバレあり選択:', e.target.value);
+                            console.log('設定前のeditFormData:', editFormData);
+                            const newValue = e.target.value === 'true';
+                            console.log('設定する値:', newValue);
                             setEditFormData({
                               ...editFormData,
-                              containsSpoiler: e.target.value === 'true'
+                              containsSpoiler: newValue
                             });
+                            console.log('設定後のeditFormData:', { ...editFormData, containsSpoiler: newValue });
                           }}
                           className="mr-2 text-blue-500 focus:ring-blue-500"
                         />
