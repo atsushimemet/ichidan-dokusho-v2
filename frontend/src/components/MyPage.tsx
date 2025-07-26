@@ -192,9 +192,9 @@ function MyPage() {
     return combinedText;
   };
 
-  // 文字数チェック（500文字以内かどうか）
-  const isWithinLimit = (text: string) => {
-    return text.length <= 500;
+  // 文字数チェック（学びとアクションの合計が500文字以内かどうか）
+  const isWithinLimit = (learning: string, action: string) => {
+    return (learning + action).length <= 500;
   };
 
   // X（Twitter）でシェア
@@ -371,14 +371,15 @@ function MyPage() {
                   </button>
                   {(() => {
                     const text = generateSocialText(record.learning, record.action, record.title);
-                    const isWithinCharLimit = isWithinLimit(text);
+                    const isWithinCharLimit = isWithinLimit(record.learning, record.action);
                     
                     // デバッグ用ログ
                     console.log('シェアテキスト:', {
                       title: record.title,
                       learning: record.learning,
                       action: record.action,
-                      textLength: text.length,
+                      learningActionLength: (record.learning + record.action).length,
+                      fullTextLength: text.length,
                       isWithinLimit: isWithinCharLimit,
                       text: text
                     });
