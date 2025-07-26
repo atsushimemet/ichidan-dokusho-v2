@@ -48,23 +48,43 @@ function Timeline() {
   }, [token]);
 
   useEffect(() => {
+    console.log('=== フィルタリング処理開始 ===');
+    console.log('userSettings.hideSpoilers:', userSettings.hideSpoilers);
+    console.log('user.email:', user?.email);
+    console.log('records:', records);
+    
     // ネタバレ設定に基づいてレコードをフィルタリング
     if (userSettings.hideSpoilers) {
-      setFilteredRecords(records.filter(record => {
+      const filtered = records.filter(record => {
+        console.log('フィルタリング対象レコード:', {
+          id: record.id,
+          title: record.title,
+          user_email: record.user_email,
+          containsSpoiler: record.containsSpoiler,
+          isOwnPost: user && record.user_email === user.email
+        });
+        
         // 自分の投稿は常に表示
         if (user && record.user_email === user.email) {
+          console.log('自分の投稿なので表示:', record.title);
           return true;
         }
         // 他人のネタバレ投稿は非表示
-        return !record.containsSpoiler;
-      }));
+        const shouldShow = !record.containsSpoiler;
+        console.log('他人の投稿:', record.title, 'ネタバレ:', record.containsSpoiler, '表示:', shouldShow);
+        return shouldShow;
+      });
+      console.log('フィルタリング結果:', filtered);
+      setFilteredRecords(filtered);
     } else {
+      console.log('ネタバレ非表示設定がOFFなので全件表示');
       setFilteredRecords(records);
     }
   }, [records, userSettings.hideSpoilers, user]);
 
   const loadUserSettings = async () => {
     try {
+      console.log('=== ユーザー設定読み込み開始 ===');
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const response = await fetch(`${API_BASE_URL}/api/user-settings`, {
         headers: {
@@ -74,7 +94,10 @@ function Timeline() {
 
       if (response.ok) {
         const settings = await response.json();
+        console.log('取得したユーザー設定:', settings);
         setUserSettings(settings);
+      } else {
+        console.log('ユーザー設定の取得に失敗:', response.status);
       }
     } catch (error) {
       console.error('設定の読み込みに失敗しました:', error);
@@ -122,7 +145,16 @@ function Timeline() {
       }
 
       const result = await response.json();
-      setRecords(result.data || []);
+      console.log('タイムライン取得データ:', result.data);
+      
+      // バックエンドのスネークケースをキャメルケースに変換
+      const convertedRecords = (result.data || []).map((record: any) => ({
+        ...record,
+        containsSpoiler: record.contains_spoiler
+      }));
+      console.log('タイムライン変換後データ:', convertedRecords);
+      
+      setRecords(convertedRecords);
     } catch (error) {
       console.error('レコード取得エラー:', error);
       setError('レコードの取得に失敗しました。');
