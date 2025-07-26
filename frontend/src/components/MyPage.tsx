@@ -16,6 +16,7 @@ interface ReadingRecord {
   user_email?: string;
   created_at: string;
   updated_at: string;
+  containsSpoiler?: boolean;
 }
 
 interface UserSettings {
@@ -37,13 +38,15 @@ function MyPage() {
     action: string;
     notes: string;
     link: string;
+    containsSpoiler: boolean;
   }>({
     title: '',
     reading_amount: '',
     learning: '',
     action: '',
     notes: '',
-    link: ''
+    link: '',
+    containsSpoiler: false
   });
 
   useEffect(() => {
@@ -159,7 +162,8 @@ function MyPage() {
       learning: record.learning,
       action: record.action,
       notes: record.notes || '',
-      link: record.link || ''
+      link: record.link || '',
+      containsSpoiler: record.containsSpoiler || false
     });
   };
 
@@ -172,7 +176,8 @@ function MyPage() {
       learning: '',
       action: '',
       notes: '',
-      link: ''
+      link: '',
+      containsSpoiler: false
     });
   };
 
@@ -625,6 +630,45 @@ ${action}
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      ネタバレを含む
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="containsSpoiler"
+                          value="false"
+                          checked={!editFormData.containsSpoiler}
+                          onChange={(e) => setEditFormData({
+                            ...editFormData,
+                            containsSpoiler: e.target.value === 'true'
+                          })}
+                          className="mr-2 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">ネタバレなし</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="containsSpoiler"
+                          value="true"
+                          checked={editFormData.containsSpoiler}
+                          onChange={(e) => setEditFormData({
+                            ...editFormData,
+                            containsSpoiler: e.target.value === 'true'
+                          })}
+                          className="mr-2 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">ネタバレあり</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      ネタバレを含む場合は、タイムラインで他のユーザーに表示されないように設定できます
+                    </p>
+                  </div>
+
                   {/* 編集ボタン */}
                   <div className="flex space-x-2 pt-4">
                     <button
@@ -693,6 +737,19 @@ ${action}
                   </p>
                 </div>
               )}
+
+              {/* ネタバレ設定（マイページでのみ表示） */}
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-700 mb-2">⚠️ ネタバレ設定</h4>
+                <div className="min-h-[60px] bg-red-50 p-3 rounded-lg border-l-4 border-red-400 flex items-center">
+                  <p className="text-gray-800">
+                    {record.containsSpoiler ? 'ネタバレあり' : 'ネタバレなし'}
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  ネタバレありの場合は、タイムラインで他のユーザーに表示されません
+                </p>
+              </div>
 
 
 
