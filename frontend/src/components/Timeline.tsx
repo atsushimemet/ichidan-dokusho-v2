@@ -15,6 +15,7 @@ interface ReadingRecord {
   like_count?: number | string;
   is_liked?: boolean;
   containsSpoiler?: boolean;
+  user_email?: string;
 }
 
 interface UserSettings {
@@ -22,7 +23,7 @@ interface UserSettings {
 }
 
 function Timeline() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,11 +50,18 @@ function Timeline() {
   useEffect(() => {
     // ネタバレ設定に基づいてレコードをフィルタリング
     if (userSettings.hideSpoilers) {
-      setFilteredRecords(records.filter(record => !record.containsSpoiler));
+      setFilteredRecords(records.filter(record => {
+        // 自分の投稿は常に表示
+        if (user && record.user_email === user.email) {
+          return true;
+        }
+        // 他人のネタバレ投稿は非表示
+        return !record.containsSpoiler;
+      }));
     } else {
       setFilteredRecords(records);
     }
-  }, [records, userSettings.hideSpoilers]);
+  }, [records, userSettings.hideSpoilers, user]);
 
   const loadUserSettings = async () => {
     try {
