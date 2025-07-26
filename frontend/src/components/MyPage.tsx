@@ -357,7 +357,7 @@ function MyPage() {
                 {/* 登録日 */}
                 <p className="text-sm text-gray-500 mb-2">{formatDate(record.created_at)}</p>
                 
-                {/* 編集・削除・Google TODOボタン */}
+                {/* 編集・削除・Google TODO・シェアボタン */}
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => startEdit(record)}
@@ -386,6 +386,29 @@ function MyPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                     </svg>
                   </button>
+                  {(() => {
+                    const text = generateSocialText(record.learning, record.action, record.title);
+                    const isWithinCharLimit = isWithinLimit(text);
+                    
+                    return (
+                      <button
+                        onClick={() => isWithinCharLimit 
+                          ? shareOnTwitter(record.learning, record.action, record.title)
+                          : shareOnNote(record.learning, record.action, record.title)
+                        }
+                        className={`p-1 rounded-full transition-colors ${
+                          isWithinCharLimit 
+                            ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' 
+                            : 'text-green-500 hover:text-green-700 hover:bg-green-50'
+                        }`}
+                        title={isWithinCharLimit ? 'Xでシェア' : 'noteのネタに'}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -544,51 +567,7 @@ function MyPage() {
                 </div>
               )}
 
-              {/* ソーシャルメディアシェア */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex items-center justify-end mb-3">
-                  <div className="text-sm text-gray-500">
-                    {(() => {
-                      const text = generateSocialText(record.learning, record.action, record.title);
-                      const charCount = text.length;
-                      const isWithinCharLimit = isWithinLimit(text);
-                      return (
-                        <span className={isWithinCharLimit ? 'text-green-500' : 'text-orange-500'}>
-                          {charCount}/140文字 {isWithinCharLimit ? '(Xでシェア可能)' : '(noteのネタに)'}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                </div>
-                
-                {(() => {
-                  const text = generateSocialText(record.learning, record.action, record.title);
-                  const isWithinCharLimit = isWithinLimit(text);
-                  
-                  return (
-                    <div className="flex space-x-2">
-                      {isWithinCharLimit ? (
-                        // 140文字以内の場合：Xでシェア
-                        <button
-                          onClick={() => shareOnTwitter(record.learning, record.action, record.title)}
-                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                        >
-                          Xでシェア
-                        </button>
-                      ) : (
-                        // 140文字を超える場合：noteのネタに
-                        <button
-                          onClick={() => shareOnNote(record.learning, record.action, record.title)}
-                          className="flex-1 h-12 flex items-center justify-center px-4 py-2 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
-                        >
-                          noteのネタに
-                        </button>
-                      )}
-                    </div>
-                  );
-                })()}
-                
-              </div>
+
 
               {/* アコーディオン - 使い方ガイド */}
               <div className="border-t border-gray-200 pt-4">
