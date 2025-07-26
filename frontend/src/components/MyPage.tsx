@@ -580,42 +580,21 @@ function MyPage() {
 
 
 
-              {/* ツールチップ - 使い方ガイド */}
+              {/* ツールチップ - QAページへのリンク */}
               {hoveredTooltip === record.id && (
-                <div className="absolute z-10 top-0 right-0 transform translate-x-full -translate-y-1/2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-w-sm">
+                <div className="absolute z-10 top-0 right-0 transform translate-x-full -translate-y-1/2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg max-w-xs">
                   {/* 吹き出しの矢印 */}
                   <div className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-200"></div>
                   <div className="absolute left-0 top-1/2 transform -translate-x-full -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-white" style={{ left: '-1px' }}></div>
-                  <div className="space-y-3">
-                    {/* Google Todo */}
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-1 text-sm">📝 Google Todoに追加</h5>
-                      <ul className="text-xs text-gray-600 space-y-1">
-                        <li>• アクションがクリップボードにコピーされます</li>
-                        <li>• Google Todoが開くので、Ctrl+V（MacはCmd+V）で貼り付け</li>
-                      </ul>
-                    </div>
-                    
-                    {/* シェア機能 */}
-                    <div>
-                      <h5 className="font-medium text-gray-800 mb-1 text-sm">📱 シェア機能</h5>
-                      <ul className="text-xs text-gray-600 space-y-1">
-                        <li>• 140文字以内：Xでシェア</li>
-                        <li>• 140文字超過：noteのネタに</li>
-                        <li>• 内容は自動でクリップボードにコピー</li>
-                        {(() => {
-                          const text = generateSocialText(record.learning, record.action, record.title);
-                          const isWithinCharLimit = isWithinLimit(text);
-                          
-                          if (!isWithinCharLimit) {
-                            return (
-                              <li className="text-orange-500">• ※ 140文字超過のためnoteのネタに</li>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </ul>
-                    </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-700 mb-2">機能の使い方が分からない？</p>
+                    <a
+                      href="/qa"
+                      className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                    >
+                      <span>📖</span>
+                      <span className="ml-1">QAページを見る</span>
+                    </a>
                   </div>
                 </div>
               )}
