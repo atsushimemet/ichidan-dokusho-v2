@@ -192,9 +192,9 @@ function MyPage() {
     return combinedText;
   };
 
-  // 文字数チェック（140文字以内かどうか）
+  // 文字数チェック（500文字以内かどうか）
   const isWithinLimit = (text: string) => {
-    return text.length <= 140;
+    return text.length <= 500;
   };
 
   // X（Twitter）でシェア
