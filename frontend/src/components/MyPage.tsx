@@ -349,10 +349,8 @@ function MyPage() {
                   </span>
                 </h3>
                 
-                {/* 読んだ量 */}
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-xl">{getReadingAmountIcon(record.reading_amount)}</span>
-                  <span className="text-sm text-gray-600">{record.reading_amount}</span>
+                {/* 読んだ量の丸 */}
+                <div className="mb-2">
                   <div className={`w-3 h-3 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                 </div>
                 

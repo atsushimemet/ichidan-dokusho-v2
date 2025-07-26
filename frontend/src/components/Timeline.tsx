@@ -222,15 +222,9 @@ function Timeline() {
                   </span>
                 </h3>
                 
-                {/* 読んだ量 */}
+                {/* 読んだ量の丸といいねボタン */}
                 <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-xl">{getReadingAmountIcon(record.reading_amount)}</span>
-                  <span className="text-sm text-gray-600">{record.reading_amount}</span>
                   <div className={`w-3 h-3 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
-                </div>
-                
-                {/* いいねボタン */}
-                <div className="mb-2">
                   <button
                     onClick={() => handleLike(record.id, record.is_liked || false)}
                     className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
