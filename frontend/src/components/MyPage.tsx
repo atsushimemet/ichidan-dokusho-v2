@@ -19,9 +19,7 @@ interface ReadingRecord {
   containsSpoiler?: boolean;
 }
 
-interface UserSettings {
-  hideSpoilers: boolean;
-}
+
 
 function MyPage() {
   const { token } = useAuth();
@@ -30,7 +28,7 @@ function MyPage() {
   const [error, setError] = useState<string | null>(null);
   const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
-  const [userSettings, setUserSettings] = useState<UserSettings>({ hideSpoilers: false });
+
   const [editFormData, setEditFormData] = useState<{
     title: string;
     reading_amount: string;
@@ -51,52 +49,7 @@ function MyPage() {
 
   useEffect(() => {
     fetchRecords();
-    if (token) {
-      loadUserSettings();
-    }
-  }, [token]);
-
-  const loadUserSettings = async () => {
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/user-settings`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const settings = await response.json();
-        setUserSettings(settings);
-      }
-    } catch (error) {
-      console.error('設定の読み込みに失敗しました:', error);
-    }
-  };
-
-  const updateSpoilerSettings = async (hideSpoilers: boolean) => {
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/user-settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ hideSpoilers }),
-      });
-
-      if (response.ok) {
-        setUserSettings({ hideSpoilers });
-        alert('ネタバレ設定を更新しました');
-      } else {
-        alert('設定の更新に失敗しました');
-      }
-    } catch (error) {
-      console.error('設定の更新に失敗しました:', error);
-      alert('設定の更新に失敗しました');
-    }
-  };
+  }, []);
 
   const fetchRecords = async () => {
     try {
