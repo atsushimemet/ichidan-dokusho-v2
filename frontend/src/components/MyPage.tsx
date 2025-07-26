@@ -338,16 +338,22 @@ function MyPage() {
               className="bg-white rounded-xl shadow-md border border-orange-100 p-6 hover:shadow-lg transition-shadow"
             >
               {/* ヘッダー */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{getReadingAmountIcon(record.reading_amount)}</span>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg text-gray-800 line-clamp-2 leading-tight">{record.title}</h3>
-                    <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
-                  </div>
+              <div className="mb-4">
+                {/* 書籍タイトル */}
+                <h3 className="font-semibold text-lg text-gray-800 line-clamp-2 leading-tight mb-2">{record.title}</h3>
+                
+                {/* 読んだ量 */}
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-xl">{getReadingAmountIcon(record.reading_amount)}</span>
+                  <span className="text-sm text-gray-600">{record.reading_amount}</span>
+                  <div className={`w-3 h-3 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                 </div>
+                
+                {/* 登録日 */}
+                <p className="text-sm text-gray-500 mb-2">{formatDate(record.created_at)}</p>
+                
+                {/* 編集・削除ボタン */}
                 <div className="flex items-center space-x-2">
-                  <div className={`w-4 h-4 rounded-full ${getReadingAmountColor(record.reading_amount)} flex-shrink-0`}></div>
                   <button
                     onClick={() => startEdit(record)}
                     className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded-full transition-colors"
