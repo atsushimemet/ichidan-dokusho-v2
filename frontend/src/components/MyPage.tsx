@@ -520,15 +520,6 @@ function MyPage() {
                 <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400 flex items-center">
                   <p className="text-gray-800">{record.action}</p>
                 </div>
-                <div className="mt-3">
-                  <button
-                    onClick={() => openGoogleTodo(record.action, record.title)}
-                    className="w-full h-12 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                  >
-                    <span>📝</span>
-                    <span>Google Todoに追加</span>
-                  </button>
-                </div>
               </div>
 
               {/* 備考（マイページでのみ表示） */}
