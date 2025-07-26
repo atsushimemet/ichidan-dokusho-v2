@@ -184,6 +184,7 @@ function MyPage() {
   // 投稿更新処理
   const updateRecord = async (id: number) => {
     try {
+      console.log('更新データ:', editFormData);
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const response = await fetch(`${API_BASE_URL}/api/reading-records/${id}`, {
         method: 'PUT',
@@ -407,27 +408,6 @@ ${action}
         </h1>
       </div>
       
-      {/* ネタバレ設定 */}
-      <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium text-gray-900">ネタバレ設定</h3>
-            <p className="text-sm text-gray-600 mt-1">
-              タイムラインでネタバレを含む投稿を非表示にします
-            </p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={userSettings.hideSpoilers}
-              onChange={(e) => updateSpoilerSettings(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-          </label>
-        </div>
-      </div>
-      
       {records.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg mb-4">まだ読書記録がありません</p>
@@ -641,13 +621,16 @@ ${action}
                           name="containsSpoiler"
                           value="false"
                           checked={!editFormData.containsSpoiler}
-                          onChange={(e) => setEditFormData({
-                            ...editFormData,
-                            containsSpoiler: e.target.value === 'true'
-                          })}
+                          onChange={(e) => {
+                            console.log('ネタバレなし選択:', e.target.value);
+                            setEditFormData({
+                              ...editFormData,
+                              containsSpoiler: e.target.value === 'true'
+                            });
+                          }}
                           className="mr-2 text-blue-500 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700">ネタバレなし</span>
+                        <span className="text-sm text-gray-700">なし</span>
                       </label>
                       <label className="flex items-center">
                         <input
@@ -655,13 +638,16 @@ ${action}
                           name="containsSpoiler"
                           value="true"
                           checked={editFormData.containsSpoiler}
-                          onChange={(e) => setEditFormData({
-                            ...editFormData,
-                            containsSpoiler: e.target.value === 'true'
-                          })}
+                          onChange={(e) => {
+                            console.log('ネタバレあり選択:', e.target.value);
+                            setEditFormData({
+                              ...editFormData,
+                              containsSpoiler: e.target.value === 'true'
+                            });
+                          }}
                           className="mr-2 text-blue-500 focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700">ネタバレあり</span>
+                        <span className="text-sm text-gray-700">あり</span>
                       </label>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
@@ -738,18 +724,17 @@ ${action}
                 </div>
               )}
 
-              {/* ネタバレ設定（マイページでのみ表示） */}
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-700 mb-2">⚠️ ネタバレ設定</h4>
-                <div className="min-h-[60px] bg-red-50 p-3 rounded-lg border-l-4 border-red-400 flex items-center">
-                  <p className="text-gray-800">
-                    {record.containsSpoiler ? 'ネタバレあり' : 'ネタバレなし'}
-                  </p>
+              {/* ネタバレ設定（ネタバレありの場合のみ表示） */}
+              {record.containsSpoiler && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-700 mb-2">⚠️ ネタバレあり</h4>
+                  <div className="min-h-[60px] bg-red-50 p-3 rounded-lg border-l-4 border-red-400 flex items-center">
+                    <p className="text-gray-800">
+                      この投稿はネタバレを含むため、タイムラインで他のユーザーに表示されません
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  ネタバレありの場合は、タイムラインで他のユーザーに表示されません
-                </p>
-              </div>
+              )}
 
 
 
