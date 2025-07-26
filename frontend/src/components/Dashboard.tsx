@@ -210,23 +210,7 @@ function Dashboard() {
         </div>
       )}
 
-      {/* 10件未満の場合のメッセージ */}
-      {records.length < 10 && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
-          <h2 className="text-xl font-semibold text-green-800 mb-4 flex items-center">
-            <span className="mr-2">🎯</span>
-            次の目標
-          </h2>
-          <div className="text-center">
-            <p className="text-green-700 mb-2">
-              読書記録が10件に達すると、より詳細な分析が可能になります
-            </p>
-            <div className="text-2xl font-bold text-green-600">
-              {10 - records.length}件 あと
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
