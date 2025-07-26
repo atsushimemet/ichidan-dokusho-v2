@@ -340,7 +340,9 @@ function MyPage() {
               {/* ヘッダー */}
               <div className="mb-4">
                 {/* 書籍タイトル */}
-                <h3 className="font-semibold text-lg text-gray-800 line-clamp-2 leading-tight mb-2">{record.title}</h3>
+                <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-2">
+                  {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
+                </h3>
                 
                 {/* 読んだ量 */}
                 <div className="flex items-center space-x-2 mb-2">
