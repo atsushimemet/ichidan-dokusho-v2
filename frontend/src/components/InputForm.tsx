@@ -11,6 +11,7 @@ interface FormData {
   notes: string;
   isNotBook: boolean;
   customLink: string;
+  containsSpoiler: boolean;
 }
 
 function InputForm() {
@@ -22,7 +23,8 @@ function InputForm() {
     action: '',
     notes: '',
     isNotBook: false,
-    customLink: ''
+    customLink: '',
+    containsSpoiler: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
@@ -210,7 +212,8 @@ function InputForm() {
       action: '',
       notes: '',
       isNotBook: false,
-      customLink: ''
+      customLink: '',
+      containsSpoiler: false
     });
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);
@@ -256,7 +259,8 @@ function InputForm() {
           action: formData.action,
           notes: formData.notes,
           isNotBook: formData.isNotBook,
-          customLink: formData.customLink
+          customLink: formData.customLink,
+          containsSpoiler: formData.containsSpoiler
         }),
       });
 
@@ -488,7 +492,47 @@ function InputForm() {
           </p>
         </div>
 
-        {/* 6. ChatGPTで学びとアクションを整理 */}
+        {/* 6. ネタバレを含む */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            6. ネタバレを含む
+          </label>
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="containsSpoiler"
+                value="false"
+                checked={!formData.containsSpoiler}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  containsSpoiler: e.target.value === 'true'
+                })}
+                className="mr-2 text-orange-500 focus:ring-orange-500"
+              />
+              <span className="text-sm text-gray-700">ネタバレなし</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="containsSpoiler"
+                value="true"
+                checked={formData.containsSpoiler}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  containsSpoiler: e.target.value === 'true'
+                })}
+                className="mr-2 text-orange-500 focus:ring-orange-500"
+              />
+              <span className="text-sm text-gray-700">ネタバレあり</span>
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            ネタバレを含む場合は、タイムラインで他のユーザーに表示されないように設定できます
+          </p>
+        </div>
+
+        {/* 7. ChatGPTで学びとアクションを整理 */}
         <div>
           <button
             type="button"

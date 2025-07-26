@@ -38,6 +38,9 @@ export interface ReadingRecord {
   learning: string;
   action: string;
   notes?: string;
+  is_not_book?: boolean;
+  custom_link?: string;
+  contains_spoiler?: boolean;
   user_id?: string;
   user_email?: string;
   created_at?: string;
@@ -58,11 +61,23 @@ export interface Like {
 export const createReadingRecord = async (record: ReadingRecord) => {
   try {
     const query = `
-      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, user_id, user_email)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, is_not_book, custom_link, contains_spoiler, user_id, user_email)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
-    const values = [record.title, record.link, record.reading_amount, record.learning, record.action, record.notes, record.user_id, record.user_email];
+    const values = [
+      record.title, 
+      record.link, 
+      record.reading_amount, 
+      record.learning, 
+      record.action, 
+      record.notes, 
+      record.is_not_book || false,
+      record.custom_link,
+      record.contains_spoiler || false,
+      record.user_id, 
+      record.user_email
+    ];
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
   } catch (error) {
@@ -207,6 +222,62 @@ export const getUserReadingRecords = async (userId: string, sessionId?: string) 
     return { success: true, data: result.rows };
   } catch (error) {
     console.error('Get user reading records error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// ユーザー設定の型定義
+export interface UserSettings {
+  id?: number;
+  user_id: string;
+  hide_spoilers: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// ユーザー設定を取得
+export const getUserSettings = async (userId: string) => {
+  try {
+    const query = `
+      SELECT * FROM user_settings 
+      WHERE user_id = $1
+    `;
+    const result = await pool.query(query, [userId]);
+    
+    if (result.rows.length > 0) {
+      return { success: true, data: result.rows[0] };
+    } else {
+      // デフォルト設定を返す
+      return { 
+        success: true, 
+        data: { 
+          user_id: userId, 
+          hide_spoilers: false 
+        } 
+      };
+    }
+  } catch (error) {
+    console.error('Get user settings error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// ユーザー設定を更新または作成
+export const upsertUserSettings = async (settings: UserSettings) => {
+  try {
+    const query = `
+      INSERT INTO user_settings (user_id, hide_spoilers)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id) 
+      DO UPDATE SET 
+        hide_spoilers = EXCLUDED.hide_spoilers,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+    const result = await pool.query(query, [settings.user_id, settings.hide_spoilers]);
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Upsert user settings error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

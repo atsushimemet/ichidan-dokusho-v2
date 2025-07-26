@@ -15,7 +15,10 @@ interface ReadingRecord {
   user_email?: string;
   created_at: string;
   updated_at: string;
+  containsSpoiler?: boolean;
 }
+
+
 
 function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
@@ -23,6 +26,7 @@ function MyPage() {
   const [error, setError] = useState<string | null>(null);
   const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
+
   const [editFormData, setEditFormData] = useState<{
     title: string;
     reading_amount: string;
@@ -30,13 +34,15 @@ function MyPage() {
     action: string;
     notes: string;
     link: string;
+    containsSpoiler: boolean;
   }>({
     title: '',
     reading_amount: '',
     learning: '',
     action: '',
     notes: '',
-    link: ''
+    link: '',
+    containsSpoiler: false
   });
 
   useEffect(() => {
@@ -59,7 +65,16 @@ function MyPage() {
       }
 
       const result = await response.json();
-      setRecords(result.data || []);
+      console.log('取得したデータ:', result.data);
+      
+      // バックエンドのスネークケースをキャメルケースに変換
+      const convertedRecords = (result.data || []).map((record: any) => ({
+        ...record,
+        containsSpoiler: record.contains_spoiler
+      }));
+      console.log('変換後のレコード:', convertedRecords);
+      
+      setRecords(convertedRecords);
     } catch (error) {
       console.error('レコード取得エラー:', error);
       setError('レコードの取得に失敗しました。');
@@ -100,15 +115,22 @@ function MyPage() {
 
   // 編集開始
   const startEdit = (record: ReadingRecord) => {
+    console.log('=== 編集開始 ===');
+    console.log('編集対象レコード:', record);
+    console.log('元のcontainsSpoiler:', record.containsSpoiler);
+    
     setEditingRecord(record.id);
-    setEditFormData({
+    const initialFormData = {
       title: record.title,
       reading_amount: record.reading_amount,
       learning: record.learning,
       action: record.action,
       notes: record.notes || '',
-      link: record.link || ''
-    });
+      link: record.link || '',
+      containsSpoiler: record.containsSpoiler || false
+    };
+    console.log('初期フォームデータ:', initialFormData);
+    setEditFormData(initialFormData);
   };
 
   // 編集キャンセル
@@ -120,34 +142,57 @@ function MyPage() {
       learning: '',
       action: '',
       notes: '',
-      link: ''
+      link: '',
+      containsSpoiler: false
     });
   };
 
   // 投稿更新処理
   const updateRecord = async (id: number) => {
     try {
+      console.log('=== 更新処理開始 ===');
+      console.log('更新対象ID:', id);
+      console.log('更新データ:', editFormData);
+      console.log('containsSpoilerの値:', editFormData.containsSpoiler);
+      console.log('containsSpoilerの型:', typeof editFormData.containsSpoiler);
+      
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const requestBody = JSON.stringify(editFormData);
+      console.log('送信するJSON:', requestBody);
+      
       const response = await fetch(`${API_BASE_URL}/api/reading-records/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editFormData),
+        body: requestBody,
       });
 
       if (response.ok) {
         const updatedRecord = await response.json();
+        console.log('更新成功 - レスポンス:', updatedRecord);
+        console.log('更新後のデータ:', updatedRecord.data);
+        console.log('更新後のcontainsSpoiler:', updatedRecord.data.containsSpoiler);
+        
+        // バックエンドのスネークケースをキャメルケースに変換
+        const convertedData = {
+          ...updatedRecord.data,
+          containsSpoiler: updatedRecord.data.contains_spoiler
+        };
+        console.log('変換後のデータ:', convertedData);
+        console.log('変換後のcontainsSpoiler:', convertedData.containsSpoiler);
+        
         // レコードリストを更新
         setRecords(prevRecords => 
           prevRecords.map(record => 
-            record.id === id ? { ...record, ...updatedRecord.data } : record
+            record.id === id ? { ...record, ...convertedData } : record
           )
         );
         setEditingRecord(null);
         alert('投稿を更新しました。');
       } else {
         const errorData = await response.json();
+        console.error('更新失敗 - エラーレスポンス:', errorData);
         throw new Error(errorData.message || '更新に失敗しました');
       }
     } catch (error) {
@@ -552,6 +597,59 @@ ${action}
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      ネタバレを含む
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="containsSpoiler"
+                          value="false"
+                          checked={!editFormData.containsSpoiler}
+                          onChange={(e) => {
+                            console.log('ネタバレなし選択:', e.target.value);
+                            console.log('設定前のeditFormData:', editFormData);
+                            const newValue = e.target.value === 'true';
+                            console.log('設定する値:', newValue);
+                            setEditFormData({
+                              ...editFormData,
+                              containsSpoiler: newValue
+                            });
+                            console.log('設定後のeditFormData:', { ...editFormData, containsSpoiler: newValue });
+                          }}
+                          className="mr-2 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">なし</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="containsSpoiler"
+                          value="true"
+                          checked={editFormData.containsSpoiler}
+                          onChange={(e) => {
+                            console.log('ネタバレあり選択:', e.target.value);
+                            console.log('設定前のeditFormData:', editFormData);
+                            const newValue = e.target.value === 'true';
+                            console.log('設定する値:', newValue);
+                            setEditFormData({
+                              ...editFormData,
+                              containsSpoiler: newValue
+                            });
+                            console.log('設定後のeditFormData:', { ...editFormData, containsSpoiler: newValue });
+                          }}
+                          className="mr-2 text-blue-500 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">あり</span>
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      ネタバレを含む場合は、タイムラインで他のユーザーに表示されないように設定できます
+                    </p>
+                  </div>
+
                   {/* 編集ボタン */}
                   <div className="flex space-x-2 pt-4">
                     <button
@@ -618,6 +716,18 @@ ${action}
                   <p className="text-xs text-gray-500 mt-1">
                     この情報はあなたのマイページでのみ表示されています
                   </p>
+                </div>
+              )}
+
+              {/* ネタバレ設定（ネタバレありの場合のみ表示） */}
+              {record.containsSpoiler && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-700 mb-2">⚠️ ネタバレあり</h4>
+                  <div className="min-h-[60px] bg-red-50 p-3 rounded-lg border-l-4 border-red-400 flex items-center">
+                    <p className="text-gray-800">
+                      この投稿はネタバレを含むため、タイムラインで他のユーザーに表示されません
+                    </p>
+                  </div>
                 </div>
               )}
 
