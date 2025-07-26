@@ -214,7 +214,12 @@ function Timeline() {
               <div className="mb-4">
                 {/* 書籍タイトル */}
                 <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-2">
-                  {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
+                  <span className="sm:hidden">
+                    {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
+                  </span>
+                  <span className="hidden sm:block">
+                    {record.title}
+                  </span>
                 </h3>
                 
                 {/* 読んだ量 */}
