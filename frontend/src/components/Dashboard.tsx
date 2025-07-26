@@ -50,10 +50,8 @@ function Dashboard() {
       const fetchedRecords = result.data || [];
       setRecords(fetchedRecords);
 
-      // 10件以上の場合、日次データを生成
-      if (fetchedRecords.length >= 10) {
-        generateDailyRecords(fetchedRecords);
-      }
+      // 全ユーザーに日次データを生成
+      generateDailyRecords(fetchedRecords);
     } catch (error) {
       console.error('レコード取得エラー:', error);
       setError('レコードの取得に失敗しました。');
@@ -66,8 +64,8 @@ function Dashboard() {
     const today = new Date();
     const dailyData: { [key: string]: number } = {};
 
-    // 前後2週間の日付を初期化
-    for (let i = -14; i <= 14; i++) {
+    // 前後3日の日付を初期化
+    for (let i = -3; i <= 3; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
@@ -161,8 +159,8 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 日次推移グラフ（10件以上の場合のみ表示） */}
-      {records.length >= 10 && dailyRecords.length > 0 && (
+      {/* 日次推移グラフ（全ユーザーに表示） */}
+      {dailyRecords.length > 0 && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
           <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center">
             <span className="mr-2">📈</span>
@@ -207,7 +205,7 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
           <p className="text-sm text-blue-600 mt-2 text-center">
-            当日の前後2週間の読書記録数を表示しています
+            当日の前後3日の読書記録数を表示しています
           </p>
         </div>
       )}
@@ -221,7 +219,7 @@ function Dashboard() {
           </h2>
           <div className="text-center">
             <p className="text-green-700 mb-2">
-              読書記録が10件に達すると、日次推移グラフが表示されます
+              読書記録が10件に達すると、より詳細な分析が可能になります
             </p>
             <div className="text-2xl font-bold text-green-600">
               {10 - records.length}件 あと
