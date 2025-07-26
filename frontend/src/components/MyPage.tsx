@@ -188,7 +188,7 @@ function MyPage() {
 
   // 学びとアクションを統合して140文字以内のテキストを生成
   const generateSocialText = (learning: string, action: string, title: string) => {
-    const combinedText = `📖 ${title}\n💡 ${learning}\n🎯 ${action}\n#1段読書 #読書習慣\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
+    const combinedText = `📖 ${title}\n\n💡 ${learning}\n\n🎯 ${action}\n\n#1段読書 #読書習慣\n\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
     return combinedText;
   };
 
