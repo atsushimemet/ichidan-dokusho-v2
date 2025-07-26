@@ -84,9 +84,11 @@ function Dashboard() {
     const chartData: DailyRecord[] = Object.entries(dailyData)
       .map(([date, count]) => ({
         date: formatDateForChart(date),
-        count
+        count,
+        originalDate: date // ソート用に元の日付を保持
       }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => new Date(a.originalDate).getTime() - new Date(b.originalDate).getTime())
+      .map(({ date, count }) => ({ date, count })); // originalDateを除去
 
     setDailyRecords(chartData);
   };
