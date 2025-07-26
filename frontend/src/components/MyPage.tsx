@@ -341,8 +341,8 @@ function MyPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">{getReadingAmountIcon(record.reading_amount)}</span>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-800">{record.title}</h3>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg text-gray-800 line-clamp-2 leading-tight">{record.title}</h3>
                     <p className="text-sm text-gray-500">{formatDate(record.created_at)}</p>
                   </div>
                 </div>
