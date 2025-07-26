@@ -48,7 +48,7 @@ function QAPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                 </svg>
               </span>
-              <span><b>Xでシェア / noteのネタに</b>：学び・アクション内容をSNSでシェアできます。140文字以内ならX（旧Twitter）、超過時はnoteのネタとして利用できます。</span>
+              <span><b>Xでシェア / noteのネタに</b>：学び・アクション内容をSNSでシェアできます。140文字以内ならX（旧Twitter）、超過時はnoteのネタとして利用できます。140文字以内なら青色、超過時は緑色で表示されます。</span>
             </li>
             <li className="flex items-start">
               <span className="mr-2">
