@@ -21,7 +21,6 @@ function MyPage() {
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedAccordions, setExpandedAccordions] = useState<{ [key: number]: boolean }>({});
   const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<{
@@ -39,13 +38,6 @@ function MyPage() {
     notes: '',
     link: ''
   });
-
-  const toggleAccordion = (recordId: number) => {
-    setExpandedAccordions(prev => ({
-      ...prev,
-      [recordId]: !prev[recordId]
-    }));
-  };
 
   useEffect(() => {
     fetchRecords();
@@ -182,16 +174,6 @@ function MyPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getReadingAmountIcon = (amount: string) => {
-    switch (amount) {
-      case '1文だけ': return '💬';
-      case '1段落': return '📝';
-      case '1章': return '📖';
-      case '1冊・全文': return '📚';
-      default: return '📖';
-    }
   };
 
   const getReadingAmountColor = (amount: string) => {

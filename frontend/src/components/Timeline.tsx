@@ -121,24 +121,13 @@ function Timeline() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ja-JP', {
+    return new Date(dateString).toLocaleDateString('ja-JP', {
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getReadingAmountIcon = (amount: string) => {
-    switch (amount) {
-      case '1文だけ': return '💬';
-      case '1段落': return '📝';
-      case '1章': return '📖';
-      case '1冊・全文': return '📚';
-      default: return '📖';
-    }
   };
 
   const getReadingAmountColor = (amount: string) => {
