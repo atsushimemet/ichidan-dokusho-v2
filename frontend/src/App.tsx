@@ -159,19 +159,19 @@ function AppContent() {
       <Routes>
         <Route path="/landing_page" element={<LandingPage />} />
         <Route path="/" element={
-          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
             {isAuthenticated ? <Timeline /> : <SelectionScreen />}
           </div>
         } />
         <Route path="/auth" element={
-          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
             <AuthScreen />
           </div>
         } />
         <Route 
           path="/input" 
           element={
-            <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl">
               <InputForm />
             </div>
           } 
@@ -179,7 +179,7 @@ function AppContent() {
         <Route 
           path="/mypage" 
           element={
-            <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
               <MyPage />
             </div>
           } 
@@ -187,23 +187,23 @@ function AppContent() {
         <Route 
           path="/dashboard" 
           element={
-            <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
               <Dashboard />
             </div>
           } 
         />
         <Route path="/timeline" element={
-          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
             <Timeline />
           </div>
         } />
         <Route path="/qa" element={
-          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
             <QAPage />
           </div>
         } />
         <Route path="/settings" element={
-          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl">
             <SettingsPage />
           </div>
         } />

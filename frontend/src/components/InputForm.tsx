@@ -32,6 +32,19 @@ function InputForm() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [, setTitleExtractionSuccess] = useState(false);
   
+  // テキストエリアの展開状態管理
+  const [expandedTextareas, setExpandedTextareas] = useState<{
+    learning: boolean;
+    action: boolean;
+    notes: boolean;
+    customLink: boolean;
+  }>({
+    learning: false,
+    action: false,
+    notes: false,
+    customLink: false
+  });
+  
   // デバウンス用のref
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -218,6 +231,35 @@ function InputForm() {
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);
     setTitleExtractionSuccess(false);
+    // テキストエリアの展開状態もリセット
+    setExpandedTextareas({
+      learning: false,
+      action: false,
+      notes: false,
+      customLink: false
+    });
+  };
+
+  // テキストエリアの展開/折りたたみを切り替える関数
+  const toggleTextareaExpansion = (field: keyof typeof expandedTextareas) => {
+    setExpandedTextareas(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  // テキストエリアの行数を計算する関数
+  const getTextareaRows = (field: keyof typeof expandedTextareas, text: string) => {
+    const baseRows = 3; // 基本の行数
+    const maxRows = 20; // 最大行数（スマホUI最適化）
+    
+    if (expandedTextareas[field]) {
+      return maxRows;
+    }
+    
+    // 文字数に基づいて行数を計算（1行約20文字として計算）
+    const estimatedRows = Math.ceil(text.length / 20);
+    return Math.min(Math.max(estimatedRows, baseRows), maxRows);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -294,7 +336,7 @@ function InputForm() {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border border-orange-100 min-h-screen sm:min-h-0">
       <div className="flex items-center justify-center mb-4">
         <BookIcon size={48} />
         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -401,15 +443,26 @@ function InputForm() {
                 <label htmlFor="customLink" className="block text-sm font-medium text-gray-700 mb-2">
                   リンクを直接入力（任意）
                 </label>
-                <textarea
-                  id="customLink"
-                  name="customLink"
-                  value={formData.customLink}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={2}
-                />
+                <div className="relative">
+                  <textarea
+                    id="customLink"
+                    name="customLink"
+                    value={formData.customLink}
+                    onChange={handleInputChange}
+                    placeholder="https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
+                    rows={getTextareaRows('customLink', formData.customLink)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                  {formData.customLink.length > 60 && (
+                    <button
+                      type="button"
+                      onClick={() => toggleTextareaExpansion('customLink')}
+                      className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                    >
+                      {expandedTextareas.customLink ? '折りたたむ' : 'さらに表示'}
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
                   記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます
                 </p>
@@ -444,16 +497,27 @@ function InputForm() {
           <label htmlFor="learning" className="block text-sm font-medium text-gray-700 mb-2">
             3. 今日の学び or 気づき
           </label>
-          <textarea
-            id="learning"
-            name="learning"
-            value={formData.learning}
-            onChange={handleInputChange}
-            placeholder="例：「人の話を聴くとは、同意することではない」"
-            rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
-            required
-          />
+          <div className="relative">
+            <textarea
+              id="learning"
+              name="learning"
+              value={formData.learning}
+              onChange={handleInputChange}
+              placeholder="例：「人の話を聴くとは、同意することではない」"
+              rows={getTextareaRows('learning', formData.learning)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
+              required
+            />
+            {formData.learning.length > 60 && (
+              <button
+                type="button"
+                onClick={() => toggleTextareaExpansion('learning')}
+                className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+              >
+                {expandedTextareas.learning ? '折りたたむ' : 'さらに表示'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 4. 明日の小さなアクション */}
@@ -461,16 +525,27 @@ function InputForm() {
           <label htmlFor="action" className="block text-sm font-medium text-gray-700 mb-2">
             4. 明日の小さなアクション
           </label>
-          <textarea
-            id="action"
-            name="action"
-            value={formData.action}
-            onChange={handleInputChange}
-            placeholder="例：「朝会で相手の話をさえぎらずに聞く」"
-            rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
-            required
-          />
+          <div className="relative">
+            <textarea
+              id="action"
+              name="action"
+              value={formData.action}
+              onChange={handleInputChange}
+              placeholder="例：「朝会で相手の話をさえぎらずに聞く」"
+              rows={getTextareaRows('action', formData.action)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
+              required
+            />
+            {formData.action.length > 60 && (
+              <button
+                type="button"
+                onClick={() => toggleTextareaExpansion('action')}
+                className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+              >
+                {expandedTextareas.action ? '折りたたむ' : 'さらに表示'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 5. 備考（マイページでのみ表示） */}
@@ -478,15 +553,26 @@ function InputForm() {
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
             5. 備考 <span className="text-xs text-gray-500">（マイページでのみ表示）</span>
           </label>
-          <textarea
-            id="notes"
-            name="notes"
-            value={formData.notes}
-            onChange={handleInputChange}
-            placeholder="どこで読んだのか、何ページ目か、どんなきっかけで読んだのか、教えてくれた人は誰かなど"
-            rows={3}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
-          />
+          <div className="relative">
+            <textarea
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
+              placeholder="どこで読んだのか、何ページ目か、どんなきっかけで読んだのか、教えてくれた人は誰かなど"
+              rows={getTextareaRows('notes', formData.notes)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
+            />
+            {formData.notes.length > 60 && (
+              <button
+                type="button"
+                onClick={() => toggleTextareaExpansion('notes')}
+                className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+              >
+                {expandedTextareas.notes ? '折りたたむ' : 'さらに表示'}
+              </button>
+            )}
+          </div>
           <p className="text-xs text-gray-500 mt-1">
             この情報はあなたのマイページでのみ表示され、他のユーザーには公開されません
           </p>
