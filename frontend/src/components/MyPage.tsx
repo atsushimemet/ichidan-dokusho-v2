@@ -114,7 +114,16 @@ function MyPage() {
       }
 
       const result = await response.json();
-      setRecords(result.data || []);
+      console.log('取得したデータ:', result.data);
+      
+      // バックエンドのスネークケースをキャメルケースに変換
+      const convertedRecords = (result.data || []).map((record: any) => ({
+        ...record,
+        containsSpoiler: record.contains_spoiler
+      }));
+      console.log('変換後のレコード:', convertedRecords);
+      
+      setRecords(convertedRecords);
     } catch (error) {
       console.error('レコード取得エラー:', error);
       setError('レコードの取得に失敗しました。');
@@ -214,10 +223,18 @@ function MyPage() {
         console.log('更新後のデータ:', updatedRecord.data);
         console.log('更新後のcontainsSpoiler:', updatedRecord.data.containsSpoiler);
         
+        // バックエンドのスネークケースをキャメルケースに変換
+        const convertedData = {
+          ...updatedRecord.data,
+          containsSpoiler: updatedRecord.data.contains_spoiler
+        };
+        console.log('変換後のデータ:', convertedData);
+        console.log('変換後のcontainsSpoiler:', convertedData.containsSpoiler);
+        
         // レコードリストを更新
         setRecords(prevRecords => 
           prevRecords.map(record => 
-            record.id === id ? { ...record, ...updatedRecord.data } : record
+            record.id === id ? { ...record, ...convertedData } : record
           )
         );
         setEditingRecord(null);
