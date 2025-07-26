@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
@@ -13,6 +14,7 @@ interface FormData {
 }
 
 function InputForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     title: '',
     readingAmount: '',
@@ -274,8 +276,10 @@ function InputForm() {
       }
       
       // 成功時の処理
-      alert('投稿が完了しました！');
+      alert('投稿が完了しました！マイページに遷移します。');
       resetForm();
+      // マイページに遷移
+      navigate('/mypage');
     } catch (error) {
       console.error('送信エラー:', error);
       trackError('post_creation_failed', error instanceof Error ? error.message : 'Unknown error');
