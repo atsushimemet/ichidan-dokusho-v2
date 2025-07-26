@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { isAmazonLink } from '../utils/amazonUtils';
 import { trackShare } from '../utils/analytics';
 import BookIcon from './BookIcon';
@@ -22,7 +21,6 @@ interface ReadingRecord {
 
 
 function MyPage() {
-  const { token } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
