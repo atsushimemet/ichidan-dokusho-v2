@@ -261,10 +261,10 @@ function MyPage() {
     });
   };
 
-  // ChatGPTでアクションを深掘り
+  // ChatGPTで学びとアクションを整理
   const openChatGPT = (action: string, learning: string, title: string) => {
     // ChatGPT用のプロンプトを生成
-    const prompt = `以下の読書から得た学びとアクションについて、より具体的で実行可能なアクションに深掘りしてください。
+    const prompt = `以下の読書から得た学びとアクションについて、学んだ内容の整理と具体的で実行可能なアクションに深掘りしてください。
 
 【読んだ本】
 ${title}
@@ -276,12 +276,13 @@ ${learning}
 ${action}
 
 【お願い】
-1. 現在のアクションをより具体的で実行可能なステップに分解してください
-2. いつ、どこで、どのように実行するかを明確にしてください
-3. 成功の指標や確認方法も含めてください
-4. 必要に応じて、複数の小さなアクションに分けてください
+1. 学んだ内容を1000文字以内のテキストで整理し、核心的なポイントを明確にしてください
+2. 整理された学びを基に、現在のアクションをより具体的で実行可能なステップに分解してください
+3. いつ、どこで、どのように実行するかを明確にしてください
+4. 成功の指標や確認方法も含めてください
+5. 必要に応じて、複数の小さなアクションに分けてください
 
-より実践的で継続可能なアクションプランを作成してください。`;
+学んだ内容の整理と実践的で継続可能なアクションプランを作成してください。`;
     
     // クリップボードにプロンプトをコピー
     navigator.clipboard.writeText(prompt).then(() => {
@@ -447,7 +448,7 @@ ${action}
                   <button
                     onClick={() => openChatGPT(record.action, record.learning, record.title)}
                     className="text-purple-500 hover:text-purple-700 hover:bg-purple-50 p-1 rounded-full transition-colors"
-                    title="ChatGPTでアクションを深掘り"
+                    title="ChatGPTで学びとアクションを整理"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
