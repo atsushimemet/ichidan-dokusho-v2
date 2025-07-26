@@ -20,23 +20,23 @@ function QAPage() {
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start">
               <span className="mr-2">✏️</span>
-              <span><b>編集アイコン</b>：記録内容を編集できます。押下すると編集フォームが開きます。</span>
+              <span><b>編集アイコン（鉛筆マーク）</b>：記録内容を編集できます。押下すると編集フォームが開きます。</span>
             </li>
             <li className="flex items-start">
               <span className="mr-2">🗑️</span>
-              <span><b>削除アイコン</b>：記録を削除します。押下後、確認ダイアログが表示されます。</span>
+              <span><b>削除アイコン（ゴミ箱マーク）</b>：記録を削除します。押下後、確認ダイアログが表示されます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">📝</span>
-              <span><b>Google Todoアイコン</b>：アクション内容をGoogle Todoに追加できます。押下するとGoogle Todoが開き、内容を貼り付けて登録できます。</span>
+              <span className="mr-2">📋</span>
+              <span><b>Google Todoアイコン（クリップボードマーク）</b>：アクション内容をGoogle Todoに追加できます。押下するとGoogle Todoが開き、内容を貼り付けて登録できます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">📤</span>
-              <span><b>シェアアイコン</b>：学び・アクション内容をSNSでシェアできます。140文字以内ならX（旧Twitter）、超過時はnoteのネタとして利用できます。</span>
+              <span className="mr-2">🔗</span>
+              <span><b>シェアアイコン（リンクマーク）</b>：学び・アクション内容をSNSでシェアできます。140文字以内ならX（旧Twitter）、超過時はnoteのネタとして利用できます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">ℹ️</span>
-              <span><b>機能の使い方（iマーク）</b>：このボタンを押すと、QAページへのリンク付きツールチップが表示されます。</span>
+              <span className="mr-2">❓</span>
+              <span><b>機能の使い方アイコン（疑問符マーク）</b>：このボタンを押すと、QAページへのリンク付きツールチップが表示されます。</span>
             </li>
           </ul>
         </div>
