@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import AuthScreen from './components/AuthScreen';
+import Dashboard from './components/Dashboard';
 import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
@@ -101,6 +102,13 @@ function AppContent() {
                     📝 入力画面
                   </Link>
                   <Link
+                    to="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                  >
+                    📊 ダッシュボード
+                  </Link>
+                  <Link
                     to="/mypage"
                     onClick={() => setIsMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
@@ -165,6 +173,14 @@ function AppContent() {
           element={
             <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
               <MyPage />
+            </div>
+          } 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+              <Dashboard />
             </div>
           } 
         />
