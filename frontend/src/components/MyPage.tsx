@@ -373,6 +373,16 @@ function MyPage() {
                     const text = generateSocialText(record.learning, record.action, record.title);
                     const isWithinCharLimit = isWithinLimit(text);
                     
+                    // デバッグ用ログ
+                    console.log('シェアテキスト:', {
+                      title: record.title,
+                      learning: record.learning,
+                      action: record.action,
+                      textLength: text.length,
+                      isWithinLimit: isWithinCharLimit,
+                      text: text
+                    });
+                    
                     return (
                       <button
                         onClick={() => isWithinCharLimit 
