@@ -9,6 +9,7 @@ import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
 import QAPage from './components/QAPage';
 import SelectionScreen from './components/SelectionScreen';
+import SettingsPage from './components/SettingsPage';
 import Timeline from './components/Timeline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -115,6 +116,13 @@ function AppContent() {
                   >
                     📚 マイページ
                   </Link>
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                  >
+                    ⚙️ 設定
+                  </Link>
                 </>
               )}
               <Link
@@ -192,6 +200,11 @@ function AppContent() {
         <Route path="/qa" element={
           <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
             <QAPage />
+          </div>
+        } />
+        <Route path="/settings" element={
+          <div className="container mx-auto px-4 pt-0 pb-8 max-w-2xl">
+            <SettingsPage />
           </div>
         } />
       </Routes>

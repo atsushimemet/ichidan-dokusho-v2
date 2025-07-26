@@ -3,16 +3,18 @@ import cors from 'cors';
 import express from 'express';
 import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
-  addLike,
-  createReadingRecord,
-  deleteReadingRecord,
-  getAllReadingRecords,
-  getReadingRecordById,
-  getUserReadingRecords,
-  ReadingRecord,
-  removeLike,
-  testConnection,
-  updateReadingRecord
+    addLike,
+    createReadingRecord,
+    deleteReadingRecord,
+    getAllReadingRecords,
+    getReadingRecordById,
+    getUserReadingRecords,
+    getUserSettings,
+    ReadingRecord,
+    removeLike,
+    testConnection,
+    updateReadingRecord,
+    upsertUserSettings
 } from './database';
 
 // Request型の拡張
@@ -465,7 +467,7 @@ app.get('/api/reading-records/:id', async (req, res) => {
 // 新しい読書記録を作成（認証必須）
 app.post('/api/reading-records', async (req, res) => {
   try {
-    const { title, reading_amount, learning, action, isNotBook, customLink } = req.body;
+    const { title, reading_amount, learning, action, isNotBook, customLink, containsSpoiler } = req.body;
     // 開発用のダミーユーザー情報
     const userId = 'dev-user-123';
     const userEmail = 'dev@example.com';
@@ -495,6 +497,9 @@ app.post('/api/reading-records', async (req, res) => {
       learning,
       action,
       notes: req.body.notes,
+      is_not_book: isNotBook,
+      custom_link: customLink,
+      contains_spoiler: containsSpoiler || false,
       user_id: userId,
       user_email: userEmail
     };
@@ -731,6 +736,62 @@ app.get('/api/my-records', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: 'Error retrieving user reading records',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// ユーザー設定を取得
+app.get('/api/user-settings', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.sub || 'dev-user-123';
+    const result = await getUserSettings(userId);
+    
+    if (result.success) {
+      res.json({
+        hideSpoilers: result.data.hide_spoilers
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to retrieve user settings',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving user settings',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// ユーザー設定を更新
+app.put('/api/user-settings', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.sub || 'dev-user-123';
+    const { hideSpoilers } = req.body;
+    
+    const result = await upsertUserSettings({
+      user_id: userId,
+      hide_spoilers: hideSpoilers
+    });
+    
+    if (result.success) {
+      res.json({
+        message: 'User settings updated successfully',
+        settings: {
+          hideSpoilers: result.data.hide_spoilers
+        }
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to update user settings',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error updating user settings',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }

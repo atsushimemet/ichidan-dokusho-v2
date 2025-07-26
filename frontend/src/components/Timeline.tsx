@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { isAmazonLink } from '../utils/amazonUtils';
 import BookIcon from './BookIcon';
 
@@ -13,13 +14,21 @@ interface ReadingRecord {
   updated_at: string;
   like_count?: number | string;
   is_liked?: boolean;
+  containsSpoiler?: boolean;
+}
+
+interface UserSettings {
+  hideSpoilers: boolean;
 }
 
 function Timeline() {
+  const { token } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
+  const [filteredRecords, setFilteredRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
+  const [userSettings, setUserSettings] = useState<UserSettings>({ hideSpoilers: false });
 
   useEffect(() => {
     initializeSession();
@@ -30,6 +39,39 @@ function Timeline() {
       fetchRecords();
     }
   }, [sessionId]);
+
+  useEffect(() => {
+    if (token) {
+      loadUserSettings();
+    }
+  }, [token]);
+
+  useEffect(() => {
+    // ネタバレ設定に基づいてレコードをフィルタリング
+    if (userSettings.hideSpoilers) {
+      setFilteredRecords(records.filter(record => !record.containsSpoiler));
+    } else {
+      setFilteredRecords(records);
+    }
+  }, [records, userSettings.hideSpoilers]);
+
+  const loadUserSettings = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/user-settings`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const settings = await response.json();
+        setUserSettings(settings);
+      }
+    } catch (error) {
+      console.error('設定の読み込みに失敗しました:', error);
+    }
+  };
 
   const initializeSession = async () => {
     try {
@@ -194,22 +236,29 @@ function Timeline() {
         </div>
       ) : (
         <div className="space-y-6 max-h-96 overflow-y-auto">
-          {records.map((record) => (
+          {filteredRecords.map((record) => (
             <div
               key={record.id}
               className="bg-white rounded-xl shadow-md border border-orange-100 p-6 hover:shadow-lg transition-shadow"
             >
               {/* ヘッダー */}
               <div className="mb-4">
-                {/* 書籍タイトル */}
-                <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight mb-2">
-                  <span className="sm:hidden">
-                    {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
-                  </span>
-                  <span className="hidden sm:block">
-                    {record.title}
-                  </span>
-                </h3>
+                {/* 書籍タイトルとネタバレインジケーター */}
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-base text-gray-800 line-clamp-2 leading-tight flex-1 min-w-0">
+                    <span className="sm:hidden">
+                      {record.title.length > 30 ? `${record.title.substring(0, 30)}...` : record.title}
+                    </span>
+                    <span className="hidden sm:block">
+                      {record.title}
+                    </span>
+                  </h3>
+                  {record.containsSpoiler && (
+                    <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full flex-shrink-0">
+                      ⚠️ ネタバレ
+                    </span>
+                  )}
+                </div>
                 
                 {/* 読んだ量の丸といいねボタン */}
                 <div className="flex items-center space-x-2 mb-2">
