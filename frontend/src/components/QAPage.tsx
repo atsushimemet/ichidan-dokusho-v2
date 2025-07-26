@@ -19,23 +19,43 @@ function QAPage() {
           </h2>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start">
-              <span className="mr-2">📝</span>
+              <span className="mr-2">
+                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </span>
               <span><b>投稿を編集</b>：記録内容を編集できます。押下すると編集フォームが開きます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">🗑️</span>
+              <span className="mr-2">
+                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </span>
               <span><b>投稿を削除</b>：記録を削除します。押下後、確認ダイアログが表示されます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">📋</span>
+              <span className="mr-2">
+                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </span>
               <span><b>Google TODOに追加</b>：アクション内容をGoogle Todoに追加できます。押下するとGoogle Todoが開き、内容を貼り付けて登録できます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">🔗</span>
+              <span className="mr-2">
+                <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+              </span>
               <span><b>Xでシェア / noteのネタに</b>：学び・アクション内容をSNSでシェアできます。140文字以内ならX（旧Twitter）、超過時はnoteのネタとして利用できます。</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2">❓</span>
+              <span className="mr-2">
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
               <span><b>機能の使い方</b>：このボタンを押すと、QAページへのリンク付きツールチップが表示されます。</span>
             </li>
           </ul>
