@@ -488,6 +488,60 @@ function InputForm() {
           </p>
         </div>
 
+        {/* 6. ChatGPTで明日の小さなアクションを精緻化する */}
+        <div>
+          <button
+            type="button"
+            onClick={() => {
+              if (formData.action.trim()) {
+                const prompt = `以下の読書から得た学びとアクションについて、より具体的で実行可能なアクションに深掘りしてください。
+
+【読んだ本】
+${formData.title || '書籍名未入力'}
+
+【今日の学び】
+${formData.learning || '学び未入力'}
+
+【現在のアクション】
+${formData.action}
+
+【お願い】
+1. 現在のアクションをより具体的で実行可能なステップに分解してください
+2. いつ、どこで、どのように実行するかを明確にしてください
+3. 成功の指標や確認方法も含めてください
+4. 必要に応じて、複数の小さなアクションに分けてください
+
+より実践的で継続可能なアクションプランを作成してください。`;
+
+                navigator.clipboard.writeText(prompt).then(() => {
+                  window.open('https://chat.openai.com/', '_blank');
+                }).catch(err => {
+                  console.error('クリップボードへのコピーに失敗しました:', err);
+                  const textArea = document.createElement('textarea');
+                  textArea.value = prompt;
+                  document.body.appendChild(textArea);
+                  textArea.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(textArea);
+                  window.open('https://chat.openai.com/', '_blank');
+                });
+              } else {
+                alert('明日の小さなアクションを入力してからお試しください。');
+              }
+            }}
+            disabled={!formData.action.trim()}
+            className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <span>ChatGPTで明日の小さなアクションを精緻化する</span>
+          </button>
+          <p className="text-xs text-gray-500 mt-1 text-center">
+            アクションを入力後、このボタンを押すとChatGPTでより具体的なアクションプランを作成できます
+          </p>
+        </div>
+
         {/* 送信ボタン */}
         <div className="pt-4">
           <button

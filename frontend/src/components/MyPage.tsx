@@ -261,6 +261,47 @@ function MyPage() {
     });
   };
 
+  // ChatGPTでアクションを深掘り
+  const openChatGPT = (action: string, learning: string, title: string) => {
+    // ChatGPT用のプロンプトを生成
+    const prompt = `以下の読書から得た学びとアクションについて、より具体的で実行可能なアクションに深掘りしてください。
+
+【読んだ本】
+${title}
+
+【今日の学び】
+${learning}
+
+【現在のアクション】
+${action}
+
+【お願い】
+1. 現在のアクションをより具体的で実行可能なステップに分解してください
+2. いつ、どこで、どのように実行するかを明確にしてください
+3. 成功の指標や確認方法も含めてください
+4. 必要に応じて、複数の小さなアクションに分けてください
+
+より実践的で継続可能なアクションプランを作成してください。`;
+    
+    // クリップボードにプロンプトをコピー
+    navigator.clipboard.writeText(prompt).then(() => {
+      // ChatGPTを新しいタブで開く
+      window.open('https://chat.openai.com/', '_blank');
+    }).catch(err => {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: 古いブラウザ対応
+      const textArea = document.createElement('textarea');
+      textArea.value = prompt;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      // ChatGPTを新しいタブで開く
+      window.open('https://chat.openai.com/', '_blank');
+    });
+  };
+
   if (loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
@@ -403,6 +444,15 @@ function MyPage() {
                       </button>
                     );
                   })()}
+                  <button
+                    onClick={() => openChatGPT(record.action, record.learning, record.title)}
+                    className="text-purple-500 hover:text-purple-700 hover:bg-purple-50 p-1 rounded-full transition-colors"
+                    title="ChatGPTでアクションを深掘り"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </button>
                   <button
                     onClick={() => setHoveredTooltip(hoveredTooltip === record.id ? null : record.id)}
                     className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 p-1 rounded-full transition-colors"
