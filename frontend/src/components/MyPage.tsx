@@ -22,6 +22,7 @@ function MyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedAccordions, setExpandedAccordions] = useState<{ [key: number]: boolean }>({});
+  const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<{
     title: string;
@@ -410,7 +411,8 @@ function MyPage() {
                     );
                   })()}
                   <button
-                    onClick={() => toggleAccordion(record.id)}
+                    onMouseEnter={() => setHoveredTooltip(record.id)}
+                    onMouseLeave={() => setHoveredTooltip(null)}
                     className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 p-1 rounded-full transition-colors"
                     title="機能の使い方"
                   >
@@ -579,7 +581,7 @@ function MyPage() {
 
 
               {/* ツールチップ - 使い方ガイド */}
-              {expandedAccordions[record.id] && (
+              {hoveredTooltip === record.id && (
                 <div className="absolute z-10 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-lg max-w-sm">
                   <div className="space-y-3">
                     {/* Google Todo */}
