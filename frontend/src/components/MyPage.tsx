@@ -411,8 +411,7 @@ function MyPage() {
                     );
                   })()}
                   <button
-                    onMouseEnter={() => setHoveredTooltip(record.id)}
-                    onMouseLeave={() => setHoveredTooltip(null)}
+                    onClick={() => setHoveredTooltip(hoveredTooltip === record.id ? null : record.id)}
                     className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 p-1 rounded-full transition-colors"
                     title="機能の使い方"
                   >
