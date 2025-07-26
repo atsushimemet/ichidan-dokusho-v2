@@ -353,7 +353,7 @@ function InputForm() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="https://www.amazon.co.jp/dp/XXXXXXXXXX"
+              placeholder={formData.isNotBook ? "書籍以外のURLを入力して下さい。ex. Web記事" : "https://www.amazon.co.jp/dp/XXXXXXXXXX"}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
               required
             />
@@ -382,7 +382,7 @@ function InputForm() {
                   : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {formData.isNotBook ? '✓ 書籍じゃありません' : '📚 書籍じゃありません'}
+              {formData.isNotBook ? '✓ not 書籍' : '📚 not 書籍'}
             </button>
             <span className="text-xs text-gray-500">
               （記事、ブログ、YouTubeなど書籍以外の場合はチェックしてください）
