@@ -582,10 +582,7 @@ function MyPage() {
 
               {/* ツールチップ - QAページへのリンク */}
               {hoveredTooltip === record.id && (
-                <div className="absolute z-10 top-1/2 right-full transform -translate-y-1/2 mr-2 p-3 bg-white border border-gray-200 rounded-lg shadow-lg max-w-xs">
-                  {/* 吹き出しの矢印 */}
-                  <div className="absolute top-1/2 right-0 transform translate-x-full -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-200"></div>
-                  <div className="absolute top-1/2 right-0 transform translate-x-full -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-white" style={{ right: '-1px' }}></div>
+                <div className="absolute z-10 top-4 right-4 p-3 bg-white border border-gray-200 rounded-lg shadow-lg max-w-xs">
                   <div className="text-center">
                     <p className="text-sm text-gray-700 mb-2">機能の使い方が分からない？</p>
                     <a
