@@ -336,7 +336,7 @@ function InputForm() {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border border-orange-100 min-h-screen sm:min-h-0">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border border-orange-100 min-h-screen sm:min-h-0 w-full max-w-full overflow-x-hidden">
       <div className="flex items-center justify-center mb-4">
         <BookIcon size={48} />
         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -348,7 +348,7 @@ function InputForm() {
         1ページの前進が、思考と行動を変えていく。
       </p>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 w-full">
         {/* 1. Amazonリンク入力 */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
