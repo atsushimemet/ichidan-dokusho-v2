@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { isAmazonLink } from '../utils/amazonUtils';
 import { trackShare } from '../utils/analytics';
+import { useExpandableText } from '../hooks/useExpandableText';
 import BookIcon from './BookIcon';
+import ExpandableTextDisplay from './ExpandableTextDisplay';
 
 interface ReadingRecord {
   id: number;
@@ -44,6 +46,20 @@ function MyPage() {
     link: '',
     containsSpoiler: false
   });
+
+  // 編集モードでのテキストエリア展開状態管理
+  const [editExpandedTextareas, setEditExpandedTextareas] = useState<{
+    learning: boolean;
+    action: boolean;
+    notes: boolean;
+  }>({
+    learning: false,
+    action: false,
+    notes: false
+  });
+
+  // 表示モードでのテキスト展開機能
+  const { expandedTexts, toggleTextExpansion, isTextLong, getDisplayText } = useExpandableText();
 
   useEffect(() => {
     fetchRecords();
@@ -145,6 +161,12 @@ function MyPage() {
       link: '',
       containsSpoiler: false
     });
+    // テキストエリアの展開状態もリセット
+    setEditExpandedTextareas({
+      learning: false,
+      action: false,
+      notes: false
+    });
   };
 
   // 投稿更新処理
@@ -189,6 +211,12 @@ function MyPage() {
           )
         );
         setEditingRecord(null);
+        // テキストエリアの展開状態もリセット
+        setEditExpandedTextareas({
+          learning: false,
+          action: false,
+          notes: false
+        });
         alert('投稿を更新しました。');
       } else {
         const errorData = await response.json();
@@ -209,6 +237,29 @@ function MyPage() {
       [name]: value
     }));
   };
+
+  // 編集モードでのテキストエリア展開/折りたたみを切り替える関数
+  const toggleEditTextareaExpansion = (field: keyof typeof editExpandedTextareas) => {
+    setEditExpandedTextareas(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  // 編集モードでのテキストエリアの行数を計算する関数
+  const getEditTextareaRows = (field: keyof typeof editExpandedTextareas, text: string) => {
+    const baseRows = 3; // 基本の行数
+    const maxRows = 20; // 最大行数（スマホUI最適化）
+    
+    if (editExpandedTextareas[field]) {
+      return maxRows;
+    }
+    
+    // 文字数に基づいて行数を計算（1行約20文字として計算）
+    const estimatedRows = Math.ceil(text.length / 20);
+    return Math.min(Math.max(estimatedRows, baseRows), maxRows);
+  };
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -350,7 +401,7 @@ ${action}
 
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
           <BookIcon size={48} />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -366,7 +417,7 @@ ${action}
 
   if (error) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
           <BookIcon size={48} />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -387,7 +438,7 @@ ${action}
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
       <div className="flex items-center justify-center mb-8">
         <BookIcon size={48} />
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -401,11 +452,11 @@ ${action}
           <p className="text-gray-500">最初の読書記録を作成してみましょう！</p>
         </div>
       ) : (
-        <div className="space-y-6 max-h-96 overflow-y-auto">
+        <div className="space-y-3 sm:space-y-6 w-full">
           {records.map((record) => (
             <div
               key={record.id}
-              className="bg-white rounded-xl shadow-md border border-orange-100 p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-md border border-orange-100 p-3 sm:p-6 hover:shadow-lg transition-shadow"
             >
               {/* ヘッダー */}
               <div className="mb-4">
@@ -549,39 +600,72 @@ ${action}
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       学び・気づき
                     </label>
-                    <textarea
-                      name="learning"
-                      value={editFormData.learning}
-                      onChange={handleEditInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        name="learning"
+                        value={editFormData.learning}
+                        onChange={handleEditInputChange}
+                        rows={getEditTextareaRows('learning', editFormData.learning)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                      {editFormData.learning.length > 60 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEditTextareaExpansion('learning')}
+                          className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                        >
+                          {editExpandedTextareas.learning ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       今日のアクション
                     </label>
-                    <textarea
-                      name="action"
-                      value={editFormData.action}
-                      onChange={handleEditInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        name="action"
+                        value={editFormData.action}
+                        onChange={handleEditInputChange}
+                        rows={getEditTextareaRows('action', editFormData.action)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                      {editFormData.action.length > 60 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEditTextareaExpansion('action')}
+                          className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                        >
+                          {editExpandedTextareas.action ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       備考・メモ（任意）
                     </label>
-                    <textarea
-                      name="notes"
-                      value={editFormData.notes}
-                      onChange={handleEditInputChange}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        name="notes"
+                        value={editFormData.notes}
+                        onChange={handleEditInputChange}
+                        rows={getEditTextareaRows('notes', editFormData.notes)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                      {editFormData.notes.length > 60 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEditTextareaExpansion('notes')}
+                          className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                        >
+                          {editExpandedTextareas.notes ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -691,32 +775,55 @@ ${action}
               )}
 
               {/* 学び */}
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-700 mb-2">💡 今日の学び</h4>
-                <div className="min-h-[80px] bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400 flex items-center">
-                  <p className="text-gray-800">{record.learning}</p>
-                </div>
-              </div>
+              <ExpandableTextDisplay
+                recordId={record.id}
+                field="learning"
+                text={record.learning}
+                displayText={getDisplayText(record.id, 'learning', record.learning)}
+                isTextLong={isTextLong(record.learning)}
+                isExpanded={expandedTexts[record.id]?.learning || false}
+                onToggle={() => toggleTextExpansion(record.id, 'learning')}
+                bgColor="bg-yellow-50"
+                borderColor="border-yellow-400"
+                icon="💡"
+                title="今日の学び"
+              />
 
               {/* アクション */}
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-700 mb-2">🎯 明日のアクション</h4>
-                <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400 flex items-center">
-                  <p className="text-gray-800">{record.action}</p>
-                </div>
-              </div>
+              <ExpandableTextDisplay
+                recordId={record.id}
+                field="action"
+                text={record.action}
+                displayText={getDisplayText(record.id, 'action', record.action)}
+                isTextLong={isTextLong(record.action)}
+                isExpanded={expandedTexts[record.id]?.action || false}
+                onToggle={() => toggleTextExpansion(record.id, 'action')}
+                bgColor="bg-green-50"
+                borderColor="border-green-400"
+                icon="🎯"
+                title="明日のアクション"
+              />
 
               {/* 備考（マイページでのみ表示） */}
               {record.notes && (
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-700 mb-2">📝 備考</h4>
-                  <div className="min-h-[80px] bg-gray-50 p-3 rounded-lg border-l-4 border-gray-400 flex items-center">
-                    <p className="text-gray-800">{record.notes}</p>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                <>
+                  <ExpandableTextDisplay
+                    recordId={record.id}
+                    field="notes"
+                    text={record.notes}
+                    displayText={getDisplayText(record.id, 'notes', record.notes)}
+                    isTextLong={isTextLong(record.notes)}
+                    isExpanded={expandedTexts[record.id]?.notes || false}
+                    onToggle={() => toggleTextExpansion(record.id, 'notes')}
+                    bgColor="bg-gray-50"
+                    borderColor="border-gray-400"
+                    icon="📝"
+                    title="備考"
+                  />
+                  <p className="text-xs text-gray-500 mt-1 mb-4">
                     この情報はあなたのマイページでのみ表示されています
                   </p>
-                </div>
+                </>
               )}
 
               {/* ネタバレ設定（ネタバレありの場合のみ表示） */}

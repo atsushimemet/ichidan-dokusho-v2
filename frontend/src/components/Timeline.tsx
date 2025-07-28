@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { isAmazonLink } from '../utils/amazonUtils';
+import { useExpandableText } from '../hooks/useExpandableText';
 import BookIcon from './BookIcon';
+import ExpandableTextDisplay from './ExpandableTextDisplay';
 
 interface ReadingRecord {
   id: number;
@@ -30,6 +32,9 @@ function Timeline() {
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
   const [userSettings, setUserSettings] = useState<UserSettings>({ hideSpoilers: false });
+
+  // テキスト展開機能
+  const { expandedTexts, toggleTextExpansion, isTextLong, getDisplayText } = useExpandableText();
 
   useEffect(() => {
     initializeSession();
@@ -224,7 +229,7 @@ function Timeline() {
 
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
           <BookIcon size={48} />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -240,7 +245,7 @@ function Timeline() {
 
   if (error) {
     return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
           <BookIcon size={48} />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -275,11 +280,11 @@ function Timeline() {
           <p className="text-gray-500">最初の読書記録を作成してみましょう！</p>
         </div>
       ) : (
-        <div className="space-y-6 max-h-96 overflow-y-auto">
+        <div className="space-y-3 sm:space-y-6 w-full">
           {filteredRecords.map((record) => (
             <div
               key={record.id}
-              className="bg-white rounded-xl shadow-md border border-orange-100 p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-md border border-orange-100 p-3 sm:p-6 hover:shadow-lg transition-shadow"
             >
               {/* ヘッダー */}
               <div className="mb-4">
@@ -344,20 +349,34 @@ function Timeline() {
               )}
 
               {/* 学び */}
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-700 mb-2">💡 今日の学び</h4>
-                <p className="text-gray-800 bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
-                  {record.learning}
-                </p>
-              </div>
+              <ExpandableTextDisplay
+                recordId={record.id}
+                field="learning"
+                text={record.learning}
+                displayText={getDisplayText(record.id, 'learning', record.learning)}
+                isTextLong={isTextLong(record.learning)}
+                isExpanded={expandedTexts[record.id]?.learning || false}
+                onToggle={() => toggleTextExpansion(record.id, 'learning')}
+                bgColor="bg-yellow-50"
+                borderColor="border-yellow-400"
+                icon="💡"
+                title="今日の学び"
+              />
 
               {/* アクション */}
-              <div>
-                <h4 className="font-medium text-gray-700 mb-2">🎯 明日のアクション</h4>
-                <p className="text-gray-800 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                  {record.action}
-                </p>
-              </div>
+              <ExpandableTextDisplay
+                recordId={record.id}
+                field="action"
+                text={record.action}
+                displayText={getDisplayText(record.id, 'action', record.action)}
+                isTextLong={isTextLong(record.action)}
+                isExpanded={expandedTexts[record.id]?.action || false}
+                onToggle={() => toggleTextExpansion(record.id, 'action')}
+                bgColor="bg-green-50"
+                borderColor="border-green-400"
+                icon="🎯"
+                title="明日のアクション"
+              />
             </div>
           ))}
         </div>

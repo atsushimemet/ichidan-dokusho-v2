@@ -32,6 +32,7 @@ function InputForm() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [, setTitleExtractionSuccess] = useState(false);
   
+  
   // デバウンス用のref
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -220,6 +221,7 @@ function InputForm() {
     setTitleExtractionSuccess(false);
   };
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -294,7 +296,7 @@ function InputForm() {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border border-orange-100 min-h-screen sm:min-h-0 w-full max-w-full overflow-x-hidden">
       <div className="flex items-center justify-center mb-4">
         <BookIcon size={48} />
         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -306,7 +308,7 @@ function InputForm() {
         1ページの前進が、思考と行動を変えていく。
       </p>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 w-full">
         {/* 1. Amazonリンク入力 */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -407,8 +409,8 @@ function InputForm() {
                   value={formData.customLink}
                   onChange={handleInputChange}
                   placeholder="https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
+                  rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={2}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます
