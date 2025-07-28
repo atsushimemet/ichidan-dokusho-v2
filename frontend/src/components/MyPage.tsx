@@ -296,7 +296,9 @@ function MyPage() {
     }
     
     // ハッシュタグとサイトリンクを最後に配置
-    combinedText += `\n\n#1段読書 #読書習慣\n\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
+    // 書籍リンクがある場合は#PRタグを追加
+    const hashTags = link ? '#1段読書 #読書習慣 #PR' : '#1段読書 #読書習慣';
+    combinedText += `\n\n${hashTags}\n\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
     
     return combinedText;
   };
