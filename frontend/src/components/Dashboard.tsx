@@ -64,10 +64,10 @@ function Dashboard() {
     const today = new Date();
     const dailyData: { [key: string]: number } = {};
 
-    // 前後3日の日付を初期化
-    for (let i = -3; i <= 3; i++) {
+    // 過去7日間の日付を初期化（6日前〜今日）
+    for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      date.setDate(today.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       dailyData[dateStr] = 0;
     }
@@ -95,15 +95,13 @@ function Dashboard() {
 
   const formatDateForChart = (dateStr: string): string => {
     const date = new Date(dateStr);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const year = date.getFullYear();
-    
-    // 右端（最新日）の場合のみ年を表示
     const today = new Date();
-    const isLatest = date.toDateString() === today.toDateString();
     
-    return isLatest ? `${month}/${day} ${year}` : `${month}/${day}`;
+    // 今日から何日前かを計算
+    const diffTime = today.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    return `${diffDays}`;
   };
 
   if (loading) {
@@ -168,7 +166,7 @@ function Dashboard() {
             <span className="mr-2">📈</span>
             読書記録数の日次推移
           </h2>
-          <div className="h-64">
+          <div className="h-64 relative">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyRecords}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -194,6 +192,8 @@ function Dashboard() {
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                   }}
                   labelStyle={{ color: '#374151' }}
+                  formatter={(value) => [value, '読書記録数']}
+                  labelFormatter={(label) => `${label}日前`}
                 />
                 <Line 
                   type="monotone" 
@@ -205,9 +205,13 @@ function Dashboard() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            {/* 「日前」ラベルを右端に追加 */}
+            <div className="absolute bottom-6 right-8 text-xs text-gray-500">
+              日前
+            </div>
           </div>
           <p className="text-sm text-blue-600 mt-2 text-center">
-            当日の前後3日の読書記録数を表示しています
+            過去7日間（6日前〜今日）の読書記録数を表示しています
           </p>
         </div>
       )}
