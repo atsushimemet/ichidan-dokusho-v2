@@ -283,8 +283,23 @@ function MyPage() {
   };
 
   // 学びとアクションを統合して140文字以内のテキストを生成
-  const generateSocialText = (learning: string, action: string, title: string) => {
-    const combinedText = `📖 ${title}\n\n💡 ${learning}\n\n🎯 ${action}\n\n#1段読書 #読書習慣\n\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
+  const generateSocialText = (learning: string, action: string, title: string, link?: string) => {
+    // 学びとアクションを最優先で配置
+    let combinedText = `💡 ${learning}\n\n🎯 ${action}\n\n`;
+    
+    // 書籍情報を副次的な位置に配置
+    combinedText += `📖 ${title}`;
+    
+    // 書籍リンクがある場合は含める（AmazonリンクやカスタムリンクがあればURLを追加）
+    if (link) {
+      combinedText += `\n🔗 ${link}`;
+    }
+    
+    // ハッシュタグとサイトリンクを最後に配置
+    // 書籍リンクがある場合は#PRタグを追加
+    const hashTags = link ? '#1段読書 #読書習慣 #PR' : '#1段読書 #読書習慣';
+    combinedText += `\n\n${hashTags}\n\n👇 今すぐチェック！\nhttps://ichidan-dokusho.netlify.app/`;
+    
     return combinedText;
   };
 
@@ -294,8 +309,8 @@ function MyPage() {
   };
 
   // X（Twitter）でシェア
-  const shareOnTwitter = (learning: string, action: string, title: string) => {
-    const text = generateSocialText(learning, action, title);
+  const shareOnTwitter = (learning: string, action: string, title: string, link?: string) => {
+    const text = generateSocialText(learning, action, title, link);
     const encodedText = encodeURIComponent(text);
     const url = `https://twitter.com/intent/tweet?text=${encodedText}`;
     
@@ -306,8 +321,8 @@ function MyPage() {
   };
 
   // noteでシェア
-  const shareOnNote = (learning: string, action: string, title: string) => {
-    const text = generateSocialText(learning, action, title);
+  const shareOnNote = (learning: string, action: string, title: string, link?: string) => {
+    const text = generateSocialText(learning, action, title, link);
     
     // Google Analytics シェア追跡
     trackShare('note', text.length);
@@ -508,7 +523,7 @@ ${action}
                     </svg>
                   </button>
                   {(() => {
-                    const text = generateSocialText(record.learning, record.action, record.title);
+                    const text = generateSocialText(record.learning, record.action, record.title, record.link);
                     const isWithinCharLimit = isWithinLimit(record.learning, record.action);
                     
                     // デバッグ用ログ
@@ -516,6 +531,7 @@ ${action}
                       title: record.title,
                       learning: record.learning,
                       action: record.action,
+                      link: record.link,
                       learningActionLength: (record.learning + record.action).length,
                       fullTextLength: text.length,
                       isWithinLimit: isWithinCharLimit,
@@ -525,8 +541,8 @@ ${action}
                     return (
                       <button
                         onClick={() => isWithinCharLimit 
-                          ? shareOnTwitter(record.learning, record.action, record.title)
-                          : shareOnNote(record.learning, record.action, record.title)
+                          ? shareOnTwitter(record.learning, record.action, record.title, record.link)
+                          : shareOnNote(record.learning, record.action, record.title, record.link)
                         }
                         className={`p-1 rounded-full transition-colors ${
                           isWithinCharLimit 
