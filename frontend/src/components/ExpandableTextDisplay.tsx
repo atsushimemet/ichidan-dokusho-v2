@@ -25,14 +25,14 @@ const ExpandableTextDisplay: React.FC<ExpandableTextDisplayProps> = ({
   title
 }) => {
   return (
-    <div className="mb-4">
-      <h4 className="font-medium text-gray-700 mb-2">{icon} {title}</h4>
-      <div className={`min-h-[80px] ${bgColor} p-3 rounded-lg border-l-4 ${borderColor}`}>
-        <p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
+    <div className="mb-2 sm:mb-4">
+      <h4 className="font-medium text-gray-700 mb-1 sm:mb-2 text-sm sm:text-base">{icon} {title}</h4>
+      <div className={`min-h-[60px] sm:min-h-[80px] ${bgColor} p-2 sm:p-3 rounded-lg border-l-4 ${borderColor}`}>
+        <p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed text-sm sm:text-base">
           {displayText}
         </p>
         {isTextLong && (
-          <div className="mt-2 text-right">
+          <div className="mt-1 sm:mt-2 text-right">
             <button
               type="button"
               onClick={onToggle}

@@ -159,12 +159,12 @@ function AppContent() {
       <Routes>
         <Route path="/landing_page" element={<LandingPage />} />
         <Route path="/" element={
-          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             {isAuthenticated ? <Timeline /> : <SelectionScreen />}
           </div>
         } />
         <Route path="/auth" element={
-          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <AuthScreen />
           </div>
         } />
@@ -179,7 +179,7 @@ function AppContent() {
         <Route 
           path="/mypage" 
           element={
-            <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <MyPage />
             </div>
           } 
@@ -187,23 +187,23 @@ function AppContent() {
         <Route 
           path="/dashboard" 
           element={
-            <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <Dashboard />
             </div>
           } 
         />
         <Route path="/timeline" element={
-          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <Timeline />
           </div>
         } />
         <Route path="/qa" element={
-          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <QAPage />
           </div>
         } />
         <Route path="/settings" element={
-          <div className="container mx-auto px-2 sm:px-4 pt-0 pb-4 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <SettingsPage />
           </div>
         } />
