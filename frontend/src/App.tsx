@@ -139,6 +139,15 @@ function AppContent() {
               >
                 ❓ Q&A
               </Link>
+              <a
+                href={import.meta.env.VITE_FEEDBACK_FORM_URL || "https://forms.gle/placeholder"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+              >
+                💭 意見の匿名送信
+              </a>
               
               {isAuthenticated && (
                 <button
