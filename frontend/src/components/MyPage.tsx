@@ -45,6 +45,26 @@ function MyPage() {
     containsSpoiler: false
   });
 
+  // 編集モードでのテキストエリア展開状態管理
+  const [editExpandedTextareas, setEditExpandedTextareas] = useState<{
+    learning: boolean;
+    action: boolean;
+    notes: boolean;
+  }>({
+    learning: false,
+    action: false,
+    notes: false
+  });
+
+  // 表示モードでのテキスト展開状態管理（レコードID別）
+  const [expandedTexts, setExpandedTexts] = useState<{
+    [recordId: number]: {
+      learning: boolean;
+      action: boolean;
+      notes: boolean;
+    }
+  }>({});
+
   useEffect(() => {
     fetchRecords();
   }, []);
@@ -145,6 +165,12 @@ function MyPage() {
       link: '',
       containsSpoiler: false
     });
+    // テキストエリアの展開状態もリセット
+    setEditExpandedTextareas({
+      learning: false,
+      action: false,
+      notes: false
+    });
   };
 
   // 投稿更新処理
@@ -189,6 +215,12 @@ function MyPage() {
           )
         );
         setEditingRecord(null);
+        // テキストエリアの展開状態もリセット
+        setEditExpandedTextareas({
+          learning: false,
+          action: false,
+          notes: false
+        });
         alert('投稿を更新しました。');
       } else {
         const errorData = await response.json();
@@ -208,6 +240,53 @@ function MyPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  // 編集モードでのテキストエリア展開/折りたたみを切り替える関数
+  const toggleEditTextareaExpansion = (field: keyof typeof editExpandedTextareas) => {
+    setEditExpandedTextareas(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  // 編集モードでのテキストエリアの行数を計算する関数
+  const getEditTextareaRows = (field: keyof typeof editExpandedTextareas, text: string) => {
+    const baseRows = 3; // 基本の行数
+    const maxRows = 20; // 最大行数（スマホUI最適化）
+    
+    if (editExpandedTextareas[field]) {
+      return maxRows;
+    }
+    
+    // 文字数に基づいて行数を計算（1行約20文字として計算）
+    const estimatedRows = Math.ceil(text.length / 20);
+    return Math.min(Math.max(estimatedRows, baseRows), maxRows);
+  };
+
+  // 表示モードでのテキスト展開/折りたたみを切り替える関数
+  const toggleTextExpansion = (recordId: number, field: 'learning' | 'action' | 'notes') => {
+    setExpandedTexts(prev => ({
+      ...prev,
+      [recordId]: {
+        ...prev[recordId],
+        [field]: !prev[recordId]?.[field]
+      }
+    }));
+  };
+
+  // テキストが長いかどうかを判定する関数
+  const isTextLong = (text: string) => {
+    return text.length > 100; // 100文字以上で「さらに表示」を表示
+  };
+
+  // 表示用テキストを取得する関数（展開状態に応じて）
+  const getDisplayText = (recordId: number, field: 'learning' | 'action' | 'notes', text: string) => {
+    const isExpanded = expandedTexts[recordId]?.[field];
+    if (!isTextLong(text) || isExpanded) {
+      return text;
+    }
+    return text.substring(0, 100) + '...';
   };
 
   const formatDate = (dateString: string) => {
@@ -401,7 +480,7 @@ ${action}
           <p className="text-gray-500">最初の読書記録を作成してみましょう！</p>
         </div>
       ) : (
-        <div className="space-y-6 max-h-96 overflow-y-auto">
+        <div className="space-y-6 w-full">
           {records.map((record) => (
             <div
               key={record.id}
@@ -549,39 +628,72 @@ ${action}
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       学び・気づき
                     </label>
-                    <textarea
-                      name="learning"
-                      value={editFormData.learning}
-                      onChange={handleEditInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        name="learning"
+                        value={editFormData.learning}
+                        onChange={handleEditInputChange}
+                        rows={getEditTextareaRows('learning', editFormData.learning)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                      {editFormData.learning.length > 60 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEditTextareaExpansion('learning')}
+                          className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                        >
+                          {editExpandedTextareas.learning ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       今日のアクション
                     </label>
-                    <textarea
-                      name="action"
-                      value={editFormData.action}
-                      onChange={handleEditInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        name="action"
+                        value={editFormData.action}
+                        onChange={handleEditInputChange}
+                        rows={getEditTextareaRows('action', editFormData.action)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                      {editFormData.action.length > 60 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEditTextareaExpansion('action')}
+                          className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                        >
+                          {editExpandedTextareas.action ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       備考・メモ（任意）
                     </label>
-                    <textarea
-                      name="notes"
-                      value={editFormData.notes}
-                      onChange={handleEditInputChange}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="relative">
+                      <textarea
+                        name="notes"
+                        value={editFormData.notes}
+                        onChange={handleEditInputChange}
+                        rows={getEditTextareaRows('notes', editFormData.notes)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                      {editFormData.notes.length > 60 && (
+                        <button
+                          type="button"
+                          onClick={() => toggleEditTextareaExpansion('notes')}
+                          className="absolute bottom-2 right-2 text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded"
+                        >
+                          {editExpandedTextareas.notes ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -693,16 +805,42 @@ ${action}
               {/* 学び */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">💡 今日の学び</h4>
-                <div className="min-h-[80px] bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400 flex items-center">
-                  <p className="text-gray-800">{record.learning}</p>
+                <div className="min-h-[80px] bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+                  <p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
+                    {getDisplayText(record.id, 'learning', record.learning)}
+                  </p>
+                  {isTextLong(record.learning) && (
+                    <div className="mt-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => toggleTextExpansion(record.id, 'learning')}
+                        className="text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded shadow-sm"
+                      >
+                        {expandedTexts[record.id]?.learning ? '折りたたむ' : 'さらに表示'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* アクション */}
               <div className="mb-4">
                 <h4 className="font-medium text-gray-700 mb-2">🎯 明日のアクション</h4>
-                <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400 flex items-center">
-                  <p className="text-gray-800">{record.action}</p>
+                <div className="min-h-[80px] bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
+                  <p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
+                    {getDisplayText(record.id, 'action', record.action)}
+                  </p>
+                  {isTextLong(record.action) && (
+                    <div className="mt-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => toggleTextExpansion(record.id, 'action')}
+                        className="text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded shadow-sm"
+                      >
+                        {expandedTexts[record.id]?.action ? '折りたたむ' : 'さらに表示'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -710,8 +848,21 @@ ${action}
               {record.notes && (
                 <div className="mb-4">
                   <h4 className="font-medium text-gray-700 mb-2">📝 備考</h4>
-                  <div className="min-h-[80px] bg-gray-50 p-3 rounded-lg border-l-4 border-gray-400 flex items-center">
-                    <p className="text-gray-800">{record.notes}</p>
+                  <div className="min-h-[80px] bg-gray-50 p-3 rounded-lg border-l-4 border-gray-400">
+                    <p className="text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
+                      {getDisplayText(record.id, 'notes', record.notes)}
+                    </p>
+                    {isTextLong(record.notes) && (
+                      <div className="mt-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => toggleTextExpansion(record.id, 'notes')}
+                          className="text-xs text-blue-600 hover:text-blue-800 bg-white/80 px-2 py-1 rounded shadow-sm"
+                        >
+                          {expandedTexts[record.id]?.notes ? '折りたたむ' : 'さらに表示'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     この情報はあなたのマイページでのみ表示されています
