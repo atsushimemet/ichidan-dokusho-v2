@@ -140,7 +140,7 @@ function AppContent() {
                 ❓ Q&A
               </Link>
               <a
-                href={import.meta.env.VITE_FEEDBACK_FORM_URL || "https://forms.gle/placeholder"}
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdPDR8vn1mH0tI9PdU3tyfZcrjEJer-gdTOYx2QKdCzK5Aouw/viewform"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsMenuOpen(false)}
