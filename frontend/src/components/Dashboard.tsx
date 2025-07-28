@@ -64,8 +64,8 @@ function Dashboard() {
     const today = new Date();
     const dailyData: { [key: string]: number } = {};
 
-    // 過去7日間の日付を初期化（6日前〜今日）
-    for (let i = 6; i >= 0; i--) {
+    // 過去14日間の日付を初期化（13日前〜今日）
+    for (let i = 13; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
@@ -211,7 +211,7 @@ function Dashboard() {
             </div>
           </div>
           <p className="text-sm text-blue-600 mt-2 text-center">
-            過去7日間（6日前〜今日）の読書記録数を表示しています
+            過去14日間（13日前〜今日）の読書記録数を表示しています
           </p>
         </div>
       )}
