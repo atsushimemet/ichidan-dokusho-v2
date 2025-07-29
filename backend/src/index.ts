@@ -12,6 +12,7 @@ import {
     getUserSettings,
     ReadingRecord,
     removeLike,
+    searchReadingRecordsByTitle,
     testConnection,
     updateReadingRecord,
     upsertUserSettings
@@ -459,6 +460,37 @@ app.get('/api/reading-records/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       message: 'Error retrieving reading record', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// 過去の読書記録をタイトルで検索
+app.get('/api/reading-records/search/title', async (req, res) => {
+  try {
+    const { q, limit = 10 } = req.query;
+    
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const searchLimit = parseInt(limit as string) || 10;
+    const result = await searchReadingRecordsByTitle(q, searchLimit);
+    
+    if (result.success) {
+      res.json({ 
+        message: 'Search completed successfully', 
+        data: result.data 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Failed to search reading records', 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error searching reading records', 
       error: error instanceof Error ? error.message : 'Unknown error' 
     });
   }
