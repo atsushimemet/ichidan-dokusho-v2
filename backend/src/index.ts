@@ -497,17 +497,23 @@ app.get('/api/reading-records/search/title', async (req, res) => {
 });
 
 // 新しい読書記録を作成（認証必須）
-app.post('/api/reading-records', async (req, res) => {
+app.post('/api/reading-records', authenticateToken, async (req, res) => {
   try {
     const { title, reading_amount, learning, action, isNotBook, customLink, containsSpoiler } = req.body;
-    // 開発用のダミーユーザー情報
-    const userId = 'dev-user-123';
-    const userEmail = 'dev@example.com';
+    // 認証されたユーザー情報を取得
+    const userId = req.user?.userId || req.user?.sub;
+    const userEmail = req.user?.email;
 
     // バリデーション
     if (!title || !reading_amount || !learning || !action) {
       return res.status(400).json({ 
         message: 'Missing required fields: title, reading_amount, learning, action' 
+      });
+    }
+
+    if (!userId || !userEmail) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
       });
     }
 
@@ -749,11 +755,17 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
 });
 
 // ユーザー固有の読書記録を取得（マイページ用）
-app.get('/api/my-records', async (req, res) => {
+app.get('/api/my-records', authenticateToken, async (req, res) => {
   try {
-    // 開発用のダミーユーザーID
-    const userId = 'dev-user-123';
+    // 認証されたユーザー情報を取得
+    const userId = req.user?.userId || req.user?.sub;
     const sessionId = req.query.sessionId as string | undefined;
+
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
     const result = await getUserReadingRecords(userId, sessionId);
     if (result.success) {
       res.json({
