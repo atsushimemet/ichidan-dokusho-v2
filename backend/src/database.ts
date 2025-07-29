@@ -226,6 +226,24 @@ export const getUserReadingRecords = async (userId: string, sessionId?: string) 
   }
 };
 
+// 過去の読書記録をタイトルで検索
+export const searchReadingRecordsByTitle = async (searchTerm: string, limit: number = 10) => {
+  try {
+    const query = `
+      SELECT DISTINCT title, link, is_not_book, custom_link
+      FROM reading_records 
+      WHERE title ILIKE $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `;
+    const result = await pool.query(query, [`%${searchTerm}%`, limit]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Search reading records error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
 // ユーザー設定の型定義
 export interface UserSettings {
   id?: number;

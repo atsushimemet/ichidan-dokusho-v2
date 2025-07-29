@@ -32,10 +32,21 @@ function InputForm() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [, setTitleExtractionSuccess] = useState(false);
   
+  // 過去読んだもの検索用の状態
+  const [isPastBooksAccordionOpen, setIsPastBooksAccordionOpen] = useState(false);
+  const [pastBooksSearchTerm, setPastBooksSearchTerm] = useState('');
+  const [pastBooksSearchResults, setPastBooksSearchResults] = useState<Array<{
+    title: string;
+    link?: string;
+    is_not_book?: boolean;
+    custom_link?: string;
+  }>>([]);
+  const [isSearchingPastBooks, setIsSearchingPastBooks] = useState(false);
   
   // デバウンス用のref
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const pastBooksSearchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // 初期状態設定
   useEffect(() => {
@@ -47,6 +58,21 @@ function InputForm() {
       setTitleExtractionSuccess(formData.title === '' ? false : isValidBookTitle(formData.title));
     }
   }, [formData.isNotBook, formData.title]);
+
+  // クリーンアップ処理
+  useEffect(() => {
+    return () => {
+      if (titleDebounceRef.current) {
+        clearTimeout(titleDebounceRef.current);
+      }
+      if (linkDebounceRef.current) {
+        clearTimeout(linkDebounceRef.current);
+      }
+      if (pastBooksSearchDebounceRef.current) {
+        clearTimeout(pastBooksSearchDebounceRef.current);
+      }
+    };
+  }, []);
 
   // Amazonリンクかどうかをチェックする関数
   const isAmazonLink = (url: string): boolean => {
@@ -136,6 +162,53 @@ function InputForm() {
     }
   };
 
+  // 過去読んだものを検索する関数
+  const searchPastBooks = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setPastBooksSearchResults([]);
+      return;
+    }
+
+    setIsSearchingPastBooks(true);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/reading-records/search/title?q=${encodeURIComponent(searchTerm)}&limit=10`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('過去読んだもの検索結果:', result.data);
+        setPastBooksSearchResults(result.data || []);
+      } else {
+        console.error('過去読んだもの検索エラー:', response.status);
+        setPastBooksSearchResults([]);
+      }
+    } catch (error) {
+      console.error('過去読んだもの検索エラー:', error);
+      setPastBooksSearchResults([]);
+    } finally {
+      setIsSearchingPastBooks(false);
+    }
+  };
+
+  // 過去読んだものを選択する関数
+  const selectPastBook = (book: { title: string; link?: string; is_not_book?: boolean; custom_link?: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      title: book.title,
+      isNotBook: book.is_not_book || false,
+      customLink: book.custom_link || ''
+    }));
+    
+    // 書籍ではない場合で、Amazonリンクが含まれている場合は自動取得
+    if (book.is_not_book && book.custom_link && isAmazonLink(book.custom_link)) {
+      extractTitleFromAmazonLink(book.custom_link);
+    }
+    
+    // 検索結果をクリア
+    setPastBooksSearchResults([]);
+    setPastBooksSearchTerm('');
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -205,6 +278,22 @@ function InputForm() {
     }
   };
 
+  // 過去読んだもの検索の入力変更ハンドラー
+  const handlePastBooksSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPastBooksSearchTerm(value);
+    
+    // 既存のタイマーをクリア
+    if (pastBooksSearchDebounceRef.current) {
+      clearTimeout(pastBooksSearchDebounceRef.current);
+    }
+    
+    // デバウンス処理（500ms後に実行）
+    pastBooksSearchDebounceRef.current = setTimeout(() => {
+      searchPastBooks(value);
+    }, 500);
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -219,6 +308,11 @@ function InputForm() {
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);
     setTitleExtractionSuccess(false);
+    
+    // 過去読んだもの検索の状態もリセット
+    setIsPastBooksAccordionOpen(false);
+    setPastBooksSearchTerm('');
+    setPastBooksSearchResults([]);
   };
 
 
@@ -416,6 +510,86 @@ function InputForm() {
                   記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます
                 </p>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* 過去読んだものから登録するアコーディオン */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setIsPastBooksAccordionOpen(!isPastBooksAccordionOpen)}
+            className="w-full flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+          >
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-green-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-medium text-green-800">
+                過去読んだものから登録する
+              </span>
+            </div>
+            <svg
+              className={`h-5 w-5 text-green-400 transition-transform ${isPastBooksAccordionOpen ? 'rotate-180' : ''}`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          {isPastBooksAccordionOpen && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="mb-3">
+                <label htmlFor="pastBooksSearch" className="block text-sm font-medium text-green-700 mb-2">
+                  書籍 OR not書籍タイトルを入力
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="pastBooksSearch"
+                    value={pastBooksSearchTerm}
+                    onChange={handlePastBooksSearchChange}
+                    placeholder="例：How Google Works"
+                    className="w-full px-3 py-2 border border-green-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  />
+                  {isSearchingPastBooks && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-500"></div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  部分一致で過去に読んだ書籍や記事を検索できます
+                </p>
+              </div>
+              
+              {/* 検索結果 */}
+              {pastBooksSearchResults.length > 0 && (
+                <div className="mt-3">
+                  <h4 className="text-sm font-medium text-green-700 mb-2">検索結果</h4>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {pastBooksSearchResults.map((book, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => selectPastBook(book)}
+                        className="w-full text-left p-2 bg-white border border-green-200 rounded-lg hover:bg-green-50 transition-colors"
+                      >
+                        <div className="text-sm font-medium text-gray-800">{book.title}</div>
+                        <div className="text-xs text-gray-500">
+                          {book.is_not_book ? '📄 記事・ブログ' : '📚 書籍'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {pastBooksSearchTerm && pastBooksSearchResults.length === 0 && !isSearchingPastBooks && (
+                <div className="mt-3 text-sm text-gray-500">
+                  該当する過去の読書記録が見つかりませんでした
+                </div>
+              )}
             </div>
           )}
         </div>
