@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { isAmazonLink } from '../utils/amazonUtils';
 import { trackShare } from '../utils/analytics';
 import { useExpandableText } from '../hooks/useExpandableText';
+import { useAuth } from '../contexts/AuthContext';
 import BookIcon from './BookIcon';
 import ExpandableTextDisplay from './ExpandableTextDisplay';
 
@@ -23,6 +24,7 @@ interface ReadingRecord {
 
 
 function MyPage() {
+  const { token, isAuthenticated } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +65,16 @@ function MyPage() {
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+  }, [isAuthenticated, token]);
 
   const fetchRecords = async () => {
+    // 認証チェック
+    if (!isAuthenticated || !token) {
+      setError('ログインが必要です。');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       // 環境変数からAPI URLを取得
@@ -73,6 +82,7 @@ function MyPage() {
       const response = await fetch(`${API_BASE_URL}/api/my-records`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       
@@ -101,6 +111,12 @@ function MyPage() {
 
   // 投稿削除処理
   const deleteRecord = async (id: number, title: string) => {
+    // 認証チェック
+    if (!isAuthenticated || !token) {
+      alert('ログインが必要です。');
+      return;
+    }
+
     // 削除確認
     if (!window.confirm(`「${title}」を削除しますか？この操作は取り消せません。`)) {
       return;
@@ -112,6 +128,7 @@ function MyPage() {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
@@ -171,6 +188,12 @@ function MyPage() {
 
   // 投稿更新処理
   const updateRecord = async (id: number) => {
+    // 認証チェック
+    if (!isAuthenticated || !token) {
+      alert('ログインが必要です。');
+      return;
+    }
+
     try {
       console.log('=== 更新処理開始 ===');
       console.log('更新対象ID:', id);
@@ -186,6 +209,7 @@ function MyPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: requestBody,
       });
