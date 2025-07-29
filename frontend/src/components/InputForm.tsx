@@ -32,6 +32,14 @@ function InputForm() {
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [, setTitleExtractionSuccess] = useState(false);
   
+  // Amazon検索とオートコンプリート用の状態
+  const [amazonSearchResults, setAmazonSearchResults] = useState<Array<{
+    title: string;
+    link: string;
+  }>>([]);
+  const [showAmazonSuggestions, setShowAmazonSuggestions] = useState(false);
+  const [isSearchingAmazonBooks, setIsSearchingAmazonBooks] = useState(false);
+  
   // 過去読んだもの検索用の状態
   const [isPastBooksAccordionOpen, setIsPastBooksAccordionOpen] = useState(false);
   const [pastBooksSearchTerm, setPastBooksSearchTerm] = useState('');
@@ -47,6 +55,7 @@ function InputForm() {
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const pastBooksSearchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const amazonSearchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // 初期状態設定
   useEffect(() => {
@@ -70,6 +79,9 @@ function InputForm() {
       }
       if (pastBooksSearchDebounceRef.current) {
         clearTimeout(pastBooksSearchDebounceRef.current);
+      }
+      if (amazonSearchDebounceRef.current) {
+        clearTimeout(amazonSearchDebounceRef.current);
       }
     };
   }, []);
@@ -162,6 +174,69 @@ function InputForm() {
     }
   };
 
+  // Amazon検索とオートコンプリート機能
+  const searchAmazonBooks = async (searchTerm: string) => {
+    if (!searchTerm.trim() || formData.isNotBook) {
+      setAmazonSearchResults([]);
+      setShowAmazonSuggestions(false);
+      return;
+    }
+
+    setIsSearchingAmazonBooks(true);
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      
+      // タイトルからAmazonリンクを検索
+      const response = await fetch(`${API_BASE_URL}/api/search-amazon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: searchTerm }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Amazon検索結果:', result);
+        
+        if (result.success && result.data.link) {
+          // 見つかったリンクからタイトルを取得
+          const titleResponse = await fetch(`${API_BASE_URL}/api/extract-amazon-info`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ amazonUrl: result.data.link }),
+          });
+          
+          if (titleResponse.ok) {
+            const titleResult = await titleResponse.json();
+            if (titleResult.success && titleResult.data.title) {
+              setAmazonSearchResults([{
+                title: titleResult.data.title,
+                link: result.data.link
+              }]);
+              setShowAmazonSuggestions(true);
+            }
+          }
+        } else {
+          setAmazonSearchResults([]);
+          setShowAmazonSuggestions(false);
+        }
+      } else {
+        console.error('Amazon検索エラー:', response.status);
+        setAmazonSearchResults([]);
+        setShowAmazonSuggestions(false);
+      }
+    } catch (error) {
+      console.error('Amazon検索エラー:', error);
+      setAmazonSearchResults([]);
+      setShowAmazonSuggestions(false);
+    } finally {
+      setIsSearchingAmazonBooks(false);
+    }
+  };
+
   // 過去読んだものを検索する関数
   const searchPastBooks = async (searchTerm: string) => {
     if (!searchTerm.trim()) {
@@ -190,6 +265,20 @@ function InputForm() {
     }
   };
 
+  // Amazon検索結果を選択する関数
+  const selectAmazonBook = (book: { title: string; link: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      title: book.title
+    }));
+    
+    // 検索結果をクリア
+    setAmazonSearchResults([]);
+    setShowAmazonSuggestions(false);
+    setAmazonLinkFound(true);
+    setTitleExtractionSuccess(true);
+  };
+
   // 過去読んだものを選択する関数
   const selectPastBook = (book: { title: string; link?: string; is_not_book?: boolean; custom_link?: string }) => {
     setFormData(prev => ({
@@ -211,53 +300,55 @@ function InputForm() {
       [name]: value
     }));
 
-    // タイトルフィールド（Amazonリンク入力）が変更された場合（書籍の場合のみ）
-    if (name === 'title' && value && !formData.isNotBook) {
+    // タイトルフィールドが変更された場合
+    if (name === 'title') {
       console.log('📝 Title field changed:', value, 'isNotBook:', formData.isNotBook);
       
       // 状態をリセット
       setTitleExtractionSuccess(false);
       setAmazonLinkFound(false);
+      setShowAmazonSuggestions(false);
       
       // 既存のタイマーをクリア
       if (titleDebounceRef.current) {
         clearTimeout(titleDebounceRef.current);
-        console.log('⏰ Cleared existing timer');
+        console.log('⏰ Cleared existing title timer');
+      }
+      if (amazonSearchDebounceRef.current) {
+        clearTimeout(amazonSearchDebounceRef.current);
+        console.log('⏰ Cleared existing amazon search timer');
       }
       
-      // Amazonリンクかどうかをチェック
-      if (isAmazonLink(value)) {
-        // Amazonリンクとして処理
-        titleDebounceRef.current = setTimeout(() => {
-          console.log('⏰ Timer triggered, calling extractTitleFromAmazonLink');
-          extractTitleFromAmazonLink(value);
-        }, 1000);
-        console.log('⏰ Set new timer for 1 second');
-      } else {
-        // Amazonリンクでない場合は即座に有効とする
+      if (value && !formData.isNotBook) {
+        // 書籍の場合、Amazonリンクかどうかをチェック
+        if (isAmazonLink(value)) {
+          // Amazonリンクとして処理（旧機能との互換性保持）
+          titleDebounceRef.current = setTimeout(() => {
+            console.log('⏰ Timer triggered, calling extractTitleFromAmazonLink');
+            extractTitleFromAmazonLink(value);
+          }, 1000);
+          console.log('⏰ Set new timer for Amazon link extraction');
+        } else {
+          // タイトルとして処理 - Amazon検索を実行
+          amazonSearchDebounceRef.current = setTimeout(() => {
+            console.log('⏰ Timer triggered, calling searchAmazonBooks');
+            searchAmazonBooks(value);
+          }, 1000);
+          console.log('⏰ Set new timer for Amazon search');
+          // タイトル入力として有効とする
+          setTitleExtractionSuccess(true);
+        }
+      } else if (formData.isNotBook) {
+        // 書籍以外の場合は即座に有効
         setTitleExtractionSuccess(true);
       }
     }
 
-    // customLinkが入力された場合、Amazonリンクからタイトルを自動取得（書籍ではない場合のみ）
+    // customLinkが入力された場合（書籍ではない場合）
+    // 本以外の場合は一般的なWebリンクを想定し、特別な処理は行わない
     if (name === 'customLink' && value && formData.isNotBook) {
-      // 既存のタイマーをクリア
-      if (linkDebounceRef.current) {
-        clearTimeout(linkDebounceRef.current);
-      }
-      
-      // Amazonリンクかどうかチェック
-      const isAmazonLink = value.includes('amazon.co.jp') || 
-                          value.includes('amazon.com') || 
-                          value.includes('amzn.to') ||
-                          value.includes('amzn.asia');
-      
-      if (isAmazonLink) {
-        // デバウンス処理（1秒後に実行）
-        linkDebounceRef.current = setTimeout(() => {
-          extractTitleFromAmazonLink(value);
-        }, 1000);
-      }
+      // 特別な処理は不要 - 一般的なWebリンクとして扱う
+      console.log('📝 CustomLink changed for non-book content:', value);
     }
 
     // 「書籍ではない」チェックボックスが変更された場合
@@ -303,6 +394,11 @@ function InputForm() {
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);
     setTitleExtractionSuccess(false);
+    
+    // Amazon検索の状態もリセット
+    setAmazonSearchResults([]);
+    setShowAmazonSuggestions(false);
+    setIsSearchingAmazonBooks(false);
     
     // 過去読んだもの検索の状態もリセット
     setIsPastBooksAccordionOpen(false);
@@ -398,12 +494,15 @@ function InputForm() {
       </p>
       
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
-        {/* 1. Amazonリンク入力 */}
+        {/* 1. 書籍タイトル入力 */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            1. 読んだ本のAmazonリンクを入力
+            1. 読んだ{formData.isNotBook ? 'コンテンツのタイトル' : '書籍のタイトル'}を入力
             <span className="text-xs text-gray-500 ml-2">
-              （Amazonリンクから書籍タイトルが自動で取得されます）
+              {formData.isNotBook 
+                ? '（記事、動画、ブログなどのタイトルを入力してください）'
+                : '（タイトルを入力すると、対応するAmazonリンクが自動で取得されます）'
+              }
             </span>
           </label>
           {!formData.isNotBook && (
@@ -418,7 +517,7 @@ function InputForm() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm font-medium text-blue-800">
-                    Amazonリンクからタイトルを自動取得
+                    タイトル入力とAmazonリンク自動取得について
                   </span>
                 </div>
                 <svg
@@ -432,9 +531,13 @@ function InputForm() {
               {isAccordionOpen && (
                 <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="text-sm text-blue-700 space-y-2">
-                    <p>• Amazonの書籍ページのURLをコピーして貼り付けてください</p>
+                    <p><strong>📖 書籍タイトルで検索</strong></p>
+                    <p>• 書籍タイトルを入力すると、対応するAmazonリンクを自動検索します</p>
+                    <p>• 例：「7つの習慣」「嫌われる勇気」</p>
+                    <p>• タイトルに応じてAmazonの商品情報が自動取得されます</p>
+                    <p className="mt-3"><strong>🔗 従来のAmazonリンクも対応</strong></p>
+                    <p>• AmazonのURLを直接貼り付けることも可能です</p>
                     <p>• 例：https://www.amazon.co.jp/dp/B00KFB5DJC</p>
-                    <p>• リンクを貼り付けると、書籍タイトルが自動で表示されます</p>
                     <p>• 短縮URL（amzn.to、amzn.asia）にも対応しています</p>
                   </div>
                 </div>
@@ -448,16 +551,38 @@ function InputForm() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder={formData.isNotBook ? "書籍以外のURLを入力して下さい。ex. Web記事" : "https://www.amazon.co.jp/dp/XXXXXXXXXX"}
+              placeholder={formData.isNotBook ? "記事、動画、ブログなどのタイトルを入力" : "書籍タイトルを入力（例：7つの習慣）またはAmazonリンク"}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
               required
             />
-            {isSearchingAmazon && (
+            {(isSearchingAmazon || isSearchingAmazonBooks) && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
               </div>
             )}
           </div>
+          
+          {/* Amazon検索結果のサジェスト */}
+          {showAmazonSuggestions && amazonSearchResults.length > 0 && (
+            <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              <div className="p-2 text-xs text-gray-500 border-b border-gray-100">
+                📚 Amazon検索結果
+              </div>
+              {amazonSearchResults.map((book, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => selectAmazonBook(book)}
+                  className="w-full text-left p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
+                >
+                  <div className="text-sm font-medium text-gray-800">{book.title}</div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    📖 Amazon商品情報が取得されました
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
           {amazonLinkFound && !formData.isNotBook && (
             <p className="text-xs text-green-600 mt-1">
               ✓ Amazonリンクが自動取得されました
@@ -502,7 +627,7 @@ function InputForm() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます
+                  記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます。
                 </p>
               </div>
             </div>
