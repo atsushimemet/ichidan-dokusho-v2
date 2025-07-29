@@ -230,7 +230,7 @@ export const getUserReadingRecords = async (userId: string, sessionId?: string) 
 export const searchReadingRecordsByTitle = async (searchTerm: string, limit: number = 10) => {
   try {
     const query = `
-      SELECT DISTINCT title, link, is_not_book, custom_link
+      SELECT DISTINCT title, link, is_not_book, custom_link, created_at
       FROM reading_records 
       WHERE title ILIKE $1
       ORDER BY created_at DESC
