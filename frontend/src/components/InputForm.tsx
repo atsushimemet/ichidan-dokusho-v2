@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { trackError, trackPostCreation } from '../utils/analytics';
+import { useAuth } from '../contexts/AuthContext';
 import BookIcon from './BookIcon';
 
 interface FormData {
@@ -16,6 +17,7 @@ interface FormData {
 
 function InputForm() {
   const navigate = useNavigate();
+  const { token, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     title: '',
     readingAmount: '',
@@ -410,6 +412,12 @@ function InputForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // 認証チェック
+    if (!isAuthenticated || !token) {
+      alert('ログインが必要です。ログインしてから再度お試しください。');
+      return;
+    }
+    
     // 書籍の場合、タイトルが適切に取得されているかチェック
     if (!formData.isNotBook && !isValidBookTitle(formData.title)) {
       alert('書籍タイトルが正しく取得されていません。Amazonリンクから書籍タイトルが自動取得されるまでお待ちください。');
@@ -438,6 +446,7 @@ function InputForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           title: formData.title,

@@ -10,7 +10,7 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 // JWTトークンの生成
 export const generateToken = (userId: string, email: string): string => {
   return jwt.sign(
-    { userId, email },
+    { userId, email, sub: userId },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
@@ -55,15 +55,23 @@ export const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('Auth Debug - Authorization header:', authHeader);
+  console.log('Auth Debug - Extracted token:', token ? 'Token exists' : 'No token');
+
   if (!token) {
+    console.log('Auth Debug - No token provided');
     return res.status(401).json({ message: 'Access token required' });
   }
 
   const decoded = verifyToken(token);
+  console.log('Auth Debug - Decoded token:', decoded);
+  
   if (!decoded) {
+    console.log('Auth Debug - Invalid token');
     return res.status(403).json({ message: 'Invalid token' });
   }
 
   req.user = decoded;
+  console.log('Auth Debug - User set to req.user:', req.user);
   next();
 }; 
