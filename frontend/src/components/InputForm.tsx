@@ -199,11 +199,6 @@ function InputForm() {
       customLink: book.custom_link || ''
     }));
     
-    // 書籍ではない場合で、Amazonリンクが含まれている場合は自動取得
-    if (book.is_not_book && book.custom_link && isAmazonLink(book.custom_link)) {
-      extractTitleFromAmazonLink(book.custom_link);
-    }
-    
     // 検索結果をクリア
     setPastBooksSearchResults([]);
     setPastBooksSearchTerm('');
