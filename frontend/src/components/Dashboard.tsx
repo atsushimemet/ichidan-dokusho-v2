@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useAuth } from '../contexts/AuthContext';
 import BookIcon from './BookIcon';
 
 interface ReadingRecord {
@@ -22,6 +23,7 @@ interface DailyRecord {
 }
 
 function Dashboard() {
+  const { token, isAuthenticated } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,9 +31,16 @@ function Dashboard() {
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+  }, [isAuthenticated, token]);
 
   const fetchRecords = async () => {
+    // 認証チェック
+    if (!isAuthenticated || !token) {
+      setError('ログインが必要です。');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       // 環境変数からAPI URLを取得
@@ -39,6 +48,7 @@ function Dashboard() {
       const response = await fetch(`${API_BASE_URL}/api/my-records`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       
