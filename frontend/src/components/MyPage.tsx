@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useExpandableText } from '../hooks/useExpandableText';
 import { isAmazonLink } from '../utils/amazonUtils';
 import { trackShare } from '../utils/analytics';
-import { useExpandableText } from '../hooks/useExpandableText';
-import { useAuth } from '../contexts/AuthContext';
 import BookIcon from './BookIcon';
 import ExpandableTextDisplay from './ExpandableTextDisplay';
 
@@ -30,6 +30,8 @@ function MyPage() {
   const [error, setError] = useState<string | null>(null);
   const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
   const [editingRecord, setEditingRecord] = useState<number | null>(null);
+  
+
 
   const [editFormData, setEditFormData] = useState<{
     title: string;
@@ -108,6 +110,8 @@ function MyPage() {
       setLoading(false);
     }
   };
+
+
 
   // 投稿削除処理
   const deleteRecord = async (id: number, title: string) => {
@@ -484,6 +488,8 @@ ${action}
           マイページ
         </h1>
       </div>
+
+
       
       {records.length === 0 ? (
         <div className="text-center py-12">

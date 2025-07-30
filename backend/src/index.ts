@@ -9,7 +9,10 @@ import {
     deleteReadingRecord,
     deleteWritingTheme,
     getAllReadingRecords,
+    getAllThemeReadingStats,
+    getDailyThemeReadingTrends,
     getReadingRecordById,
+    getThemeBasedReadingStats,
     getUserReadingRecords,
     getUserSettings,
     getUserWritingThemes,
@@ -504,7 +507,7 @@ app.get('/api/reading-records/search/title', async (req, res) => {
 // 新しい読書記録を作成（認証必須）
 app.post('/api/reading-records', authenticateToken, async (req, res) => {
   try {
-    const { title, reading_amount, learning, action, isNotBook, customLink, containsSpoiler } = req.body;
+    const { title, reading_amount, learning, action, isNotBook, customLink, containsSpoiler, themeId } = req.body;
     // 認証されたユーザー情報を取得
     const userId = req.user?.userId || req.user?.sub;
     const userEmail = req.user?.email;
@@ -544,7 +547,8 @@ app.post('/api/reading-records', authenticateToken, async (req, res) => {
       custom_link: customLink,
       contains_spoiler: containsSpoiler || false,
       user_id: userId,
-      user_email: userEmail
+      user_email: userEmail,
+      theme_id: themeId ? parseInt(themeId) : null
     };
 
     const result = await createReadingRecord(record);
@@ -1020,6 +1024,99 @@ app.delete('/api/writing-themes/:id', authenticateToken, async (req, res) => {
     res.status(500).json({
       message: 'Error deleting writing theme',
       error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// テーマ別読書記録統計API
+app.get('/api/theme-reading-stats', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const themeId = req.query.themeId ? parseInt(req.query.themeId as string) : undefined;
+    
+    if (req.query.themeId && isNaN(themeId!)) {
+      return res.status(400).json({ message: 'Invalid theme ID' });
+    }
+    
+    const result = await getThemeBasedReadingStats(userId, themeId);
+    
+    if (result.success) {
+      res.json({ 
+        message: 'Theme-based reading stats retrieved successfully', 
+        data: result.data 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Failed to retrieve theme-based reading stats', 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error retrieving theme-based reading stats', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// 日次テーマ別読書記録推移API
+app.get('/api/daily-theme-reading-trends', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const themeId = req.query.themeId ? parseInt(req.query.themeId as string) : undefined;
+    const days = req.query.days ? parseInt(req.query.days as string) : 30;
+    
+    if (req.query.themeId && isNaN(themeId!)) {
+      return res.status(400).json({ message: 'Invalid theme ID' });
+    }
+    
+    if (isNaN(days) || days < 1 || days > 365) {
+      return res.status(400).json({ message: 'Days must be between 1 and 365' });
+    }
+    
+    const result = await getDailyThemeReadingTrends(userId, themeId, days);
+    
+    if (result.success) {
+      res.json({ 
+        message: 'Daily theme reading trends retrieved successfully', 
+        data: result.data 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Failed to retrieve daily theme reading trends', 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error retrieving daily theme reading trends', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// 全テーマ統計API（プルダウン表示用）
+app.get('/api/all-theme-reading-stats', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    const result = await getAllThemeReadingStats(userId);
+    
+    if (result.success) {
+      res.json({ 
+        message: 'All theme reading stats retrieved successfully', 
+        data: result.data 
+      });
+    } else {
+      res.status(500).json({ 
+        message: 'Failed to retrieve all theme reading stats', 
+        error: result.error 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error retrieving all theme reading stats', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
     });
   }
 });

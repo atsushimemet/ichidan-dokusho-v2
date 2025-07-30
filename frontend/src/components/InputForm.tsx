@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trackError, trackPostCreation } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
+import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
 interface FormData {
@@ -13,6 +13,7 @@ interface FormData {
   isNotBook: boolean;
   customLink: string;
   containsSpoiler: boolean;
+  themeId: number | null;
 }
 
 function InputForm() {
@@ -26,13 +27,20 @@ function InputForm() {
     notes: '',
     isNotBook: false,
     customLink: '',
-    containsSpoiler: false
+    containsSpoiler: false,
+    themeId: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
   const [amazonLinkFound, setAmazonLinkFound] = useState(false);
   const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [, setTitleExtractionSuccess] = useState(false);
+  
+  // テーマ選択用のstate
+  const [userThemes, setUserThemes] = useState<Array<{
+    id: number;
+    theme_name: string;
+  }>>([]);
   
   // Amazon検索とオートコンプリート用の状態
   const [amazonSearchResults, setAmazonSearchResults] = useState<Array<{
@@ -69,6 +77,13 @@ function InputForm() {
       setTitleExtractionSuccess(formData.title === '' ? false : isValidBookTitle(formData.title));
     }
   }, [formData.isNotBook, formData.title]);
+
+  // ユーザーのテーマ一覧を取得
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      fetchUserThemes();
+    }
+  }, [isAuthenticated, token]);
 
   // クリーンアップ処理
   useEffect(() => {
@@ -391,7 +406,8 @@ function InputForm() {
       notes: '',
       isNotBook: false,
       customLink: '',
-      containsSpoiler: false
+      containsSpoiler: false,
+      themeId: null
     });
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);
@@ -408,6 +424,25 @@ function InputForm() {
     setPastBooksSearchResults([]);
   };
 
+
+  // ユーザーのテーマ一覧を取得
+  const fetchUserThemes = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/writing-themes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setUserThemes(result.data || []);
+      }
+    } catch (error) {
+      console.error('テーマ取得エラー:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -456,7 +491,8 @@ function InputForm() {
           notes: formData.notes,
           isNotBook: formData.isNotBook,
           customLink: formData.customLink,
-          containsSpoiler: formData.containsSpoiler
+          containsSpoiler: formData.containsSpoiler,
+          themeId: formData.themeId
         }),
       });
 
@@ -742,6 +778,38 @@ function InputForm() {
             <option value="1章">1章</option>
             <option value="1冊・全文">1冊・全文</option>
           </select>
+        </div>
+
+        {/* 2.5. テーマ選択 */}
+        <div>
+          <label htmlFor="themeId" className="block text-sm font-medium text-gray-700 mb-2">
+            2.5. 書きたいテーマ（任意）
+            <span className="text-xs text-gray-500 ml-2">
+              設定したテーマから選択できます。設定は<a href="/settings" className="text-orange-600 hover:text-orange-700 underline">設定ページ</a>から行えます。
+            </span>
+          </label>
+          <select
+            id="themeId"
+            name="themeId"
+            value={formData.themeId || ''}
+            onChange={(e) => setFormData(prev => ({ 
+              ...prev, 
+              themeId: e.target.value ? parseInt(e.target.value) : null 
+            }))}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+          >
+            <option value="">テーマを選択しない</option>
+            {userThemes.map((theme) => (
+              <option key={theme.id} value={theme.id}>
+                {theme.theme_name}
+              </option>
+            ))}
+          </select>
+          {userThemes.length === 0 && (
+            <p className="mt-1 text-xs text-gray-500">
+              💡 <a href="/settings" className="text-orange-600 hover:text-orange-700 underline">設定ページ</a>でテーマを作成すると、ここで選択できるようになります。
+            </p>
+          )}
         </div>
 
         {/* 3. 今日の学び or 気づき */}

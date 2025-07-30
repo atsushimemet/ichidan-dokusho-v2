@@ -43,6 +43,7 @@ export interface ReadingRecord {
   contains_spoiler?: boolean;
   user_id?: string;
   user_email?: string;
+  theme_id?: number | null;
   created_at?: string;
   updated_at?: string;
   like_count?: number;
@@ -61,8 +62,8 @@ export interface Like {
 export const createReadingRecord = async (record: ReadingRecord) => {
   try {
     const query = `
-      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, is_not_book, custom_link, contains_spoiler, user_id, user_email)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, is_not_book, custom_link, contains_spoiler, user_id, user_email, theme_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `;
     const values = [
@@ -76,7 +77,8 @@ export const createReadingRecord = async (record: ReadingRecord) => {
       record.custom_link,
       record.contains_spoiler || false,
       record.user_id, 
-      record.user_email
+      record.user_email,
+      record.theme_id || null
     ];
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
@@ -262,6 +264,17 @@ export interface WritingTheme {
   updated_at?: string;
 }
 
+// テーマ別統計の型定義
+export interface ThemeStats {
+  theme_id: number | null;
+  theme_name: string;
+  total_records: number;
+  daily_stats: Array<{
+    date: string;
+    count: number;
+  }>;
+}
+
 // ユーザー設定を取得
 export const getUserSettings = async (userId: string) => {
   try {
@@ -381,6 +394,148 @@ export const deleteWritingTheme = async (id: number, userId: string) => {
     return { success: true, data: result.rows[0] };
   } catch (error) {
     console.error('Delete writing theme error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// テーマ別読書記録統計を取得
+export const getThemeBasedReadingStats = async (userId: string, themeId?: number) => {
+  try {
+    // テーマが指定されている場合は特定テーマの統計、されていない場合は全テーマの統計
+    const themeCondition = themeId ? 'AND r.theme_id = $2' : '';
+    const queryParams = themeId ? [userId, themeId] : [userId];
+    
+    const query = `
+      SELECT 
+        wt.id as theme_id,
+        COALESCE(wt.theme_name, '未分類') as theme_name,
+        COUNT(r.id) as total_records
+      FROM writing_themes wt
+      LEFT JOIN reading_records r ON wt.id = r.theme_id AND r.user_id = $1
+      WHERE wt.user_id = $1
+      ${themeCondition}
+      GROUP BY wt.id, wt.theme_name
+      
+      UNION ALL
+      
+      SELECT 
+        NULL as theme_id,
+        '未分類' as theme_name,
+        COUNT(r.id) as total_records
+      FROM reading_records r
+      WHERE r.user_id = $1 AND r.theme_id IS NULL
+      ${themeCondition}
+      
+      ORDER BY total_records DESC
+    `;
+    
+    const result = await pool.query(query, queryParams);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get theme-based reading stats error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 日次テーマ別読書記録推移を取得
+export const getDailyThemeReadingTrends = async (userId: string, themeId?: number, days: number = 30) => {
+  try {
+    let query: string;
+    let queryParams: any[];
+    
+    if (themeId) {
+      query = `
+        WITH date_series AS (
+          SELECT generate_series(
+            CURRENT_DATE - INTERVAL '${days - 1} days',
+            CURRENT_DATE,
+            '1 day'::interval
+          )::date AS date
+        ),
+        daily_counts AS (
+          SELECT 
+            DATE(r.created_at) as date,
+            COUNT(*) as count
+          FROM reading_records r
+          WHERE r.user_id = $1 
+            AND DATE(r.created_at) >= CURRENT_DATE - INTERVAL '${days - 1} days'
+            AND r.theme_id = $2
+          GROUP BY DATE(r.created_at)
+        )
+        SELECT 
+          ds.date,
+          COALESCE(dc.count, 0) as count
+        FROM date_series ds
+        LEFT JOIN daily_counts dc ON ds.date = dc.date
+        ORDER BY ds.date
+      `;
+      queryParams = [userId, themeId];
+    } else {
+      query = `
+        WITH date_series AS (
+          SELECT generate_series(
+            CURRENT_DATE - INTERVAL '${days - 1} days',
+            CURRENT_DATE,
+            '1 day'::interval
+          )::date AS date
+        ),
+        daily_counts AS (
+          SELECT 
+            DATE(r.created_at) as date,
+            COUNT(*) as count
+          FROM reading_records r
+          WHERE r.user_id = $1 
+            AND DATE(r.created_at) >= CURRENT_DATE - INTERVAL '${days - 1} days'
+            AND r.theme_id IS NULL
+          GROUP BY DATE(r.created_at)
+        )
+        SELECT 
+          ds.date,
+          COALESCE(dc.count, 0) as count
+        FROM date_series ds
+        LEFT JOIN daily_counts dc ON ds.date = dc.date
+        ORDER BY ds.date
+      `;
+      queryParams = [userId];
+    }
+    
+    const result = await pool.query(query, queryParams);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get daily theme reading trends error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 全テーマの累積統計を取得（プルダウン表示用）
+export const getAllThemeReadingStats = async (userId: string) => {
+  try {
+    const query = `
+      SELECT 
+        wt.id as theme_id,
+        wt.theme_name,
+        COUNT(r.id) as total_records
+      FROM writing_themes wt
+      LEFT JOIN reading_records r ON wt.id = r.theme_id AND r.user_id = $1
+      WHERE wt.user_id = $1
+      GROUP BY wt.id, wt.theme_name
+      
+      UNION ALL
+      
+      SELECT 
+        NULL as theme_id,
+        '未分類' as theme_name,
+        COUNT(r.id) as total_records
+      FROM reading_records r
+      WHERE r.user_id = $1 AND r.theme_id IS NULL
+      
+      ORDER BY total_records DESC
+    `;
+    
+    const result = await pool.query(query, [userId]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get all theme reading stats error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
