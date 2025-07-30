@@ -19,6 +19,15 @@ interface ReadingRecord {
   created_at: string;
   updated_at: string;
   containsSpoiler?: boolean;
+  theme_id?: number | null;
+}
+
+interface WritingTheme {
+  id: number;
+  user_id: string;
+  theme_name: string;
+  created_at: string;
+  updated_at: string;
 }
 
 
@@ -26,6 +35,7 @@ interface ReadingRecord {
 function MyPage() {
   const { token, isAuthenticated } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
+  const [themes, setThemes] = useState<WritingTheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hoveredTooltip, setHoveredTooltip] = useState<number | null>(null);
@@ -41,6 +51,7 @@ function MyPage() {
     notes: string;
     link: string;
     containsSpoiler: boolean;
+    theme_id: number | null;
   }>({
     title: '',
     reading_amount: '',
@@ -48,7 +59,8 @@ function MyPage() {
     action: '',
     notes: '',
     link: '',
-    containsSpoiler: false
+    containsSpoiler: false,
+    theme_id: null
   });
 
   // 編集モードでのテキストエリア展開状態管理
@@ -66,7 +78,10 @@ function MyPage() {
   const { expandedTexts, toggleTextExpansion, isTextLong, getDisplayText } = useExpandableText();
 
   useEffect(() => {
-    fetchRecords();
+    if (isAuthenticated && token) {
+      fetchRecords();
+      fetchThemes();
+    }
   }, [isAuthenticated, token]);
 
   const fetchRecords = async () => {
@@ -98,7 +113,8 @@ function MyPage() {
       // バックエンドのスネークケースをキャメルケースに変換
       const convertedRecords = (result.data || []).map((record: any) => ({
         ...record,
-        containsSpoiler: record.contains_spoiler
+        containsSpoiler: record.contains_spoiler,
+        theme_id: record.theme_id
       }));
       console.log('変換後のレコード:', convertedRecords);
       
@@ -108,6 +124,28 @@ function MyPage() {
       setError('レコードの取得に失敗しました。');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchThemes = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/writing-themes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setThemes(result.data || []);
+      } else {
+        console.error('テーマの読み込みに失敗しました');
+        setThemes([]);
+      }
+    } catch (error) {
+      console.error('テーマの読み込みに失敗しました:', error);
+      setThemes([]);
     }
   };
 
@@ -155,6 +193,7 @@ function MyPage() {
     console.log('=== 編集開始 ===');
     console.log('編集対象レコード:', record);
     console.log('元のcontainsSpoiler:', record.containsSpoiler);
+    console.log('元のtheme_id:', record.theme_id);
     
     setEditingRecord(record.id);
     const initialFormData = {
@@ -164,7 +203,8 @@ function MyPage() {
       action: record.action,
       notes: record.notes || '',
       link: record.link || '',
-      containsSpoiler: record.containsSpoiler || false
+      containsSpoiler: record.containsSpoiler || false,
+      theme_id: record.theme_id || null
     };
     console.log('初期フォームデータ:', initialFormData);
     setEditFormData(initialFormData);
@@ -180,7 +220,8 @@ function MyPage() {
       action: '',
       notes: '',
       link: '',
-      containsSpoiler: false
+      containsSpoiler: false,
+      theme_id: null
     });
     // テキストエリアの展開状態もリセット
     setEditExpandedTextareas({
@@ -227,7 +268,8 @@ function MyPage() {
         // バックエンドのスネークケースをキャメルケースに変換
         const convertedData = {
           ...updatedRecord.data,
-          containsSpoiler: updatedRecord.data.contains_spoiler
+          containsSpoiler: updatedRecord.data.contains_spoiler,
+          theme_id: updatedRecord.data.theme_id
         };
         console.log('変換後のデータ:', convertedData);
         console.log('変換後のcontainsSpoiler:', convertedData.containsSpoiler);
@@ -260,10 +302,20 @@ function MyPage() {
   // 編集フォームの入力変更処理
   const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // theme_idの場合は数値変換またはnullに設定
+    if (name === 'theme_id') {
+      const numericValue = value === '' ? null : parseInt(value, 10);
+      setEditFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }));
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // 編集モードでのテキストエリア展開/折りたたみを切り替える関数
@@ -523,6 +575,20 @@ ${action}
                 {/* 登録日 */}
                 <p className="text-sm text-gray-500 mb-2">{formatDate(record.created_at)}</p>
                 
+                {/* テーマ表示 */}
+                {record.theme_id && (
+                  <div className="mb-2">
+                    {(() => {
+                      const theme = themes.find(t => t.id === record.theme_id);
+                      return theme ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          🎯 {theme.theme_name}
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+                
                 {/* 編集・削除・Google TODO・シェアボタン */}
                 <div className="flex items-center space-x-2 relative">
                   <button
@@ -725,6 +791,28 @@ ${action}
                       onChange={handleEditInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      テーマ（任意）
+                    </label>
+                    <select
+                      name="theme_id"
+                      value={editFormData.theme_id || ''}
+                      onChange={handleEditInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">テーマを選択しない</option>
+                      {themes.map((theme) => (
+                        <option key={theme.id} value={theme.id}>
+                          {theme.theme_name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      テーマを設定すると、テーマ別の草稿出力機能で活用されます
+                    </p>
                   </div>
 
                   <div>
