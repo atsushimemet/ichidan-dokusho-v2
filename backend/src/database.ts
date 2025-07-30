@@ -486,6 +486,7 @@ export const getDailyThemeReadingTrends = async (userId: string, themeId?: numbe
           FROM reading_records r
           WHERE r.user_id = $1 
             AND DATE(r.created_at) >= CURRENT_DATE - INTERVAL '${days - 1} days'
+            AND r.theme_id IS NULL
           GROUP BY DATE(r.created_at)
         )
         SELECT 
