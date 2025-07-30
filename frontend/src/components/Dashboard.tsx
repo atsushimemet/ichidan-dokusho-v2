@@ -31,7 +31,7 @@ function Dashboard() {
   
   // テーマ関連のstate
   const [allThemeStats, setAllThemeStats] = useState<any[]>([]);
-  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(-1); // -1 = 全てのテーマ
+  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null); // null = 未分類
   const [themeStats, setThemeStats] = useState<any[]>([]);
   const [dailyTrends, setDailyTrends] = useState<any[]>([]);
 
@@ -112,7 +112,7 @@ function Dashboard() {
 
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const themeParam = selectedThemeId && selectedThemeId !== -1 ? `?themeId=${selectedThemeId}` : '';
+      const themeParam = selectedThemeId !== null ? `?themeId=${selectedThemeId}` : '';
       const response = await fetch(`${API_BASE_URL}/api/theme-reading-stats${themeParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -134,7 +134,7 @@ function Dashboard() {
 
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const themeParam = selectedThemeId && selectedThemeId !== -1 ? `?themeId=${selectedThemeId}` : '';
+      const themeParam = selectedThemeId !== null ? `?themeId=${selectedThemeId}` : '';
       const response = await fetch(`${API_BASE_URL}/api/daily-theme-reading-trends${themeParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -321,12 +321,13 @@ function Dashboard() {
               表示するテーマを選択
             </label>
             <select
-              value={selectedThemeId || -1}
-              onChange={(e) => setSelectedThemeId(parseInt(e.target.value))}
+              value={selectedThemeId || ''}
+              onChange={(e) => setSelectedThemeId(e.target.value ? parseInt(e.target.value) : null)}
               className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             >
-              {allThemeStats.map((theme) => (
-                <option key={theme.theme_id || 'null'} value={theme.theme_id || -1}>
+              <option value="">未分類</option>
+              {allThemeStats.filter(theme => theme.theme_id !== null).map((theme) => (
+                <option key={theme.theme_id} value={theme.theme_id}>
                   {theme.theme_name} ({theme.total_records}記録)
                 </option>
               ))}
@@ -337,7 +338,10 @@ function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
               <div className="text-2xl font-bold text-orange-600">
-                {allThemeStats.find(t => (t.theme_id || -1) === selectedThemeId)?.total_records || 0}
+                {selectedThemeId === null 
+                  ? allThemeStats.find(t => t.theme_id === null)?.total_records || 0
+                  : allThemeStats.find(t => t.theme_id === selectedThemeId)?.total_records || 0
+                }
               </div>
               <div className="text-sm text-gray-600 mt-1">累積読書記録数</div>
             </div>
