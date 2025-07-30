@@ -235,9 +235,82 @@ function Dashboard() {
         </h1>
       </div>
 
+
+
+      {/* 累積読書記録数 */}
+      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 mb-8 border border-orange-200">
+        <h2 className="text-xl font-semibold text-orange-800 mb-4 flex items-center">
+          <span className="mr-2">📊</span>
+          累積読書記録数
+        </h2>
+        <div className="text-center">
+          <div className="text-4xl font-bold text-orange-600 mb-2">
+            {records.length}
+          </div>
+          <p className="text-orange-700">件の読書記録</p>
+        </div>
+      </div>
+
+      {/* 日次推移グラフ（全ユーザーに表示） */}
+      {dailyRecords.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+          <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center">
+            <span className="mr-2">📈</span>
+            読書記録数の日次推移
+          </h2>
+          <div className="h-64 relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={dailyRecords}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }}
+                  labelStyle={{ color: '#374151' }}
+                  formatter={(value) => [value, '読書記録数']}
+                  labelFormatter={(label) => `${label}日前`}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="count" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            {/* 「日前」ラベルを右端に追加 */}
+            <div className="absolute bottom-6 right-8 text-xs text-gray-500">
+              日前
+            </div>
+          </div>
+          <p className="text-sm text-blue-600 mt-2 text-center">
+            過去14日間（13日前〜今日）の読書記録数を表示しています
+          </p>
+        </div>
+      )}
+
       {/* テーマ別統計セクション */}
       {isAuthenticated && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-200">
+        <div className="mt-8 p-6 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-200">
           <h2 className="text-xl font-semibold text-orange-800 mb-4 flex items-center">
             📊 テーマ別読書統計
           </h2>
@@ -311,77 +384,6 @@ function Dashboard() {
               <span>今日</span>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* 累積読書記録数 */}
-      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 mb-8 border border-orange-200">
-        <h2 className="text-xl font-semibold text-orange-800 mb-4 flex items-center">
-          <span className="mr-2">📊</span>
-          累積読書記録数
-        </h2>
-        <div className="text-center">
-          <div className="text-4xl font-bold text-orange-600 mb-2">
-            {records.length}
-          </div>
-          <p className="text-orange-700">件の読書記録</p>
-        </div>
-      </div>
-
-      {/* 日次推移グラフ（全ユーザーに表示） */}
-      {dailyRecords.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-          <h2 className="text-xl font-semibold text-blue-800 mb-4 flex items-center">
-            <span className="mr-2">📈</span>
-            読書記録数の日次推移
-          </h2>
-          <div className="h-64 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dailyRecords}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis 
-                  stroke="#6b7280"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  allowDecimals={false}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  labelStyle={{ color: '#374151' }}
-                  formatter={(value) => [value, '読書記録数']}
-                  labelFormatter={(label) => `${label}日前`}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="#3b82f6" 
-                  strokeWidth={3}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            {/* 「日前」ラベルを右端に追加 */}
-            <div className="absolute bottom-6 right-8 text-xs text-gray-500">
-              日前
-            </div>
-          </div>
-          <p className="text-sm text-blue-600 mt-2 text-center">
-            過去14日間（13日前〜今日）の読書記録数を表示しています
-          </p>
         </div>
       )}
 
