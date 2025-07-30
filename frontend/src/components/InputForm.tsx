@@ -33,7 +33,6 @@ function InputForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingAmazon, setIsSearchingAmazon] = useState(false);
   const [amazonLinkFound, setAmazonLinkFound] = useState(false);
-  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
   const [, setTitleExtractionSuccess] = useState(false);
   
   // テーマ選択用のstate
@@ -284,11 +283,24 @@ function InputForm() {
       }
     }
 
-    // customLinkが入力された場合（書籍ではない場合）
-    // 本以外の場合は一般的なWebリンクを想定し、特別な処理は行わない
-    if (name === 'customLink' && value && formData.isNotBook) {
-      // 特別な処理は不要 - 一般的なWebリンクとして扱う
-      console.log('📝 CustomLink changed for non-book content:', value);
+    // customLinkが入力された場合
+    if (name === 'customLink' && value) {
+      // 書籍の場合でAmazonリンクが入力された場合はタイトル抽出を試行
+      if (!formData.isNotBook && isAmazonLink(value)) {
+        // 既存のタイマーをクリア
+        if (linkDebounceRef.current) {
+          clearTimeout(linkDebounceRef.current);
+        }
+        
+        linkDebounceRef.current = setTimeout(() => {
+          console.log('⏰ Timer triggered from customLink, calling extractTitleFromAmazonLink');
+          extractTitleFromAmazonLink(value);
+        }, 1000);
+        console.log('⏰ Set new timer for Amazon link extraction from customLink');
+      } else if (formData.isNotBook) {
+        // not書籍の場合は特別な処理は不要
+        console.log('📝 CustomLink changed for non-book content:', value);
+      }
     }
 
     // 「書籍ではない」チェックボックスが変更された場合
@@ -333,7 +345,6 @@ function InputForm() {
       themeId: null
     });
     setAmazonLinkFound(false);
-    setIsAccordionOpen(false);
     setTitleExtractionSuccess(false);
     
     // Amazon検索機能は無効化（503エラー対応）
@@ -466,51 +477,7 @@ function InputForm() {
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
             1. 読んだ{formData.isNotBook ? 'コンテンツのタイトル' : '書籍のタイトル'}を入力
-            <span className="text-xs text-gray-500 ml-2">
-              {formData.isNotBook 
-                ? '（記事、動画、ブログなどのタイトルを入力してください）'
-                : '（タイトルを入力すると、対応するAmazonリンクが自動で取得されます）'
-              }
-            </span>
           </label>
-          {!formData.isNotBook && (
-            <div className="mb-3">
-              <button
-                type="button"
-                onClick={() => setIsAccordionOpen(!isAccordionOpen)}
-                className="w-full flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm font-medium text-blue-800">
-                    タイトル入力について
-                  </span>
-                </div>
-                <svg
-                  className={`h-5 w-5 text-blue-400 transition-transform ${isAccordionOpen ? 'rotate-180' : ''}`}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {isAccordionOpen && (
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-sm text-blue-700 space-y-2">
-                    <p><strong>📖 書籍タイトルを入力</strong></p>
-                    <p>• 読んだ書籍のタイトルを入力してください</p>
-                    <p>• 例：「7つの習慣」「嫌われる勇気」</p>
-                    <p className="mt-3"><strong>🔗 Amazonリンクも対応</strong></p>
-                    <p>• AmazonのURLを直接貼り付けることも可能です</p>
-                    <p>• 例：https://www.amazon.co.jp/dp/B00KFB5DJC</p>
-                    <p>• 短縮URL（amzn.to、amzn.asia）にも対応しています</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
           <div className="relative">
             <input
               type="text"
@@ -537,7 +504,7 @@ function InputForm() {
           )}
         </div>
 
-        {/* 書籍以外の場合はAmazon検索をスキップ */}
+        {/* 書籍・not書籍区分 */}
         <div className="mb-4">
           <div className="flex items-center space-x-3">
             <button
@@ -555,27 +522,32 @@ function InputForm() {
               （記事、ブログ、YouTubeなど書籍以外の場合はチェックしてください）
             </span>
           </div>
-          {formData.isNotBook && (
-            <div className="mt-3">
-              <div>
-                <label htmlFor="customLink" className="block text-sm font-medium text-gray-700 mb-2">
-                  リンクを直接入力（任意）
-                </label>
-                <textarea
-                  id="customLink"
-                  name="customLink"
-                  value={formData.customLink}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます。
-                </p>
-              </div>
-            </div>
-          )}
+        </div>
+
+        {/* リンク入力（書籍・not書籍共通） */}
+        <div className="mb-4">
+          <label htmlFor="linkInput" className="block text-sm font-medium text-gray-700 mb-2">
+            {formData.isNotBook ? 'リンクを直接入力（任意）' : 'Amazonリンクを入力（任意）'}
+          </label>
+          <textarea
+            id="linkInput"
+            name="customLink"
+            value={formData.customLink}
+            onChange={handleInputChange}
+            placeholder={
+              formData.isNotBook 
+                ? "https://example.com/article や https://youtube.com/watch?v=... など、関連するリンクがあれば入力してください"
+                : "https://www.amazon.co.jp/dp/B00KFB5DJC など、AmazonのURLがあれば入力してください"
+            }
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            {formData.isNotBook 
+              ? '記事やブログのURL、YouTube動画、参考資料のリンクなどを入力できます。'
+              : 'AmazonのURLなど、書籍に関連するリンクを入力できます。'
+            }
+          </p>
         </div>
 
         {/* 過去読んだものから登録するアコーディオン */}
