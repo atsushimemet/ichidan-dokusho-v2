@@ -28,10 +28,25 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
+  
+  // テーマ関連のstate
+  const [allThemeStats, setAllThemeStats] = useState<any[]>([]);
+  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(-1); // -1 = 全てのテーマ
+  const [themeStats, setThemeStats] = useState<any[]>([]);
+  const [dailyTrends, setDailyTrends] = useState<any[]>([]);
 
   useEffect(() => {
     fetchRecords();
+    fetchAllThemeStats();
   }, [isAuthenticated, token]);
+
+  // テーマが変更されたときに統計を更新
+  useEffect(() => {
+    if (selectedThemeId !== null) {
+      fetchThemeStats();
+      fetchDailyTrends();
+    }
+  }, [selectedThemeId]);
 
   const fetchRecords = async () => {
     // 認証チェック
@@ -67,6 +82,71 @@ function Dashboard() {
       setError('レコードの取得に失敗しました。');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 全テーマ統計を取得（プルダウン表示用）
+  const fetchAllThemeStats = async () => {
+    if (!isAuthenticated || !token) return;
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/all-theme-reading-stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setAllThemeStats(result.data || []);
+      }
+    } catch (error) {
+      console.error('テーマ統計取得エラー:', error);
+    }
+  };
+
+  // 選択されたテーマの統計を取得
+  const fetchThemeStats = async () => {
+    if (!isAuthenticated || !token) return;
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const themeParam = selectedThemeId && selectedThemeId !== -1 ? `?themeId=${selectedThemeId}` : '';
+      const response = await fetch(`${API_BASE_URL}/api/theme-reading-stats${themeParam}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setThemeStats(result.data || []);
+      }
+    } catch (error) {
+      console.error('テーマ別統計取得エラー:', error);
+    }
+  };
+
+  // 日次推移データを取得
+  const fetchDailyTrends = async () => {
+    if (!isAuthenticated || !token) return;
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const themeParam = selectedThemeId && selectedThemeId !== -1 ? `?themeId=${selectedThemeId}` : '';
+      const response = await fetch(`${API_BASE_URL}/api/daily-theme-reading-trends${themeParam}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDailyTrends(result.data || []);
+      }
+    } catch (error) {
+      console.error('日次推移取得エラー:', error);
     }
   };
 
@@ -154,6 +234,85 @@ function Dashboard() {
           ダッシュボード
         </h1>
       </div>
+
+      {/* テーマ別統計セクション */}
+      {isAuthenticated && (
+        <div className="mb-8 p-6 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-200">
+          <h2 className="text-xl font-semibold text-orange-800 mb-4 flex items-center">
+            📊 テーマ別読書統計
+          </h2>
+          
+          {/* テーマ選択プルダウン */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              表示するテーマを選択
+            </label>
+            <select
+              value={selectedThemeId || -1}
+              onChange={(e) => setSelectedThemeId(parseInt(e.target.value))}
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            >
+              {allThemeStats.map((theme) => (
+                <option key={theme.theme_id || 'null'} value={theme.theme_id || -1}>
+                  {theme.theme_name} ({theme.total_records}記録)
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 累積読書記録数 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
+              <div className="text-2xl font-bold text-orange-600">
+                {allThemeStats.find(t => (t.theme_id || -1) === selectedThemeId)?.total_records || 0}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">累積読書記録数</div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
+              <div className="text-2xl font-bold text-blue-600">
+                {dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0)}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">過去30日間</div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
+              <div className="text-2xl font-bold text-green-600">
+                {dailyTrends.length > 0 ? Math.round(dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0) / 30 * 10) / 10 : 0}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">日平均記録数</div>
+            </div>
+          </div>
+
+          {/* 日次推移グラフ（シンプルなバー表示） */}
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">📈 過去30日間の推移</h3>
+            <div className="flex items-end space-x-1 h-32 overflow-x-auto">
+              {dailyTrends.slice(-30).map((day, index) => (
+                <div
+                  key={day.date}
+                  className="flex flex-col items-center min-w-[20px]"
+                  title={`${day.date}: ${day.count}記録`}
+                >
+                  <div
+                    className="bg-gradient-to-t from-orange-500 to-orange-300 rounded-t min-w-[18px] transition-all hover:from-orange-600 hover:to-orange-400"
+                    style={{
+                      height: `${Math.max(day.count * 20, 4)}px`,
+                    }}
+                  ></div>
+                  <div className="text-xs text-gray-500 mt-1 transform rotate-45 origin-left whitespace-nowrap">
+                    {new Date(day.date).getDate()}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-2">
+              <span>30日前</span>
+              <span>今日</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 累積読書記録数 */}
       <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 mb-8 border border-orange-200">
