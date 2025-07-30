@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface UserSettings {
   hideSpoilers: boolean;
+  draftThreshold: number;
 }
 
 interface WritingTheme {
@@ -16,7 +17,8 @@ interface WritingTheme {
 function SettingsPage() {
   const { user, token } = useAuth();
   const [settings, setSettings] = useState<UserSettings>({
-    hideSpoilers: false
+    hideSpoilers: false,
+    draftThreshold: 5
   });
   const [themes, setThemes] = useState<WritingTheme[]>([]);
   const [newTheme, setNewTheme] = useState('');
@@ -47,11 +49,11 @@ function SettingsPage() {
         setSettings(userSettings);
       } else {
         // デフォルト設定を使用
-        setSettings({ hideSpoilers: false });
+        setSettings({ hideSpoilers: false, draftThreshold: 5 });
       }
     } catch (error) {
       console.error('設定の読み込みに失敗しました:', error);
-      setSettings({ hideSpoilers: false });
+      setSettings({ hideSpoilers: false, draftThreshold: 5 });
     } finally {
       setLoading(false);
     }
@@ -108,7 +110,7 @@ function SettingsPage() {
     }
   };
 
-  const handleSettingChange = (key: keyof UserSettings, value: boolean) => {
+  const handleSettingChange = (key: keyof UserSettings, value: boolean | number) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
@@ -282,6 +284,50 @@ function SettingsPage() {
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                 </label>
+              </div>
+            </div>
+          </div>
+
+          {/* 草稿出力設定 */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">草稿出力設定</h2>
+            
+            <div className="space-y-4">
+              <div className="p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-medium text-gray-900">テーマ別記録数の閾値</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      テーマごとの記録がこの件数に達したら、草稿出力ボタンがアクティブになります
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={settings.draftThreshold}
+                    onChange={(e) => handleSettingChange('draftThreshold', parseInt(e.target.value))}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: `linear-gradient(to right, #f97316 0%, #f97316 ${((settings.draftThreshold - 1) / 19) * 100}%, #e5e7eb ${((settings.draftThreshold - 1) / 19) * 100}%, #e5e7eb 100%)`
+                    }}
+                  />
+                  <div className="text-center min-w-[80px]">
+                    <div className="text-2xl font-bold text-orange-600">{settings.draftThreshold}</div>
+                    <div className="text-xs text-gray-500">件</div>
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <span>1件</span>
+                  <span>20件</span>
+                </div>
+                <div className="mt-3 p-3 bg-orange-50 rounded-lg">
+                  <p className="text-sm text-orange-700">
+                    💡 現在の設定: テーマごとに<strong>{settings.draftThreshold}件</strong>の記録が溜まったら草稿出力が可能になります
+                  </p>
+                </div>
               </div>
             </div>
           </div>

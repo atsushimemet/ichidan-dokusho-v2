@@ -274,6 +274,7 @@ export interface UserSettings {
   id?: number;
   user_id: string;
   hide_spoilers: boolean;
+  draft_threshold?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -315,7 +316,8 @@ export const getUserSettings = async (userId: string) => {
         success: true, 
         data: { 
           user_id: userId, 
-          hide_spoilers: false 
+          hide_spoilers: false,
+          draft_threshold: 5
         } 
       };
     }
@@ -328,16 +330,45 @@ export const getUserSettings = async (userId: string) => {
 // ユーザー設定を更新または作成
 export const upsertUserSettings = async (settings: UserSettings) => {
   try {
-    const query = `
-      INSERT INTO user_settings (user_id, hide_spoilers)
-      VALUES ($1, $2)
-      ON CONFLICT (user_id) 
-      DO UPDATE SET 
-        hide_spoilers = EXCLUDED.hide_spoilers,
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING *
+    // draft_thresholdカラムの存在を確認
+    const checkDraftThresholdQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'user_settings' 
+      AND column_name = 'draft_threshold'
     `;
-    const result = await pool.query(query, [settings.user_id, settings.hide_spoilers]);
+    const draftThresholdCheck = await pool.query(checkDraftThresholdQuery);
+    const hasDraftThreshold = draftThresholdCheck.rows.length > 0;
+
+    let query: string;
+    let values: any[];
+
+    if (hasDraftThreshold) {
+      query = `
+        INSERT INTO user_settings (user_id, hide_spoilers, draft_threshold)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id) 
+        DO UPDATE SET 
+          hide_spoilers = EXCLUDED.hide_spoilers,
+          draft_threshold = EXCLUDED.draft_threshold,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `;
+      values = [settings.user_id, settings.hide_spoilers, settings.draft_threshold || 5];
+    } else {
+      query = `
+        INSERT INTO user_settings (user_id, hide_spoilers)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) 
+        DO UPDATE SET 
+          hide_spoilers = EXCLUDED.hide_spoilers,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+      `;
+      values = [settings.user_id, settings.hide_spoilers];
+    }
+
+    const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
   } catch (error) {
     console.error('Upsert user settings error:', error);

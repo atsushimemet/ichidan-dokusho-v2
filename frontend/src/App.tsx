@@ -4,6 +4,7 @@ import { Link, Route, BrowserRouter as Router, Routes, useLocation, useNavigate 
 import './App.css';
 import AuthScreen from './components/AuthScreen';
 import Dashboard from './components/Dashboard';
+import DraftOutputPage from './components/DraftOutputPage';
 import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
@@ -100,7 +101,14 @@ function AppContent() {
                     onClick={() => setIsMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                   >
-                    📝 入力画面
+                    📖 読む（入力画面）
+                  </Link>
+                  <Link
+                    to="/draft-output"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                  >
+                    ✍️ 書く（出力画面）
                   </Link>
                   <Link
                     to="/dashboard"
@@ -182,6 +190,14 @@ function AppContent() {
           element={
             <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <InputForm />
+            </div>
+          } 
+        />
+        <Route 
+          path="/draft-output" 
+          element={
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+              <DraftOutputPage />
             </div>
           } 
         />
