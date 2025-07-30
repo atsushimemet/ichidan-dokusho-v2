@@ -253,6 +253,15 @@ export interface UserSettings {
   updated_at?: string;
 }
 
+// 書きたいテーマの型定義
+export interface WritingTheme {
+  id?: number;
+  user_id: string;
+  theme_name: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // ユーザー設定を取得
 export const getUserSettings = async (userId: string) => {
   try {
@@ -296,6 +305,82 @@ export const upsertUserSettings = async (settings: UserSettings) => {
     return { success: true, data: result.rows[0] };
   } catch (error) {
     console.error('Upsert user settings error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 書きたいテーマを作成
+export const createWritingTheme = async (theme: WritingTheme) => {
+  try {
+    const query = `
+      INSERT INTO writing_themes (user_id, theme_name)
+      VALUES ($1, $2)
+      RETURNING *
+    `;
+    const values = [theme.user_id, theme.theme_name];
+    const result = await pool.query(query, values);
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Create writing theme error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// ユーザーの書きたいテーマ一覧を取得
+export const getUserWritingThemes = async (userId: string) => {
+  try {
+    const query = `
+      SELECT * FROM writing_themes 
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+    `;
+    const result = await pool.query(query, [userId]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get user writing themes error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 書きたいテーマを更新
+export const updateWritingTheme = async (id: number, userId: string, themeName: string) => {
+  try {
+    const query = `
+      UPDATE writing_themes 
+      SET theme_name = $1
+      WHERE id = $2 AND user_id = $3
+      RETURNING *
+    `;
+    const result = await pool.query(query, [themeName, id, userId]);
+    
+    if (result.rows.length === 0) {
+      return { success: false, error: 'Theme not found or unauthorized' };
+    }
+    
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Update writing theme error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 書きたいテーマを削除
+export const deleteWritingTheme = async (id: number, userId: string) => {
+  try {
+    const query = `
+      DELETE FROM writing_themes 
+      WHERE id = $1 AND user_id = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [id, userId]);
+    
+    if (result.rows.length === 0) {
+      return { success: false, error: 'Theme not found or unauthorized' };
+    }
+    
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Delete writing theme error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
