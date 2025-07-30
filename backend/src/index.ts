@@ -803,7 +803,8 @@ app.get('/api/user-settings', authenticateToken, async (req, res) => {
     
     if (result.success) {
       res.json({
-        hideSpoilers: result.data.hide_spoilers
+        hideSpoilers: result.data.hide_spoilers,
+        draftThreshold: result.data.draft_threshold || 5
       });
     } else {
       res.status(500).json({
@@ -823,18 +824,20 @@ app.get('/api/user-settings', authenticateToken, async (req, res) => {
 app.put('/api/user-settings', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.sub || 'dev-user-123';
-    const { hideSpoilers } = req.body;
+    const { hideSpoilers, draftThreshold } = req.body;
     
     const result = await upsertUserSettings({
       user_id: userId,
-      hide_spoilers: hideSpoilers
+      hide_spoilers: hideSpoilers,
+      draft_threshold: draftThreshold
     });
     
     if (result.success) {
       res.json({
         message: 'User settings updated successfully',
         settings: {
-          hideSpoilers: result.data.hide_spoilers
+          hideSpoilers: result.data.hide_spoilers,
+          draftThreshold: result.data.draft_threshold || 5
         }
       });
     } else {
@@ -1117,6 +1120,34 @@ app.get('/api/all-theme-reading-stats', authenticateToken, async (req, res) => {
     res.status(500).json({ 
       message: 'Error retrieving all theme reading stats', 
       error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// テーマ統計API（草稿出力画面用）
+app.get('/api/theme-stats', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.sub || 'dev-user-123';
+    
+    const result = await getAllThemeReadingStats(userId);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve theme stats',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving theme stats',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
