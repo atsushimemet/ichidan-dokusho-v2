@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { trackError, trackPostCreation } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
+import { trackError, trackPostCreation } from '../utils/analytics';
 import BookIcon from './BookIcon';
 
 interface FormData {
@@ -406,7 +406,8 @@ function InputForm() {
       notes: '',
       isNotBook: false,
       customLink: '',
-      containsSpoiler: false
+      containsSpoiler: false,
+      themeId: null
     });
     setAmazonLinkFound(false);
     setIsAccordionOpen(false);

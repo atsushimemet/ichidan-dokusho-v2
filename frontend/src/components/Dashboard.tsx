@@ -33,7 +33,6 @@ function Dashboard() {
   // テーマ関連のstate
   const [allThemeStats, setAllThemeStats] = useState<any[]>([]);
   const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null); // null = 未分類
-  const [themeStats, setThemeStats] = useState<any[]>([]);
   const [dailyTrends, setDailyTrends] = useState<any[]>([]);
 
   // 認証状態の初期化を監視
@@ -51,7 +50,6 @@ function Dashboard() {
 
   // テーマが変更されたときに統計を更新
   useEffect(() => {
-    fetchThemeStats();
     fetchDailyTrends();
   }, [selectedThemeId]);
 
@@ -113,27 +111,7 @@ function Dashboard() {
     }
   };
 
-  // 選択されたテーマの統計を取得
-  const fetchThemeStats = async () => {
-    if (!isAuthenticated || !token) return;
 
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const themeParam = selectedThemeId !== null ? `?themeId=${selectedThemeId}` : '';
-      const response = await fetch(`${API_BASE_URL}/api/theme-reading-stats${themeParam}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        setThemeStats(result.data || []);
-      }
-    } catch (error) {
-      console.error('テーマ別統計取得エラー:', error);
-    }
-  };
 
   // 日次推移データを取得
   const fetchDailyTrends = async () => {
