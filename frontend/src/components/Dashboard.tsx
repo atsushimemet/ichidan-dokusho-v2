@@ -38,14 +38,13 @@ function Dashboard() {
   useEffect(() => {
     fetchRecords();
     fetchAllThemeStats();
+    fetchDailyTrends(); // 初期表示時にも日次推移を取得
   }, [isAuthenticated, token]);
 
   // テーマが変更されたときに統計を更新
   useEffect(() => {
-    if (selectedThemeId !== null) {
-      fetchThemeStats();
-      fetchDailyTrends();
-    }
+    fetchThemeStats();
+    fetchDailyTrends();
   }, [selectedThemeId]);
 
   const fetchRecords = async () => {
