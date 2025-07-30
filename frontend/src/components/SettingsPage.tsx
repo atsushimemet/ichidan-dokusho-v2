@@ -165,7 +165,9 @@ function SettingsPage() {
   };
 
   const startEditTheme = (theme: WritingTheme) => {
+    console.log('startEditTheme: Starting edit for theme:', theme);
     setEditingTheme({ id: theme.id, name: theme.theme_name });
+    console.log('startEditTheme: Set editing theme to:', { id: theme.id, name: theme.theme_name });
   };
 
   const cancelEditTheme = () => {
@@ -173,7 +175,12 @@ function SettingsPage() {
   };
 
   const saveEditTheme = async () => {
-    if (!editingTheme) return;
+    if (!editingTheme) {
+      console.log('saveEditTheme: No editing theme');
+      return;
+    }
+
+    console.log('saveEditTheme: Editing theme:', editingTheme);
 
     if (!editingTheme.name.trim()) {
       setMessage('テーマ名を入力してください');
@@ -190,23 +197,42 @@ function SettingsPage() {
 
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_BASE_URL}/api/writing-themes/${editingTheme.id}`, {
+      const url = `${API_BASE_URL}/api/writing-themes/${editingTheme.id}`;
+      const requestBody = { theme_name: editingTheme.name.trim() };
+      
+      console.log('saveEditTheme: Making request to:', url);
+      console.log('saveEditTheme: Request body:', requestBody);
+      console.log('saveEditTheme: Token:', token ? 'Present' : 'Missing');
+
+      const response = await fetch(url, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ theme_name: editingTheme.name.trim() }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('saveEditTheme: Response status:', response.status);
+      console.log('saveEditTheme: Response ok:', response.ok);
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('saveEditTheme: Success response:', responseData);
         setEditingTheme(null);
         await loadThemes();
         setMessage('テーマを更新しました');
         setTimeout(() => setMessage(''), 3000);
       } else {
-        const errorData = await response.json();
-        setMessage(errorData.message || 'テーマの更新に失敗しました');
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          console.log('saveEditTheme: Failed to parse error response:', parseError);
+          errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        console.log('saveEditTheme: Error response:', errorData);
+        setMessage(errorData.message || `テーマの更新に失敗しました (${response.status})`);
       }
     } catch (error) {
       console.error('テーマの更新に失敗しました:', error);
@@ -357,8 +383,9 @@ function SettingsPage() {
                   placeholder="新しいテーマを入力... (例: キャリア、サウナ、プログラミング)"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   maxLength={100}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
                       addTheme();
                     }
                   }}
@@ -410,10 +437,13 @@ function SettingsPage() {
                           onChange={(e) => setEditingTheme({ ...editingTheme, name: e.target.value })}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                           maxLength={100}
-                          onKeyPress={(e) => {
+                          autoFocus
+                          onKeyDown={(e) => {
                             if (e.key === 'Enter') {
+                              e.preventDefault();
                               saveEditTheme();
                             } else if (e.key === 'Escape') {
+                              e.preventDefault();
                               cancelEditTheme();
                             }
                           }}
