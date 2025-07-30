@@ -28,6 +28,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
+  const [authInitialized, setAuthInitialized] = useState(false);
   
   // テーマ関連のstate
   const [allThemeStats, setAllThemeStats] = useState<any[]>([]);
@@ -35,11 +36,18 @@ function Dashboard() {
   const [themeStats, setThemeStats] = useState<any[]>([]);
   const [dailyTrends, setDailyTrends] = useState<any[]>([]);
 
+  // 認証状態の初期化を監視
   useEffect(() => {
-    fetchRecords();
-    fetchAllThemeStats();
-    fetchDailyTrends(); // 初期表示時にも日次推移を取得
-  }, [isAuthenticated, token]);
+    setAuthInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    if (authInitialized && isAuthenticated && token) {
+      fetchRecords();
+      fetchAllThemeStats();
+      fetchDailyTrends(); // 初期表示時にも日次推移を取得
+    }
+  }, [authInitialized, isAuthenticated, token]);
 
   // テーマが変更されたときに統計を更新
   useEffect(() => {
@@ -202,7 +210,7 @@ function Dashboard() {
     return `${diffDays}`;
   };
 
-  if (loading) {
+  if (!authInitialized || loading) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
         <div className="flex items-center justify-center mb-8">
@@ -229,6 +237,22 @@ function Dashboard() {
         </div>
         <div className="text-center py-12">
           <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (authInitialized && !isAuthenticated) {
+    return (
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100 mt-8 sm:mt-0">
+        <div className="flex items-center justify-center mb-8">
+          <BookIcon size={48} />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
+            ダッシュボード
+          </h1>
+        </div>
+        <div className="text-center py-12">
+          <p className="text-orange-600">ログインが必要です。</p>
         </div>
       </div>
     );
