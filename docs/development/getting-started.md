@@ -9,22 +9,10 @@
 - **Docker Desktop** (v4.0以上)
 - **Docker Compose** (v2.0以上)
 - **Git** (v2.30以上)
-- **Node.js** (v18以上) - フロントエンド開発時
-- **好みのエディタ** (VS Code推奨)
+- **Node.js** (v22以上) - フロントエンド開発時（Dockerfileと統一）
+- **Cursor** (エディタ・コーディングエージェント) - 推奨
+- **Claude** (コーディングエージェント) - 推奨
 
-### 推奨VS Code拡張機能
-
-```json
-{
-  "recommendations": [
-    "ms-vscode.vscode-typescript-next",
-    "bradlc.vscode-tailwindcss",
-    "ms-vscode.vscode-json",
-    "esbenp.prettier-vscode",
-    "ms-vscode-remote.remote-containers"
-  ]
-}
-```
 
 ## 🔧 セットアップ手順
 

@@ -67,7 +67,7 @@ open http://localhost:3003
 - React Router DOM (ルーティング)
 
 **バックエンド**
-- Node.js + Express
+- Node.js v22 + Express
 - TypeScript
 - Google OAuth2.0 + JWT認証
 - PostgreSQL (Supabase)
