@@ -326,7 +326,7 @@ function Dashboard() {
               className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             >
               <option value="">未分類</option>
-              {allThemeStats.filter(theme => theme.theme_id !== null).map((theme) => (
+              {allThemeStats.filter(theme => theme.theme_id !== null && theme.theme_id !== -1).map((theme) => (
                 <option key={theme.theme_id} value={theme.theme_id}>
                   {theme.theme_name} ({theme.total_records}記録)
                 </option>
