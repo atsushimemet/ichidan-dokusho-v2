@@ -42,13 +42,13 @@ function InputForm() {
     theme_name: string;
   }>>([]);
   
-  // Amazon検索とオートコンプリート用の状態
-  const [amazonSearchResults, setAmazonSearchResults] = useState<Array<{
-    title: string;
-    link: string;
-  }>>([]);
-  const [showAmazonSuggestions, setShowAmazonSuggestions] = useState(false);
-  const [isSearchingAmazonBooks, setIsSearchingAmazonBooks] = useState(false);
+  // Amazon検索機能は無効化（503エラー対応）
+  // const [amazonSearchResults, setAmazonSearchResults] = useState<Array<{
+  //   title: string;
+  //   link: string;
+  // }>>([]);
+  // const [showAmazonSuggestions, setShowAmazonSuggestions] = useState(false);
+  // const [isSearchingAmazonBooks, setIsSearchingAmazonBooks] = useState(false);
   
   // 過去読んだもの検索用の状態
   const [isPastBooksAccordionOpen, setIsPastBooksAccordionOpen] = useState(false);
@@ -191,68 +191,10 @@ function InputForm() {
     }
   };
 
-  // Amazon検索とオートコンプリート機能
-  const searchAmazonBooks = async (searchTerm: string) => {
-    if (!searchTerm.trim() || formData.isNotBook) {
-      setAmazonSearchResults([]);
-      setShowAmazonSuggestions(false);
-      return;
-    }
-
-    setIsSearchingAmazonBooks(true);
-    try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      
-      // タイトルからAmazonリンクを検索
-      const response = await fetch(`${API_BASE_URL}/api/search-amazon`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title: searchTerm }),
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Amazon検索結果:', result);
-        
-        if (result.success && result.data.link) {
-          // 見つかったリンクからタイトルを取得
-          const titleResponse = await fetch(`${API_BASE_URL}/api/extract-amazon-info`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ amazonUrl: result.data.link }),
-          });
-          
-          if (titleResponse.ok) {
-            const titleResult = await titleResponse.json();
-            if (titleResult.success && titleResult.data.title) {
-              setAmazonSearchResults([{
-                title: titleResult.data.title,
-                link: result.data.link
-              }]);
-              setShowAmazonSuggestions(true);
-            }
-          }
-        } else {
-          setAmazonSearchResults([]);
-          setShowAmazonSuggestions(false);
-        }
-      } else {
-        console.error('Amazon検索エラー:', response.status);
-        setAmazonSearchResults([]);
-        setShowAmazonSuggestions(false);
-      }
-    } catch (error) {
-      console.error('Amazon検索エラー:', error);
-      setAmazonSearchResults([]);
-      setShowAmazonSuggestions(false);
-    } finally {
-      setIsSearchingAmazonBooks(false);
-    }
-  };
+  // Amazon検索機能は無効化（503エラー対応）
+  // const searchAmazonBooks = async (searchTerm: string) => {
+  //   // Amazon側のボット検出により503エラーが発生するため無効化
+  // };
 
   // 過去読んだものを検索する関数
   const searchPastBooks = async (searchTerm: string) => {
@@ -282,19 +224,10 @@ function InputForm() {
     }
   };
 
-  // Amazon検索結果を選択する関数
-  const selectAmazonBook = (book: { title: string; link: string }) => {
-    setFormData(prev => ({
-      ...prev,
-      title: book.title
-    }));
-    
-    // 検索結果をクリア
-    setAmazonSearchResults([]);
-    setShowAmazonSuggestions(false);
-    setAmazonLinkFound(true);
-    setTitleExtractionSuccess(true);
-  };
+  // Amazon検索機能は無効化（503エラー対応）
+  // const selectAmazonBook = (book: { title: string; link: string }) => {
+  //   // Amazon側のボット検出により503エラーが発生するため無効化
+  // };
 
   // 過去読んだものを選択する関数
   const selectPastBook = (book: { title: string; link?: string; is_not_book?: boolean; custom_link?: string }) => {
@@ -324,7 +257,7 @@ function InputForm() {
       // 状態をリセット
       setTitleExtractionSuccess(false);
       setAmazonLinkFound(false);
-      setShowAmazonSuggestions(false);
+      // setShowAmazonSuggestions(false); // Amazon検索機能無効化
       
       // 既存のタイマーをクリア
       if (titleDebounceRef.current) {
@@ -336,28 +269,18 @@ function InputForm() {
         console.log('⏰ Cleared existing amazon search timer');
       }
       
-      if (value && !formData.isNotBook) {
-        // 書籍の場合、Amazonリンクかどうかをチェック
-        if (isAmazonLink(value)) {
-          // Amazonリンクとして処理（旧機能との互換性保持）
+      if (value) {
+        // 書籍・not書籍問わず、タイトル入力として有効とする
+        setTitleExtractionSuccess(true);
+        
+        // Amazonリンクが入力された場合のみタイトル抽出を試行
+        if (!formData.isNotBook && isAmazonLink(value)) {
           titleDebounceRef.current = setTimeout(() => {
             console.log('⏰ Timer triggered, calling extractTitleFromAmazonLink');
             extractTitleFromAmazonLink(value);
           }, 1000);
           console.log('⏰ Set new timer for Amazon link extraction');
-        } else {
-          // タイトルとして処理 - Amazon検索を実行
-          amazonSearchDebounceRef.current = setTimeout(() => {
-            console.log('⏰ Timer triggered, calling searchAmazonBooks');
-            searchAmazonBooks(value);
-          }, 1000);
-          console.log('⏰ Set new timer for Amazon search');
-          // タイトル入力として有効とする
-          setTitleExtractionSuccess(true);
         }
-      } else if (formData.isNotBook) {
-        // 書籍以外の場合は即座に有効
-        setTitleExtractionSuccess(true);
       }
     }
 
@@ -413,10 +336,10 @@ function InputForm() {
     setIsAccordionOpen(false);
     setTitleExtractionSuccess(false);
     
-    // Amazon検索の状態もリセット
-    setAmazonSearchResults([]);
-    setShowAmazonSuggestions(false);
-    setIsSearchingAmazonBooks(false);
+    // Amazon検索機能は無効化（503エラー対応）
+    // setAmazonSearchResults([]);
+    // setShowAmazonSuggestions(false);
+    // setIsSearchingAmazonBooks(false);
     
     // 過去読んだもの検索の状態もリセット
     setIsPastBooksAccordionOpen(false);
@@ -562,7 +485,7 @@ function InputForm() {
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                   <span className="text-sm font-medium text-blue-800">
-                    タイトル入力とAmazonリンク自動取得について
+                    タイトル入力について
                   </span>
                 </div>
                 <svg
@@ -576,11 +499,10 @@ function InputForm() {
               {isAccordionOpen && (
                 <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="text-sm text-blue-700 space-y-2">
-                    <p><strong>📖 書籍タイトルで検索</strong></p>
-                    <p>• 書籍タイトルを入力すると、対応するAmazonリンクを自動検索します</p>
+                    <p><strong>📖 書籍タイトルを入力</strong></p>
+                    <p>• 読んだ書籍のタイトルを入力してください</p>
                     <p>• 例：「7つの習慣」「嫌われる勇気」</p>
-                    <p>• タイトルに応じてAmazonの商品情報が自動取得されます</p>
-                    <p className="mt-3"><strong>🔗 従来のAmazonリンクも対応</strong></p>
+                    <p className="mt-3"><strong>🔗 Amazonリンクも対応</strong></p>
                     <p>• AmazonのURLを直接貼り付けることも可能です</p>
                     <p>• 例：https://www.amazon.co.jp/dp/B00KFB5DJC</p>
                     <p>• 短縮URL（amzn.to、amzn.asia）にも対応しています</p>
@@ -600,34 +522,14 @@ function InputForm() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
               required
             />
-            {(isSearchingAmazon || isSearchingAmazonBooks) && (
+            {isSearchingAmazon && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
               </div>
             )}
           </div>
           
-          {/* Amazon検索結果のサジェスト */}
-          {showAmazonSuggestions && amazonSearchResults.length > 0 && (
-            <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-              <div className="p-2 text-xs text-gray-500 border-b border-gray-100">
-                📚 Amazon検索結果
-              </div>
-              {amazonSearchResults.map((book, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => selectAmazonBook(book)}
-                  className="w-full text-left p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
-                >
-                  <div className="text-sm font-medium text-gray-800">{book.title}</div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    📖 Amazon商品情報が取得されました
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Amazon検索機能は無効化（503エラー対応） */}
           {amazonLinkFound && !formData.isNotBook && (
             <p className="text-xs text-green-600 mt-1">
               ✓ Amazonリンクが自動取得されました
@@ -655,9 +557,6 @@ function InputForm() {
           </div>
           {formData.isNotBook && (
             <div className="mt-3">
-              <p className="text-xs text-orange-600 mb-2">
-                ✓ Amazonリンクの自動取得をスキップします
-              </p>
               <div>
                 <label htmlFor="customLink" className="block text-sm font-medium text-gray-700 mb-2">
                   リンクを直接入力（任意）
