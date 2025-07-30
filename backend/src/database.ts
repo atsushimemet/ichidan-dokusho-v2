@@ -61,12 +61,22 @@ export interface Like {
 // 新しい読書記録を作成
 export const createReadingRecord = async (record: ReadingRecord) => {
   try {
-    const query = `
-      INSERT INTO reading_records (title, link, reading_amount, learning, action, notes, is_not_book, custom_link, contains_spoiler, user_id, user_email, theme_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING *
+    // theme_idカラムの存在を確認
+    const checkThemeIdQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'reading_records' 
+      AND column_name = 'theme_id'
     `;
-    const values = [
+    const themeIdCheck = await pool.query(checkThemeIdQuery);
+    const hasThemeId = themeIdCheck.rows.length > 0;
+
+    // カラムと値を動的に構築
+    const columns = [
+      'title', 'link', 'reading_amount', 'learning', 'action', 'notes', 
+      'is_not_book', 'custom_link', 'contains_spoiler', 'user_id', 'user_email'
+    ];
+    const values: (string | boolean | undefined | null | number)[] = [
       record.title, 
       record.link, 
       record.reading_amount, 
@@ -77,9 +87,22 @@ export const createReadingRecord = async (record: ReadingRecord) => {
       record.custom_link,
       record.contains_spoiler || false,
       record.user_id, 
-      record.user_email,
-      record.theme_id || null
+      record.user_email
     ];
+
+    // theme_idカラムが存在する場合は追加
+    if (hasThemeId) {
+      columns.push('theme_id');
+      values.push(record.theme_id || null);
+    }
+
+    const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+    const query = `
+      INSERT INTO reading_records (${columns.join(', ')})
+      VALUES (${placeholders})
+      RETURNING *
+    `;
+
     const result = await pool.query(query, values);
     return { success: true, data: result.rows[0] };
   } catch (error) {
@@ -401,7 +424,32 @@ export const deleteWritingTheme = async (id: number, userId: string) => {
 // テーマ別読書記録統計を取得
 export const getThemeBasedReadingStats = async (userId: string, themeId?: number) => {
   try {
-    // テーマが指定されている場合は特定テーマの統計、されていない場合は全テーマの統計
+    // theme_idカラムの存在を確認
+    const checkThemeIdQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'reading_records' 
+      AND column_name = 'theme_id'
+    `;
+    const themeIdCheck = await pool.query(checkThemeIdQuery);
+    const hasThemeId = themeIdCheck.rows.length > 0;
+
+    // theme_idカラムが存在しない場合は、全レコードの統計を返す
+    if (!hasThemeId) {
+      const query = `
+        SELECT 
+          NULL as theme_id,
+          '未分類' as theme_name,
+          COUNT(r.id) as total_records
+        FROM reading_records r
+        WHERE r.user_id = $1
+        ORDER BY total_records DESC
+      `;
+      const result = await pool.query(query, [userId]);
+      return { success: true, data: result.rows };
+    }
+
+    // theme_idカラムが存在する場合の元のロジック
     const themeCondition = themeId ? 'AND r.theme_id = $2' : '';
     const queryParams = themeId ? [userId, themeId] : [userId];
     
@@ -440,6 +488,47 @@ export const getThemeBasedReadingStats = async (userId: string, themeId?: number
 // 日次テーマ別読書記録推移を取得
 export const getDailyThemeReadingTrends = async (userId: string, themeId?: number, days: number = 30) => {
   try {
+    // theme_idカラムの存在を確認
+    const checkThemeIdQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'reading_records' 
+      AND column_name = 'theme_id'
+    `;
+    const themeIdCheck = await pool.query(checkThemeIdQuery);
+    const hasThemeId = themeIdCheck.rows.length > 0;
+
+    // theme_idカラムが存在しない場合は、全レコードの日次統計を返す
+    if (!hasThemeId) {
+      const query = `
+        WITH date_series AS (
+          SELECT generate_series(
+            CURRENT_DATE - INTERVAL '${days - 1} days',
+            CURRENT_DATE,
+            '1 day'::interval
+          )::date AS date
+        ),
+        daily_counts AS (
+          SELECT 
+            DATE(r.created_at) as date,
+            COUNT(*) as count
+          FROM reading_records r
+          WHERE r.user_id = $1 
+            AND DATE(r.created_at) >= CURRENT_DATE - INTERVAL '${days - 1} days'
+          GROUP BY DATE(r.created_at)
+        )
+        SELECT 
+          ds.date,
+          COALESCE(dc.count, 0) as count
+        FROM date_series ds
+        LEFT JOIN daily_counts dc ON ds.date = dc.date
+        ORDER BY ds.date
+      `;
+      const result = await pool.query(query, [userId]);
+      return { success: true, data: result.rows };
+    }
+
+    // theme_idカラムが存在する場合の元のロジック
     let query: string;
     let queryParams: any[];
     
@@ -510,6 +599,32 @@ export const getDailyThemeReadingTrends = async (userId: string, themeId?: numbe
 // 全テーマの累積統計を取得（プルダウン表示用）
 export const getAllThemeReadingStats = async (userId: string) => {
   try {
+    // theme_idカラムの存在を確認
+    const checkThemeIdQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'reading_records' 
+      AND column_name = 'theme_id'
+    `;
+    const themeIdCheck = await pool.query(checkThemeIdQuery);
+    const hasThemeId = themeIdCheck.rows.length > 0;
+
+    // theme_idカラムが存在しない場合は、全レコードの統計を返す
+    if (!hasThemeId) {
+      const query = `
+        SELECT 
+          NULL as theme_id,
+          '未分類' as theme_name,
+          COUNT(r.id) as total_records
+        FROM reading_records r
+        WHERE r.user_id = $1
+        ORDER BY total_records DESC
+      `;
+      const result = await pool.query(query, [userId]);
+      return { success: true, data: result.rows };
+    }
+
+    // theme_idカラムが存在する場合の元のロジック
     const query = `
       SELECT 
         wt.id as theme_id,
