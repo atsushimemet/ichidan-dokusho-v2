@@ -335,29 +335,19 @@ function Dashboard() {
           </div>
 
           {/* 累積読書記録数 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
-              <div className="text-2xl font-bold text-orange-600">
+          <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 mb-6 border border-orange-200">
+            <h3 className="text-lg font-semibold text-orange-800 mb-4 flex items-center">
+              <span className="mr-2">📊</span>
+              累積読書記録数
+            </h3>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-orange-600 mb-2">
                 {selectedThemeId === null 
                   ? allThemeStats.find(t => t.theme_id === null)?.total_records || 0
                   : allThemeStats.find(t => t.theme_id === selectedThemeId)?.total_records || 0
                 }
               </div>
-              <div className="text-sm text-gray-600 mt-1">累積読書記録数</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
-              <div className="text-2xl font-bold text-blue-600">
-                {dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0)}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">過去14日間</div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
-              <div className="text-2xl font-bold text-green-600">
-                {dailyTrends.length > 0 ? Math.round(dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0) / 14 * 10) / 10 : 0}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">日平均記録数</div>
+              <p className="text-orange-700">件の読書記録</p>
             </div>
           </div>
 
