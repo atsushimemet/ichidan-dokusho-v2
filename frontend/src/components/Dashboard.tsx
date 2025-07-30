@@ -361,32 +361,59 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* 日次推移グラフ（シンプルなバー表示） */}
+          {/* 日次推移グラフ（折れ線グラフ） */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
             <h3 className="text-lg font-medium text-gray-800 mb-3">📈 過去14日間の推移</h3>
-            <div className="flex items-end space-x-1 h-32 overflow-x-auto">
-              {dailyTrends.slice(-14).map((day, index) => (
-                <div
-                  key={day.date}
-                  className="flex flex-col items-center min-w-[20px]"
-                  title={`${day.date}: ${day.count}記録`}
-                >
-                  <div
-                    className="bg-gradient-to-t from-orange-500 to-orange-300 rounded-t min-w-[18px] transition-all hover:from-orange-600 hover:to-orange-400"
-                    style={{
-                      height: `${Math.max(day.count * 20, 4)}px`,
+            <div className="h-64 relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dailyTrends.slice(-14).map(day => ({
+                  date: formatDateForChart(day.date),
+                  count: parseInt(day.count)
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}
-                  ></div>
-                  <div className="text-xs text-gray-500 mt-1 transform rotate-45 origin-left whitespace-nowrap">
-                    {new Date(day.date).getDate()}
-                  </div>
-                </div>
-              ))}
+                    labelStyle={{ color: '#374151' }}
+                    formatter={(value) => [value, '読書記録数']}
+                    labelFormatter={(label) => `${label}日前`}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="#f97316" 
+                    strokeWidth={3}
+                    dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#f97316', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              {/* 「日前」ラベルを右端に追加 */}
+              <div className="absolute bottom-6 right-8 text-xs text-gray-500">
+                日前
+              </div>
             </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>13日前</span>
-              <span>今日</span>
-            </div>
+            <p className="text-sm text-orange-600 mt-2 text-center">
+              過去14日間（13日前〜今日）の読書記録数を表示しています
+            </p>
           </div>
         </div>
       )}
