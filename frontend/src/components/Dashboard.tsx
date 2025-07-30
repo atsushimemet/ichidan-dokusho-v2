@@ -134,8 +134,8 @@ function Dashboard() {
 
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const themeParam = selectedThemeId !== null ? `?themeId=${selectedThemeId}` : '';
-      const response = await fetch(`${API_BASE_URL}/api/daily-theme-reading-trends${themeParam}`, {
+      const themeParam = selectedThemeId !== null ? `&themeId=${selectedThemeId}` : '';
+      const response = await fetch(`${API_BASE_URL}/api/daily-theme-reading-trends?days=14${themeParam}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -350,12 +350,12 @@ function Dashboard() {
               <div className="text-2xl font-bold text-blue-600">
                 {dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0)}
               </div>
-              <div className="text-sm text-gray-600 mt-1">過去30日間</div>
+              <div className="text-sm text-gray-600 mt-1">過去14日間</div>
             </div>
             
             <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
               <div className="text-2xl font-bold text-green-600">
-                {dailyTrends.length > 0 ? Math.round(dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0) / 30 * 10) / 10 : 0}
+                {dailyTrends.length > 0 ? Math.round(dailyTrends.reduce((sum, day) => sum + parseInt(day.count), 0) / 14 * 10) / 10 : 0}
               </div>
               <div className="text-sm text-gray-600 mt-1">日平均記録数</div>
             </div>
@@ -363,9 +363,9 @@ function Dashboard() {
 
           {/* 日次推移グラフ（シンプルなバー表示） */}
           <div className="bg-white rounded-lg p-4 shadow-sm border border-orange-100">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">📈 過去30日間の推移</h3>
+            <h3 className="text-lg font-medium text-gray-800 mb-3">📈 過去14日間の推移</h3>
             <div className="flex items-end space-x-1 h-32 overflow-x-auto">
-              {dailyTrends.slice(-30).map((day, index) => (
+              {dailyTrends.slice(-14).map((day, index) => (
                 <div
                   key={day.date}
                   className="flex flex-col items-center min-w-[20px]"
@@ -384,7 +384,7 @@ function Dashboard() {
               ))}
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-2">
-              <span>30日前</span>
+              <span>13日前</span>
               <span>今日</span>
             </div>
           </div>
