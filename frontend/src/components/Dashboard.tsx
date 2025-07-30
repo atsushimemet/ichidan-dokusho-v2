@@ -399,10 +399,10 @@ function Dashboard() {
                   <Line 
                     type="monotone" 
                     dataKey="count" 
-                    stroke="#f97316" 
+                    stroke="#3b82f6" 
                     strokeWidth={3}
-                    dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: '#f97316', strokeWidth: 2 }}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -411,7 +411,7 @@ function Dashboard() {
                 日前
               </div>
             </div>
-            <p className="text-sm text-orange-600 mt-2 text-center">
+            <p className="text-sm text-blue-600 mt-2 text-center">
               過去14日間（13日前〜今日）の読書記録数を表示しています
             </p>
           </div>
