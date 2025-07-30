@@ -13,13 +13,13 @@ ON DELETE SET NULL;
 
 -- 3. インデックスを追加（テーマ別統計取得の高速化）
 -- CONCURRENTLYはトランザクションブロック内で実行できないため、通常のCREATE INDEXを使用
-CREATE INDEX idx_reading_records_theme_id ON reading_records(theme_id);
+CREATE INDEX IF NOT EXISTS idx_reading_records_theme_id ON reading_records(theme_id);
 
 -- 4. 複合インデックスを追加（ユーザー別・テーマ別統計取得の高速化）
-CREATE INDEX idx_reading_records_user_theme ON reading_records(user_id, theme_id);
+CREATE INDEX IF NOT EXISTS idx_reading_records_user_theme ON reading_records(user_id, theme_id);
 
 -- 5. 日付別統計用のインデックスを追加（created_atでソート）
-CREATE INDEX idx_reading_records_created_at ON reading_records(created_at);
+CREATE INDEX IF NOT EXISTS idx_reading_records_created_at ON reading_records(created_at);
 
 -- ロールバック用（緊急時）
 -- DROP INDEX IF EXISTS idx_reading_records_created_at;
