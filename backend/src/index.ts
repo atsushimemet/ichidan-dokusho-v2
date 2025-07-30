@@ -5,17 +5,22 @@ import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
     addLike,
     createReadingRecord,
+    createWritingTheme,
     deleteReadingRecord,
+    deleteWritingTheme,
     getAllReadingRecords,
     getReadingRecordById,
     getUserReadingRecords,
     getUserSettings,
+    getUserWritingThemes,
     ReadingRecord,
     removeLike,
     searchReadingRecordsByTitle,
     testConnection,
     updateReadingRecord,
-    upsertUserSettings
+    updateWritingTheme,
+    upsertUserSettings,
+    WritingTheme
 } from './database';
 
 // Request型の拡張
@@ -837,6 +842,183 @@ app.put('/api/user-settings', authenticateToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: 'Error updating user settings',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 書きたいテーマ一覧を取得
+app.get('/api/writing-themes', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    const result = await getUserWritingThemes(userId);
+    
+    if (result.success) {
+      res.json({
+        message: 'Writing themes retrieved successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to retrieve writing themes',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving writing themes',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 新しい書きたいテーマを作成
+app.post('/api/writing-themes', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const { theme_name } = req.body;
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (!theme_name || theme_name.trim().length === 0) {
+      return res.status(400).json({ 
+        message: 'Theme name is required' 
+      });
+    }
+    
+    if (theme_name.length > 100) {
+      return res.status(400).json({ 
+        message: 'Theme name must be 100 characters or less' 
+      });
+    }
+    
+    // 10テーマ制限チェック
+    const existingThemesResult = await getUserWritingThemes(userId);
+    if (existingThemesResult.success && existingThemesResult.data && existingThemesResult.data.length >= 10) {
+      return res.status(400).json({ 
+        message: 'テーマは最大10個まで設定できます。新しいテーマを追加するには、既存のテーマを削除してください。' 
+      });
+    }
+    
+    const theme: WritingTheme = {
+      user_id: userId,
+      theme_name: theme_name.trim()
+    };
+    
+    const result = await createWritingTheme(theme);
+    
+    if (result.success) {
+      res.status(201).json({
+        message: 'Writing theme created successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to create writing theme',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error creating writing theme',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 書きたいテーマを更新
+app.put('/api/writing-themes/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const themeId = parseInt(req.params.id);
+    const { theme_name } = req.body;
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (isNaN(themeId)) {
+      return res.status(400).json({ message: 'Invalid theme ID' });
+    }
+    
+    if (!theme_name || theme_name.trim().length === 0) {
+      return res.status(400).json({ 
+        message: 'Theme name is required' 
+      });
+    }
+    
+    if (theme_name.length > 100) {
+      return res.status(400).json({ 
+        message: 'Theme name must be 100 characters or less' 
+      });
+    }
+    
+    const result = await updateWritingTheme(themeId, userId, theme_name.trim());
+    
+    if (result.success) {
+      res.json({
+        message: 'Writing theme updated successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to update writing theme',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error updating writing theme',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 書きたいテーマを削除
+app.delete('/api/writing-themes/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const themeId = parseInt(req.params.id);
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (isNaN(themeId)) {
+      return res.status(400).json({ message: 'Invalid theme ID' });
+    }
+    
+    const result = await deleteWritingTheme(themeId, userId);
+    
+    if (result.success) {
+      res.json({
+        message: 'Writing theme deleted successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to delete writing theme',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error deleting writing theme',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
