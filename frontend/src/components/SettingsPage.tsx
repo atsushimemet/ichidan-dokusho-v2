@@ -515,143 +515,6 @@ function SettingsPage() {
             </div>
           </div>
 
-          {/* プロンプトテンプレート設定 */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">草稿出力プロンプト設定</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              草稿出力時に使用するプロンプトテンプレートをカスタマイズできます。
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ファクトモード */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-900">📊 ファクトモード</h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => startEditPrompt('fact')}
-                      disabled={promptLoading}
-                      className="text-blue-500 hover:text-blue-700 text-sm underline disabled:opacity-50"
-                    >
-                      編集
-                    </button>
-                    <button
-                      onClick={() => resetPromptTemplate('fact')}
-                      disabled={promptLoading}
-                      className="text-orange-500 hover:text-orange-700 text-sm underline disabled:opacity-50"
-                    >
-                      リセット
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mb-2">
-                  客観的事実やデータを重視した草稿を生成します
-                </p>
-                <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
-                  {(() => {
-                    const template = promptTemplates.find(t => t.mode === 'fact');
-                    const text = template?.template_text || getDefaultPromptText('fact');
-                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
-                  })()}
-                </div>
-              </div>
-
-              {/* エッセイモード */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-gray-900">✍️ エッセイモード</h3>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => startEditPrompt('essay')}
-                      disabled={promptLoading}
-                      className="text-blue-500 hover:text-blue-700 text-sm underline disabled:opacity-50"
-                    >
-                      編集
-                    </button>
-                    <button
-                      onClick={() => resetPromptTemplate('essay')}
-                      disabled={promptLoading}
-                      className="text-orange-500 hover:text-orange-700 text-sm underline disabled:opacity-50"
-                    >
-                      リセット
-                    </button>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mb-2">
-                  個人的な体験や感想を重視した草稿を生成します
-                </p>
-                <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
-                  {(() => {
-                    const template = promptTemplates.find(t => t.mode === 'essay');
-                    const text = template?.template_text || getDefaultPromptText('essay');
-                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
-                  })()}
-                </div>
-              </div>
-            </div>
-
-            {/* プロンプト編集モーダル */}
-            {editingPrompt && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {editingPrompt.mode === 'fact' ? '📊 ファクトモード' : '✍️ エッセイモード'}のプロンプト編集
-                    </h3>
-                    <button
-                      onClick={cancelEditPrompt}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">
-                      プロンプトテンプレートを編集してください。<code>{'{themeName}'}</code>と<code>{'{recordsText}'}</code>は自動で置換されます。
-                    </p>
-                    <div className="text-xs text-orange-600 mb-3">
-                      💡 ヒント: 「質問から始める」「30代会社員向けに」など、具体的な指示を追加できます
-                    </div>
-                  </div>
-
-                  <textarea
-                    value={editingPrompt.text}
-                    onChange={(e) => setEditingPrompt({ ...editingPrompt, text: e.target.value })}
-                    className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                    placeholder="プロンプトテンプレートを入力..."
-                  />
-
-                  <div className="flex justify-end space-x-3 mt-4">
-                    <button
-                      onClick={cancelEditPrompt}
-                      disabled={promptLoading}
-                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      onClick={savePromptTemplate}
-                      disabled={promptLoading || !editingPrompt.text.trim()}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
-                    >
-                      {promptLoading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>保存中...</span>
-                        </>
-                      ) : (
-                        <span>保存</span>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* 書きたいテーマ設定 */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
@@ -796,6 +659,143 @@ function SettingsPage() {
                 ))
               )}
             </div>
+          </div>
+
+          {/* プロンプトテンプレート設定 */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">草稿出力プロンプト設定</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              草稿出力時に使用するプロンプトテンプレートをカスタマイズできます。
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ファクトモード */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">📊 ファクトモード</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => startEditPrompt('fact')}
+                      disabled={promptLoading}
+                      className="text-blue-500 hover:text-blue-700 text-sm underline disabled:opacity-50"
+                    >
+                      編集
+                    </button>
+                    <button
+                      onClick={() => resetPromptTemplate('fact')}
+                      disabled={promptLoading}
+                      className="text-orange-500 hover:text-orange-700 text-sm underline disabled:opacity-50"
+                    >
+                      リセット
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mb-2">
+                  客観的事実やデータを重視した草稿を生成します
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
+                  {(() => {
+                    const template = promptTemplates.find(t => t.mode === 'fact');
+                    const text = template?.template_text || getDefaultPromptText('fact');
+                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                  })()}
+                </div>
+              </div>
+
+              {/* エッセイモード */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">✍️ エッセイモード</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => startEditPrompt('essay')}
+                      disabled={promptLoading}
+                      className="text-blue-500 hover:text-blue-700 text-sm underline disabled:opacity-50"
+                    >
+                      編集
+                    </button>
+                    <button
+                      onClick={() => resetPromptTemplate('essay')}
+                      disabled={promptLoading}
+                      className="text-orange-500 hover:text-orange-700 text-sm underline disabled:opacity-50"
+                    >
+                      リセット
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mb-2">
+                  個人的な体験や感想を重視した草稿を生成します
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
+                  {(() => {
+                    const template = promptTemplates.find(t => t.mode === 'essay');
+                    const text = template?.template_text || getDefaultPromptText('essay');
+                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* プロンプト編集モーダル */}
+            {editingPrompt && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {editingPrompt.mode === 'fact' ? '📊 ファクトモード' : '✍️ エッセイモード'}のプロンプト編集
+                    </h3>
+                    <button
+                      onClick={cancelEditPrompt}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      プロンプトテンプレートを編集してください。<code>{'{themeName}'}</code>と<code>{'{recordsText}'}</code>は自動で置換されます。
+                    </p>
+                    <div className="text-xs text-orange-600 mb-3">
+                      💡 ヒント: 「質問から始める」「30代会社員向けに」など、具体的な指示を追加できます
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={editingPrompt.text}
+                    onChange={(e) => setEditingPrompt({ ...editingPrompt, text: e.target.value })}
+                    className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    placeholder="プロンプトテンプレートを入力..."
+                  />
+
+                  <div className="flex justify-end space-x-3 mt-4">
+                    <button
+                      onClick={cancelEditPrompt}
+                      disabled={promptLoading}
+                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={savePromptTemplate}
+                      disabled={promptLoading || !editingPrompt.text.trim()}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      {promptLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>保存中...</span>
+                        </>
+                      ) : (
+                        <span>保存</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 保存ボタン */}
