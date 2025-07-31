@@ -155,6 +155,42 @@ function DraftOutputPage() {
     }
   };
 
+  // クリップボードにコピー（フォールバック付き）
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    // 現代的なClipboard APIを試行
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        console.warn('Clipboard API failed, falling back to legacy method:', error);
+      }
+    }
+
+    // フォールバック：レガシーメソッド
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        return true;
+      }
+    } catch (error) {
+      console.warn('Legacy clipboard method failed:', error);
+    }
+
+    return false;
+  };
+
   const handleGenerateDraft = async () => {
     if (!selectedThemeId) {
       setMessage('テーマを選択してください');
@@ -175,13 +211,19 @@ function DraftOutputPage() {
       // プロンプトを生成
       const prompt = await generatePrompt();
       
-      // クリップボードにコピー
-      await navigator.clipboard.writeText(prompt);
+      // クリップボードにコピー（フォールバック付き）
+      const copySuccess = await copyToClipboard(prompt);
       
-      // ChatGPTに遷移
-      window.open('https://chatgpt.com/', '_blank');
-      
-      setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
+      if (copySuccess) {
+        // ChatGPTに遷移
+        window.open('https://chatgpt.com/', '_blank');
+        setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
+      } else {
+        // クリップボードコピーに失敗した場合は、プロンプトを表示
+        setMessage(`クリップボードへのコピーに失敗しました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}`);
+        // ChatGPTも開く
+        window.open('https://chatgpt.com/', '_blank');
+      }
     } catch (error) {
       console.error('草稿生成エラー:', error);
       setMessage('草稿生成に失敗しました');
@@ -421,9 +463,18 @@ function DraftOutputPage() {
                 ? 'bg-red-100 text-red-700' 
                 : message.includes('開発中')
                 ? 'bg-yellow-100 text-yellow-700'
+                : message.includes('クリップボードへのコピーに失敗')
+                ? 'bg-orange-100 text-orange-700'
                 : 'bg-green-100 text-green-700'
             }`}>
-              {message}
+              <div className="whitespace-pre-wrap break-words">
+                {message}
+              </div>
+              {message.includes('以下のプロンプトを手動でコピー') && (
+                <div className="mt-2 text-xs text-orange-600">
+                  💡 ヒント: 上記のテキストを長押し（またはダブルタップ）して選択し、コピーしてください
+                </div>
+              )}
             </div>
           )}
 
