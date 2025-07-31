@@ -15,6 +15,7 @@ interface ReadingRecord {
   user_email?: string;
   created_at: string;
   updated_at: string;
+  theme_id?: number | null;
 }
 
 interface DailyRecord {

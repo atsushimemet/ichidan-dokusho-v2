@@ -18,6 +18,15 @@ interface ReadingRecord {
   is_liked?: boolean;
   containsSpoiler?: boolean;
   user_email?: string;
+  theme_id?: number | null;
+}
+
+interface WritingTheme {
+  id: number;
+  user_id: string;
+  theme_name: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface UserSettings {
@@ -28,6 +37,7 @@ function Timeline() {
   const { token, user } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<ReadingRecord[]>([]);
+  const [themes, setThemes] = useState<WritingTheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
@@ -49,6 +59,7 @@ function Timeline() {
   useEffect(() => {
     if (token) {
       loadUserSettings();
+      fetchThemes();
     }
   }, [token]);
 
@@ -106,6 +117,28 @@ function Timeline() {
       }
     } catch (error) {
       console.error('設定の読み込みに失敗しました:', error);
+    }
+  };
+
+  const fetchThemes = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/writing-themes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setThemes(result.data || []);
+      } else {
+        console.error('テーマの読み込みに失敗しました');
+        setThemes([]);
+      }
+    } catch (error) {
+      console.error('テーマの読み込みに失敗しました:', error);
+      setThemes([]);
     }
   };
 
@@ -304,6 +337,20 @@ function Timeline() {
                     </span>
                   )}
                 </div>
+                
+                {/* テーマ表示 */}
+                {record.theme_id && (
+                  <div className="mb-2">
+                    {(() => {
+                      const theme = themes.find(t => t.id === record.theme_id);
+                      return theme ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          🎯 {theme.theme_name}
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
                 
                 {/* 読んだ量の丸といいねボタン */}
                 <div className="flex items-center space-x-2 mb-2">
