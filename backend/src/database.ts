@@ -251,6 +251,32 @@ export const getUserReadingRecords = async (userId: string, sessionId?: string) 
   }
 };
 
+// テーマ別の読書記録を取得
+export const getThemeReadingRecords = async (userId: string, themeId: number) => {
+  try {
+    const query = `
+      SELECT 
+        r.id,
+        r.title,
+        r.link,
+        r.reading_amount,
+        r.learning,
+        r.action,
+        r.notes,
+        r.created_at,
+        r.updated_at
+      FROM reading_records r
+      WHERE r.user_id = $1 AND r.theme_id = $2
+      ORDER BY r.created_at DESC
+    `;
+    const result = await pool.query(query, [userId, themeId]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get theme reading records error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
 // 過去の読書記録をタイトルで検索
 export const searchReadingRecordsByTitle = async (searchTerm: string, limit: number = 10) => {
   try {

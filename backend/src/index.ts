@@ -13,6 +13,7 @@ import {
     getDailyThemeReadingTrends,
     getReadingRecordById,
     getThemeBasedReadingStats,
+    getThemeReadingRecords,
     getUserReadingRecords,
     getUserSettings,
     getUserWritingThemes,
@@ -1095,6 +1096,43 @@ app.get('/api/daily-theme-reading-trends', authenticateToken, async (req, res) =
     res.status(500).json({ 
       message: 'Error retrieving daily theme reading trends', 
       error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// テーマ別読書記録を取得（草稿生成用）
+app.get('/api/theme-reading-records/:themeId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const themeId = parseInt(req.params.themeId);
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (isNaN(themeId)) {
+      return res.status(400).json({ message: 'Invalid theme ID' });
+    }
+    
+    const result = await getThemeReadingRecords(userId, themeId);
+    
+    if (result.success) {
+      res.json({
+        message: 'Theme reading records retrieved successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to retrieve theme reading records',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving theme reading records',
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

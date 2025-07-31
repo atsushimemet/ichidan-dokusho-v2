@@ -29,6 +29,7 @@ function DraftOutputPage() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState('');
+  const [draftMode, setDraftMode] = useState<'fact' | 'essay'>('fact');
 
   useEffect(() => {
     if (user && token) {
@@ -126,6 +127,34 @@ function DraftOutputPage() {
     return count >= userSettings.draftThreshold;
   };
 
+  const generatePrompt = async (): Promise<string> => {
+    const selectedTheme = themes.find(t => t.id === selectedThemeId);
+    const themeName = selectedTheme?.theme_name || 'テーマ';
+    
+    // 読書記録を取得
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    const response = await fetch(`${API_BASE_URL}/api/theme-reading-records/${selectedThemeId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    
+    let recordsText = '';
+    if (response.ok) {
+      const result = await response.json();
+      const records = result.data || [];
+      recordsText = records.map((record: any) => 
+        `【${record.title}】\n学び: ${record.learning}\nアクション: ${record.action}`
+      ).join('\n\n');
+    }
+    
+    if (draftMode === 'fact') {
+      return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から客観的なファクトを抽出し、整理してください。\n\n${recordsText}\n\n# 指示\n- 客観的事実のみを抽出\n- データや統計、専門家の見解を重視\n- 個人的な感想や主観は除外\n- 論理的で体系的な構成\n- 引用元を明確に`;
+    } else {
+      return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から個人的な意見や洞察を抽出し、エッセイ形式で整理してください。\n\n${recordsText}\n\n# 指示\n- 個人的な体験や感想を重視\n- 主観的な洞察や気づきを表現\n- ストーリー性のある構成\n- 読者の共感を呼ぶ内容\n- 具体的なエピソードを交える`;
+    }
+  };
+
   const handleGenerateDraft = async () => {
     if (!selectedThemeId) {
       setMessage('テーマを選択してください');
@@ -143,11 +172,16 @@ function DraftOutputPage() {
     setMessage('');
 
     try {
-      // TODO: 実際の草稿生成APIを実装
-      // 現在はプレースホルダー
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // プロンプトを生成
+      const prompt = await generatePrompt();
       
-      setMessage('草稿生成機能は開発中です。近日中に実装予定です。');
+      // クリップボードにコピー
+      await navigator.clipboard.writeText(prompt);
+      
+      // ChatGPTに遷移
+      window.open('https://chatgpt.com/', '_blank');
+      
+      setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
     } catch (error) {
       console.error('草稿生成エラー:', error);
       setMessage('草稿生成に失敗しました');
@@ -282,13 +316,81 @@ function DraftOutputPage() {
             )}
           </div>
 
+          {/* モード選択 */}
+          {availableThemes.length > 0 && selectedThemeId && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">📝 草稿出力モード</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* ファクトモード */}
+                <div 
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    draftMode === 'fact'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                  onClick={() => setDraftMode('fact')}
+                >
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="radio"
+                      name="draftMode"
+                      value="fact"
+                      checked={draftMode === 'fact'}
+                      onChange={() => setDraftMode('fact')}
+                      className="mr-3"
+                    />
+                    <h4 className="font-semibold text-gray-900">📊 ファクトモード</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">客観重視</p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• 客観的事実のみを抽出</li>
+                    <li>• データや統計を重視</li>
+                    <li>• 論理的で体系的な構成</li>
+                  </ul>
+                </div>
+
+                {/* エッセイモード */}
+                <div 
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    draftMode === 'essay'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                  onClick={() => setDraftMode('essay')}
+                >
+                  <div className="flex items-center mb-2">
+                    <input
+                      type="radio"
+                      name="draftMode"
+                      value="essay"
+                      checked={draftMode === 'essay'}
+                      onChange={() => setDraftMode('essay')}
+                      className="mr-3"
+                    />
+                    <h4 className="font-semibold text-gray-900">✍️ エッセイモード</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">主観重視</p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li>• 個人的な体験や感想を重視</li>
+                    <li>• 主観的な洞察を表現</li>
+                    <li>• ストーリー性のある構成</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 草稿生成ボタン */}
           {availableThemes.length > 0 && (
             <div className="mb-6">
               <button
                 onClick={handleGenerateDraft}
                 disabled={!selectedThemeId || generating || !isThemeReady(selectedThemeId)}
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold py-4 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className={`w-full font-semibold py-4 px-6 rounded-lg focus:ring-4 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
+                  draftMode === 'fact'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 focus:ring-blue-300'
+                    : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 focus:ring-purple-300'
+                }`}
               >
                 {generating ? (
                   <>
@@ -300,7 +402,7 @@ function DraftOutputPage() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
-                    <span>草稿を生成</span>
+                    <span>{draftMode === 'fact' ? 'ファクト草稿を生成' : 'エッセイ草稿を生成'}</span>
                   </>
                 )}
               </button>
