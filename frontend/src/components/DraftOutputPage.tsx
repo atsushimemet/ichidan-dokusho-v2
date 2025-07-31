@@ -238,13 +238,13 @@ function DraftOutputPage() {
     note: {
       name: 'note',
       description: 'Markdown形式で整形',
-      url: 'https://note.com/n/new',
+      url: 'https://note.com/',
       icon: '📝'
     },
     zenn: {
       name: 'Zenn',
       description: 'Markdown形式で整形',
-      url: 'https://zenn.dev/new',
+      url: 'https://zenn.dev/',
       icon: '⚡'
     }
   };
