@@ -131,10 +131,6 @@ function DraftOutputPage() {
     const selectedTheme = themes.find(t => t.id === selectedThemeId);
     const themeName = selectedTheme?.theme_name || 'テーマ';
     
-    console.log('generatePrompt - draftMode:', draftMode);
-    console.log('generatePrompt - selectedThemeId:', selectedThemeId);
-    console.log('generatePrompt - themeName:', themeName);
-    
     // 読書記録を取得
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
     const response = await fetch(`${API_BASE_URL}/api/theme-reading-records/${selectedThemeId}`, {
@@ -152,17 +148,11 @@ function DraftOutputPage() {
       ).join('\n\n');
     }
     
-    let prompt = '';
     if (draftMode === 'fact') {
-      prompt = `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から客観的なファクトを抽出し、整理してください。\n\n${recordsText}\n\n# 指示\n- 客観的事実のみを抽出\n- データや統計、専門家の見解を重視\n- 個人的な感想や主観は除外\n- 論理的で体系的な構成\n- 引用元を明確に`;
-      console.log('generatePrompt - FACT mode selected');
+      return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から客観的なファクトを抽出し、整理してください。\n\n${recordsText}\n\n# 指示\n- 客観的事実のみを抽出\n- データや統計、専門家の見解を重視\n- 個人的な感想や主観は除外\n- 論理的で体系的な構成\n- 引用元を明確に`;
     } else {
-      prompt = `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から個人的な意見や洞察を抽出し、エッセイ形式で整理してください。\n\n${recordsText}\n\n# 指示\n- 個人的な体験や感想を重視\n- 主観的な洞察や気づきを表現\n- ストーリー性のある構成\n- 読者の共感を呼ぶ内容\n- 具体的なエピソードを交える`;
-      console.log('generatePrompt - ESSAY mode selected');
+      return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から個人的な意見や洞察を抽出し、エッセイ形式で整理してください。\n\n${recordsText}\n\n# 指示\n- 個人的な体験や感想を重視\n- 主観的な洞察や気づきを表現\n- ストーリー性のある構成\n- 読者の共感を呼ぶ内容\n- 具体的なエピソードを交える`;
     }
-    
-    console.log('generatePrompt - generated prompt preview:', prompt.substring(0, 100) + '...');
-    return prompt;
   };
 
   const handleGenerateDraft = async () => {
