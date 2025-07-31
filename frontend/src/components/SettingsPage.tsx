@@ -314,7 +314,9 @@ function SettingsPage() {
 
   // プロンプトテンプレートを編集開始
   const startEditPrompt = (mode: 'fact' | 'essay') => {
-    const template = promptTemplates.find(t => t.mode === mode);
+    // ユーザー固有のテンプレートを優先して取得
+    const template = promptTemplates.find(t => t.mode === mode && t.user_id !== 'system') 
+                    || promptTemplates.find(t => t.mode === mode);
     setEditingPrompt({ 
       mode, 
       text: template?.template_text || getDefaultPromptText(mode)
@@ -695,7 +697,9 @@ function SettingsPage() {
                 </p>
                 <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
                   {(() => {
-                    const template = promptTemplates.find(t => t.mode === 'fact');
+                    // ユーザー固有のテンプレートを優先して取得
+                    const template = promptTemplates.find(t => t.mode === 'fact' && t.user_id !== 'system') 
+                                    || promptTemplates.find(t => t.mode === 'fact');
                     const text = template?.template_text || getDefaultPromptText('fact');
                     return text.length > 100 ? text.substring(0, 100) + '...' : text;
                   })()}
@@ -728,7 +732,9 @@ function SettingsPage() {
                 </p>
                 <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
                   {(() => {
-                    const template = promptTemplates.find(t => t.mode === 'essay');
+                    // ユーザー固有のテンプレートを優先して取得
+                    const template = promptTemplates.find(t => t.mode === 'essay' && t.user_id !== 'system') 
+                                    || promptTemplates.find(t => t.mode === 'essay');
                     const text = template?.template_text || getDefaultPromptText('essay');
                     return text.length > 100 ? text.substring(0, 100) + '...' : text;
                   })()}
