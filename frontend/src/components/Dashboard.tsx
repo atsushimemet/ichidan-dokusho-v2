@@ -15,6 +15,15 @@ interface ReadingRecord {
   user_email?: string;
   created_at: string;
   updated_at: string;
+  theme_id?: number | null;
+}
+
+interface WritingTheme {
+  id: number;
+  user_id: string;
+  theme_name: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface DailyRecord {
@@ -25,6 +34,7 @@ interface DailyRecord {
 function Dashboard() {
   const { token, isAuthenticated } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
+  const [themes, setThemes] = useState<WritingTheme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([]);
@@ -43,6 +53,7 @@ function Dashboard() {
   useEffect(() => {
     if (authInitialized && isAuthenticated && token) {
       fetchRecords();
+      fetchThemes();
       fetchAllThemeStats();
       fetchDailyTrends(); // 初期表示時にも日次推移を取得
     }
@@ -87,6 +98,28 @@ function Dashboard() {
       setError('レコードの取得に失敗しました。');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchThemes = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/writing-themes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setThemes(result.data || []);
+      } else {
+        console.error('テーマの読み込みに失敗しました');
+        setThemes([]);
+      }
+    } catch (error) {
+      console.error('テーマの読み込みに失敗しました:', error);
+      setThemes([]);
     }
   };
 
