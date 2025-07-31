@@ -7,22 +7,27 @@ import {
     createReadingRecord,
     createWritingTheme,
     deleteReadingRecord,
+    deleteUserPromptTemplate,
     deleteWritingTheme,
     getAllReadingRecords,
     getAllThemeReadingStats,
     getDailyThemeReadingTrends,
+    getPromptTemplate,
     getReadingRecordById,
     getThemeBasedReadingStats,
     getThemeReadingRecords,
+    getUserPromptTemplates,
     getUserReadingRecords,
     getUserSettings,
     getUserWritingThemes,
+    PromptTemplate,
     ReadingRecord,
     removeLike,
     searchReadingRecordsByTitle,
     testConnection,
     updateReadingRecord,
     updateWritingTheme,
+    upsertPromptTemplate,
     upsertUserSettings,
     WritingTheme
 } from './database';
@@ -1192,6 +1197,165 @@ app.get('/api/theme-stats', authenticateToken, async (req, res) => {
 });
 
 // Health check
+// プロンプトテンプレート一覧を取得
+app.get('/api/prompt-templates', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    const result = await getUserPromptTemplates(userId);
+    
+    if (result.success) {
+      res.json({
+        message: 'Prompt templates retrieved successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to retrieve prompt templates',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving prompt templates',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// プロンプトテンプレートを作成/更新
+app.put('/api/prompt-templates', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const { mode, template_text } = req.body;
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (!mode || !template_text) {
+      return res.status(400).json({ 
+        message: 'Mode and template_text are required' 
+      });
+    }
+    
+    if (!['fact', 'essay'].includes(mode)) {
+      return res.status(400).json({ 
+        message: 'Mode must be either "fact" or "essay"' 
+      });
+    }
+    
+    const result = await upsertPromptTemplate({
+      user_id: userId,
+      mode: mode as 'fact' | 'essay',
+      template_text
+    });
+    
+    if (result.success) {
+      res.json({
+        message: 'Prompt template updated successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to update prompt template',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error updating prompt template',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 特定のプロンプトテンプレートを取得
+app.get('/api/prompt-templates/:mode', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const mode = req.params.mode as 'fact' | 'essay';
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (!['fact', 'essay'].includes(mode)) {
+      return res.status(400).json({ 
+        message: 'Mode must be either "fact" or "essay"' 
+      });
+    }
+    
+    const result = await getPromptTemplate(userId, mode);
+    
+    if (result.success) {
+      res.json({
+        message: 'Prompt template retrieved successfully',
+        data: result.data
+      });
+    } else {
+      res.status(404).json({
+        message: 'Prompt template not found',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving prompt template',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// プロンプトテンプレートを削除（デフォルトに戻す）
+app.delete('/api/prompt-templates/:mode', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.sub;
+    const mode = req.params.mode as 'fact' | 'essay';
+    
+    if (!userId) {
+      return res.status(401).json({ 
+        message: 'User authentication required' 
+      });
+    }
+    
+    if (!['fact', 'essay'].includes(mode)) {
+      return res.status(400).json({ 
+        message: 'Mode must be either "fact" or "essay"' 
+      });
+    }
+    
+    const result = await deleteUserPromptTemplate(userId, mode);
+    
+    if (result.success) {
+      res.json({
+        message: 'Prompt template reset to default successfully',
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        message: 'Failed to reset prompt template',
+        error: result.error
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error resetting prompt template',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });

@@ -14,6 +14,16 @@ interface WritingTheme {
   updated_at: string;
 }
 
+interface PromptTemplate {
+  id: number;
+  user_id: string;
+  mode: 'fact' | 'essay';
+  template_text: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 function SettingsPage() {
   const { user, token } = useAuth();
   const [settings, setSettings] = useState<UserSettings>({
@@ -23,15 +33,19 @@ function SettingsPage() {
   const [themes, setThemes] = useState<WritingTheme[]>([]);
   const [newTheme, setNewTheme] = useState('');
   const [editingTheme, setEditingTheme] = useState<{ id: number; name: string } | null>(null);
+  const [promptTemplates, setPromptTemplates] = useState<PromptTemplate[]>([]);
+  const [editingPrompt, setEditingPrompt] = useState<{ mode: 'fact' | 'essay'; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [themeLoading, setThemeLoading] = useState(false);
+  const [promptLoading, setPromptLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (user) {
       loadSettings();
       loadThemes();
+      loadPromptTemplates();
     }
   }, [user]);
 
@@ -275,6 +289,149 @@ function SettingsPage() {
     }
   };
 
+  // プロンプトテンプレートを読み込む
+  const loadPromptTemplates = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/prompt-templates`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setPromptTemplates(result.data || []);
+      } else {
+        console.error('プロンプトテンプレートの読み込みに失敗しました');
+        setPromptTemplates([]);
+      }
+    } catch (error) {
+      console.error('プロンプトテンプレートの読み込みに失敗しました:', error);
+      setPromptTemplates([]);
+    }
+  };
+
+  // プロンプトテンプレートを編集開始
+  const startEditPrompt = (mode: 'fact' | 'essay') => {
+    const template = promptTemplates.find(t => t.mode === mode);
+    setEditingPrompt({ 
+      mode, 
+      text: template?.template_text || getDefaultPromptText(mode)
+    });
+  };
+
+  // デフォルトプロンプトテキストを取得
+  const getDefaultPromptText = (mode: 'fact' | 'essay'): string => {
+    if (mode === 'fact') {
+      return `以下は「{themeName}」というテーマで蓄積した読書記録です。これらの記録から客観的なファクトを抽出し、整理してください。
+
+{recordsText}
+
+# 指示
+- 客観的事実のみを抽出
+- データや統計、専門家の見解を重視
+- 個人的な感想や主観は除外
+- 論理的で体系的な構成
+- 引用元を明確に`;
+    } else {
+      return `以下は「{themeName}」というテーマで蓄積した読書記録です。これらの記録から個人的な意見や洞察を抽出し、エッセイ形式で整理してください。
+
+{recordsText}
+
+# 指示
+- 個人的な体験や感想を重視
+- 主観的な洞察や気づきを表現
+- ストーリー性のある構成
+- 読者の共感を呼ぶ内容
+- 具体的なエピソードを交える`;
+    }
+  };
+
+  // プロンプトテンプレート編集をキャンセル
+  const cancelEditPrompt = () => {
+    setEditingPrompt(null);
+  };
+
+  // プロンプトテンプレートを保存
+  const savePromptTemplate = async () => {
+    if (!editingPrompt) {
+      return;
+    }
+
+    if (!editingPrompt.text.trim()) {
+      setMessage('プロンプトテンプレートを入力してください');
+      return;
+    }
+
+    setPromptLoading(true);
+    setMessage('');
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/prompt-templates`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mode: editingPrompt.mode,
+          template_text: editingPrompt.text.trim()
+        }),
+      });
+
+      if (response.ok) {
+        setEditingPrompt(null);
+        await loadPromptTemplates();
+        setMessage('プロンプトテンプレートを保存しました');
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        const errorData = await response.json();
+        setMessage(errorData.message || 'プロンプトテンプレートの保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('プロンプトテンプレートの保存に失敗しました:', error);
+      setMessage('プロンプトテンプレートの保存に失敗しました');
+    } finally {
+      setPromptLoading(false);
+    }
+  };
+
+  // プロンプトテンプレートをデフォルトに戻す
+  const resetPromptTemplate = async (mode: 'fact' | 'essay') => {
+    if (!window.confirm(`${mode === 'fact' ? 'ファクト' : 'エッセイ'}モードのプロンプトテンプレートをデフォルトに戻しますか？`)) {
+      return;
+    }
+
+    setPromptLoading(true);
+    setMessage('');
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/prompt-templates/${mode}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        await loadPromptTemplates();
+        setMessage('プロンプトテンプレートをデフォルトに戻しました');
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        const errorData = await response.json();
+        setMessage(errorData.message || 'プロンプトテンプレートのリセットに失敗しました');
+      }
+    } catch (error) {
+      console.error('プロンプトテンプレートのリセットに失敗しました:', error);
+      setMessage('プロンプトテンプレートのリセットに失敗しました');
+    } finally {
+      setPromptLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -356,6 +513,143 @@ function SettingsPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* プロンプトテンプレート設定 */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">草稿出力プロンプト設定</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              草稿出力時に使用するプロンプトテンプレートをカスタマイズできます。
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ファクトモード */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">📊 ファクトモード</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => startEditPrompt('fact')}
+                      disabled={promptLoading}
+                      className="text-blue-500 hover:text-blue-700 text-sm underline disabled:opacity-50"
+                    >
+                      編集
+                    </button>
+                    <button
+                      onClick={() => resetPromptTemplate('fact')}
+                      disabled={promptLoading}
+                      className="text-orange-500 hover:text-orange-700 text-sm underline disabled:opacity-50"
+                    >
+                      リセット
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mb-2">
+                  客観的事実やデータを重視した草稿を生成します
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
+                  {(() => {
+                    const template = promptTemplates.find(t => t.mode === 'fact');
+                    const text = template?.template_text || getDefaultPromptText('fact');
+                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                  })()}
+                </div>
+              </div>
+
+              {/* エッセイモード */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">✍️ エッセイモード</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => startEditPrompt('essay')}
+                      disabled={promptLoading}
+                      className="text-blue-500 hover:text-blue-700 text-sm underline disabled:opacity-50"
+                    >
+                      編集
+                    </button>
+                    <button
+                      onClick={() => resetPromptTemplate('essay')}
+                      disabled={promptLoading}
+                      className="text-orange-500 hover:text-orange-700 text-sm underline disabled:opacity-50"
+                    >
+                      リセット
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mb-2">
+                  個人的な体験や感想を重視した草稿を生成します
+                </p>
+                <div className="bg-gray-50 p-3 rounded text-xs text-gray-600 max-h-20 overflow-y-auto">
+                  {(() => {
+                    const template = promptTemplates.find(t => t.mode === 'essay');
+                    const text = template?.template_text || getDefaultPromptText('essay');
+                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* プロンプト編集モーダル */}
+            {editingPrompt && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {editingPrompt.mode === 'fact' ? '📊 ファクトモード' : '✍️ エッセイモード'}のプロンプト編集
+                    </h3>
+                    <button
+                      onClick={cancelEditPrompt}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      プロンプトテンプレートを編集してください。<code>{'{themeName}'}</code>と<code>{'{recordsText}'}</code>は自動で置換されます。
+                    </p>
+                    <div className="text-xs text-orange-600 mb-3">
+                      💡 ヒント: 「質問から始める」「30代会社員向けに」など、具体的な指示を追加できます
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={editingPrompt.text}
+                    onChange={(e) => setEditingPrompt({ ...editingPrompt, text: e.target.value })}
+                    className="w-full h-64 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    placeholder="プロンプトテンプレートを入力..."
+                  />
+
+                  <div className="flex justify-end space-x-3 mt-4">
+                    <button
+                      onClick={cancelEditPrompt}
+                      disabled={promptLoading}
+                      className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      onClick={savePromptTemplate}
+                      disabled={promptLoading || !editingPrompt.text.trim()}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      {promptLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>保存中...</span>
+                        </>
+                      ) : (
+                        <span>保存</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 書きたいテーマ設定 */}
