@@ -314,6 +314,17 @@ export interface WritingTheme {
   updated_at?: string;
 }
 
+// プロンプトテンプレートの型定義
+export interface PromptTemplate {
+  id?: number;
+  user_id: string;
+  mode: 'fact' | 'essay';
+  template_text: string;
+  is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // テーマ別統計の型定義
 export interface ThemeStats {
   theme_id: number | null;
@@ -708,6 +719,86 @@ export const getAllThemeReadingStats = async (userId: string) => {
     return { success: true, data: result.rows };
   } catch (error) {
     console.error('Get all theme reading stats error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// プロンプトテンプレートを取得
+export const getUserPromptTemplates = async (userId: string) => {
+  try {
+    const query = `
+      SELECT * FROM prompt_templates 
+      WHERE user_id = $1 OR (user_id = 'system' AND is_default = true)
+      ORDER BY user_id DESC, mode ASC
+    `;
+    const result = await pool.query(query, [userId]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get user prompt templates error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// プロンプトテンプレートを作成/更新
+export const upsertPromptTemplate = async (template: PromptTemplate) => {
+  try {
+    const query = `
+      INSERT INTO prompt_templates (user_id, mode, template_text, is_default)
+      VALUES ($1, $2, $3, false)
+      ON CONFLICT (user_id, mode) 
+      DO UPDATE SET 
+        template_text = EXCLUDED.template_text,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+    const result = await pool.query(query, [
+      template.user_id,
+      template.mode,
+      template.template_text
+    ]);
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Upsert prompt template error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 特定のプロンプトテンプレートを取得
+export const getPromptTemplate = async (userId: string, mode: 'fact' | 'essay') => {
+  try {
+    // ユーザー固有のテンプレートを優先して検索
+    const query = `
+      SELECT * FROM prompt_templates 
+      WHERE (user_id = $1 OR (user_id = 'system' AND is_default = true))
+      AND mode = $2
+      ORDER BY user_id DESC
+      LIMIT 1
+    `;
+    const result = await pool.query(query, [userId, mode]);
+    
+    if (result.rows.length > 0) {
+      return { success: true, data: result.rows[0] };
+    } else {
+      return { success: false, error: 'Template not found' };
+    }
+  } catch (error) {
+    console.error('Get prompt template error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// プロンプトテンプレートを削除（デフォルトに戻す）
+export const deleteUserPromptTemplate = async (userId: string, mode: 'fact' | 'essay') => {
+  try {
+    const query = `
+      DELETE FROM prompt_templates 
+      WHERE user_id = $1 AND mode = $2 AND is_default = false
+      RETURNING *
+    `;
+    const result = await pool.query(query, [userId, mode]);
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Delete user prompt template error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

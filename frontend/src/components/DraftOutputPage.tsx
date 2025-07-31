@@ -130,24 +130,49 @@ function DraftOutputPage() {
   const generatePrompt = async (): Promise<string> => {
     const selectedTheme = themes.find(t => t.id === selectedThemeId);
     const themeName = selectedTheme?.theme_name || 'テーマ';
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
     
     // 読書記録を取得
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-    const response = await fetch(`${API_BASE_URL}/api/theme-reading-records/${selectedThemeId}`, {
+    const recordsResponse = await fetch(`${API_BASE_URL}/api/theme-reading-records/${selectedThemeId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
     });
     
     let recordsText = '';
-    if (response.ok) {
-      const result = await response.json();
+    if (recordsResponse.ok) {
+      const result = await recordsResponse.json();
       const records = result.data || [];
       recordsText = records.map((record: any) => 
         `【${record.title}】\n学び: ${record.learning}\nアクション: ${record.action}`
       ).join('\n\n');
     }
     
+    // プロンプトテンプレートを取得
+    try {
+      const templateResponse = await fetch(`${API_BASE_URL}/api/prompt-templates`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (templateResponse.ok) {
+        const templateResult = await templateResponse.json();
+        const templates = templateResult.data || [];
+        const template = templates.find((t: any) => t.mode === draftMode);
+        
+        if (template) {
+          // プロンプトテンプレートのプレースホルダーを置換
+          return template.template_text
+            .replace(/{themeName}/g, themeName)
+            .replace(/{recordsText}/g, recordsText);
+        }
+      }
+    } catch (error) {
+      console.warn('プロンプトテンプレートの取得に失敗しました、デフォルトを使用します:', error);
+    }
+    
+    // フォールバック：デフォルトプロンプト
     if (draftMode === 'fact') {
       return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から客観的なファクトを抽出し、整理してください。\n\n${recordsText}\n\n# 指示\n- 客観的事実のみを抽出\n- データや統計、専門家の見解を重視\n- 個人的な感想や主観は除外\n- 論理的で体系的な構成\n- 引用元を明確に`;
     } else {
