@@ -182,8 +182,11 @@ function DraftOutputPage() {
 
   // クリップボードにコピー（フォールバック付き）
   const copyToClipboard = async (text: string): Promise<boolean> => {
-    // 現代的なClipboard APIを試行（セキュリティコンテキストの条件を緩和）
-    if (navigator.clipboard) {
+    // モバイル環境の検出
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    
+    // 現代的なClipboard APIを試行
+    if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(text);
         return true;
@@ -199,25 +202,34 @@ function DraftOutputPage() {
       textArea.style.position = 'fixed';
       textArea.style.left = '-999999px';
       textArea.style.top = '-999999px';
+      textArea.style.opacity = '0';
+      textArea.setAttribute('readonly', '');
       document.body.appendChild(textArea);
+      
+      // モバイル環境では異なるアプローチ
+      if (isMobile) {
+        textArea.style.position = 'absolute';
+        textArea.style.left = '50%';
+        textArea.style.top = '50%';
+        textArea.style.transform = 'translate(-50%, -50%)';
+        textArea.style.width = '1px';
+        textArea.style.height = '1px';
+        textArea.style.opacity = '0';
+      }
+      
       textArea.focus();
       textArea.select();
       
       const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
       
-      // レガシーメソッドでは、document.execCommand('copy')がfalseを返すことがあるが、
-      // 実際にはコピーが成功している場合がある。モバイル環境では特に信頼性が低い。
-      if (successful) {
+      // モバイル環境ではレガシーメソッドの戻り値が信頼できないため、
+      // 成功したと仮定する（ユーザーがクリップボードを確認できる）
+      if (isMobile) {
         return true;
-      } else {
-        // モバイル環境ではレガシーメソッドの戻り値が信頼できないため、
-        // 成功したと仮定する（ユーザーがクリップボードを確認できる）
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-          return true;
-        }
-        return false;
       }
+      
+      return successful;
     } catch (error) {
       console.warn('Legacy clipboard method failed:', error);
     }
@@ -245,18 +257,41 @@ function DraftOutputPage() {
       // プロンプトを生成
       const prompt = await generatePrompt();
       
-      // クリップボードにコピー（フォールバック付き）
+      // モバイル環境の検出
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+      
+      // クリップボードにコピー
       const copySuccess = await copyToClipboard(prompt);
       
       if (copySuccess) {
-        // ChatGPTに遷移
-        window.open('https://chatgpt.com/', '_blank');
-        setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
+        // モバイル環境でのChatGPT遷移処理
+        if (isMobile) {
+          // モバイル環境では新しいタブで開く（Safari、Chrome共通）
+          const newWindow = window.open('https://chatgpt.com/', '_blank');
+          if (newWindow) {
+            setMessage('プロンプトをクリップボードにコピーしました。ChatGPTが新しいタブで開かれました。ChatGPTにプロンプトを貼り付けて実行してください。');
+          } else {
+            setMessage('プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPTを開いてください。');
+          }
+        } else {
+          // デスクトップ環境：新しいタブで開く
+          window.open('https://chatgpt.com/', '_blank');
+          setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
+        }
       } else {
-        // クリップボードコピーに失敗した場合は、プロンプトを表示
-        setMessage(`クリップボードへのコピーに失敗しました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}`);
-        // ChatGPTも開く
-        window.open('https://chatgpt.com/', '_blank');
+        // クリップボードコピーに失敗した場合
+        if (isMobile) {
+          // モバイル環境では、プロンプトを表示して手動コピーを促す
+          setMessage(`クリップボードへのコピーに失敗しました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}\n\n💡 ヒント: 上記のテキストを長押しして選択し、コピーしてください`);
+          
+          // ChatGPTも新しいタブで開く（Safari、Chrome共通）
+          window.open('https://chatgpt.com/', '_blank');
+        } else {
+          // デスクトップ環境
+          setMessage(`クリップボードへのコピーに失敗しました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}`);
+          window.open('https://chatgpt.com/', '_blank');
+        }
       }
     } catch (error) {
       console.error('草稿生成エラー:', error);
