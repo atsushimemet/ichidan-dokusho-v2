@@ -518,10 +518,74 @@ function InputForm() {
       </p>
       
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
-        {/* 1. 書籍タイトル入力 */}
+        {/* 1. 読んだ対象の種類を選択 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            1. 読んだ対象の種類を選択してください
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* 書籍選択 */}
+            <div 
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                !formData.isNotBook
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              onClick={() => setFormData(prev => ({ ...prev, isNotBook: false }))}
+            >
+              <div className="flex items-center mb-2">
+                <input
+                  type="radio"
+                  name="contentType"
+                  value="book"
+                  checked={!formData.isNotBook}
+                  onChange={() => setFormData(prev => ({ ...prev, isNotBook: false }))}
+                  className="mr-3"
+                />
+                <h4 className="font-semibold text-gray-900">📚 書籍</h4>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">本、電子書籍など</p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>• 小説、ビジネス書、技術書</li>
+                <li>• 電子書籍、オーディオブック</li>
+                <li>• Amazonリンクから自動取得</li>
+              </ul>
+            </div>
+
+            {/* not書籍選択 */}
+            <div 
+              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                formData.isNotBook
+                  ? 'border-orange-500 bg-orange-50'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+              onClick={() => setFormData(prev => ({ ...prev, isNotBook: true }))}
+            >
+              <div className="flex items-center mb-2">
+                <input
+                  type="radio"
+                  name="contentType"
+                  value="notBook"
+                  checked={formData.isNotBook}
+                  onChange={() => setFormData(prev => ({ ...prev, isNotBook: true }))}
+                  className="mr-3"
+                />
+                <h4 className="font-semibold text-gray-900">📄 その他のコンテンツ</h4>
+              </div>
+              <p className="text-sm text-gray-600 mb-2">記事、動画、ブログなど</p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>• ブログ記事、ニュース記事</li>
+                <li>• YouTube動画、ポッドキャスト</li>
+                <li>• SNS投稿、メルマガ</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. タイトル入力 */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            1. 読んだ{formData.isNotBook ? 'コンテンツのタイトル' : '書籍のタイトル'}を入力
+            2. {formData.isNotBook ? 'コンテンツのタイトル' : '書籍のタイトル'}を入力
           </label>
           <div className="relative">
             <input
@@ -549,27 +613,7 @@ function InputForm() {
           )}
         </div>
 
-        {/* 書籍・not書籍区分 */}
-        <div className="mb-4">
-          <div className="flex items-center space-x-3">
-            <button
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, isNotBook: !prev.isNotBook }))}
-              className={`px-4 py-2 rounded-lg border-2 transition-colors ${
-                formData.isNotBook
-                  ? 'bg-orange-100 border-orange-300 text-orange-700'
-                  : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {formData.isNotBook ? '✓ not 書籍' : '📚 not 書籍'}
-            </button>
-            <span className="text-xs text-gray-500">
-              （記事、ブログ、YouTubeなど書籍以外の場合はチェックしてください）
-            </span>
-          </div>
-        </div>
-
-        {/* リンク入力（書籍・not書籍共通） */}
+        {/* 3. リンク入力（書籍・not書籍共通） */}
         <div className="mb-4">
           <label htmlFor="linkInput" className="block text-sm font-medium text-gray-700 mb-2">
             {formData.isNotBook ? 'リンクを直接入力（任意）' : 'Amazonリンクを入力（任意）'}
@@ -730,10 +774,10 @@ function InputForm() {
           )}
         </div>
 
-        {/* 2. 今日読んだ量 */}
+        {/* 4. 今日読んだ量 */}
         <div>
           <label htmlFor="readingAmount" className="block text-sm font-medium text-gray-700 mb-2">
-            2. 今日読んだ量
+            4. 今日読んだ量
           </label>
           <select
             id="readingAmount"
@@ -751,10 +795,10 @@ function InputForm() {
           </select>
         </div>
 
-        {/* 2.5. テーマ選択 */}
+        {/* 4.5. テーマ選択 */}
         <div>
           <label htmlFor="themeId" className="block text-sm font-medium text-gray-700 mb-2">
-            2.5. 書きたいテーマ（任意）
+            4.5. 書きたいテーマ（任意）
             <span className="text-xs text-gray-500 ml-2">
               設定したテーマから選択できます。設定は<a href="/settings" className="text-orange-600 hover:text-orange-700 underline">設定ページ</a>から行えます。
             </span>
@@ -783,10 +827,10 @@ function InputForm() {
           )}
         </div>
 
-        {/* 3. 今日の学び or 気づき */}
+        {/* 5. 今日の学び or 気づき */}
         <div>
           <label htmlFor="learning" className="block text-sm font-medium text-gray-700 mb-2">
-            3. 今日の学び or 気づき
+            5. 今日の学び or 気づき
           </label>
           <textarea
             id="learning"
@@ -800,10 +844,10 @@ function InputForm() {
           />
         </div>
 
-        {/* 4. 明日の小さなアクション（任意） */}
+        {/* 6. 明日の小さなアクション（任意） */}
         <div>
           <label htmlFor="action" className="block text-sm font-medium text-gray-700 mb-2">
-            4. 明日の小さなアクション <span className="text-xs text-gray-500">（任意）</span>
+            6. 明日の小さなアクション <span className="text-xs text-gray-500">（任意）</span>
           </label>
           <textarea
             id="action"
@@ -819,10 +863,10 @@ function InputForm() {
           </p>
         </div>
 
-        {/* 5. 備考（マイページでのみ表示） */}
+        {/* 7. 備考（マイページでのみ表示） */}
         <div>
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-            5. 備考 <span className="text-xs text-gray-500">（マイページでのみ表示）</span>
+            7. 備考 <span className="text-xs text-gray-500">（マイページでのみ表示）</span>
           </label>
           <textarea
             id="notes"
@@ -838,10 +882,10 @@ function InputForm() {
           </p>
         </div>
 
-        {/* 6. ネタバレを含む */}
+        {/* 8. ネタバレを含む */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            6. ネタバレを含む
+            8. ネタバレを含む
           </label>
           <div className="flex items-center space-x-4">
             <label className="flex items-center">
@@ -878,7 +922,7 @@ function InputForm() {
           </p>
         </div>
 
-        {/* 7. ChatGPTで学びとアクションを整理 */}
+        {/* 9. ChatGPTで学びとアクションを整理 */}
         <div>
           <button
             type="button"
