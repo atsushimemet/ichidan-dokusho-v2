@@ -200,7 +200,7 @@ function MyPage() {
       title: record.title,
       reading_amount: record.reading_amount,
       learning: record.learning,
-      action: record.action,
+      action: record.action || '',
       notes: record.notes || '',
       link: record.link || '',
       containsSpoiler: record.containsSpoiler || false,
@@ -624,7 +624,7 @@ ${action}
                     </svg>
                   </button>
                   <button
-                    onClick={() => openGoogleTodo(record.action, record.title)}
+                    onClick={() => openGoogleTodo(record.action || '', record.title)}
                     className="text-green-500 hover:text-green-700 hover:bg-green-50 p-1 rounded-full transition-colors"
                     title="Google TODOに追加"
                   >
@@ -633,8 +633,8 @@ ${action}
                     </svg>
                   </button>
                   {(() => {
-                    const text = generateSocialText(record.learning, record.action, record.title, record.link);
-                    const isWithinCharLimit = isWithinLimit(record.learning, record.action);
+                    const text = generateSocialText(record.learning, record.action || '', record.title, record.link);
+                    const isWithinCharLimit = isWithinLimit(record.learning, record.action || '');
                     
                     // デバッグ用ログ
                     console.log('シェアテキスト:', {
@@ -651,8 +651,8 @@ ${action}
                     return (
                       <button
                         onClick={() => isWithinCharLimit 
-                          ? shareOnTwitter(record.learning, record.action, record.title, record.link)
-                          : shareOnNote(record.learning, record.action, record.title, record.link)
+                          ? shareOnTwitter(record.learning, record.action || '', record.title, record.link)
+                          : shareOnNote(record.learning, record.action || '', record.title, record.link)
                         }
                         className={`p-1 rounded-full transition-colors ${
                           isWithinCharLimit 
@@ -668,7 +668,7 @@ ${action}
                     );
                   })()}
                   <button
-                    onClick={() => openChatGPT(record.action, record.learning, record.title)}
+                    onClick={() => openChatGPT(record.action || '', record.learning, record.title)}
                     className="text-purple-500 hover:text-purple-700 hover:bg-purple-50 p-1 rounded-full transition-colors"
                     title="ChatGPTで学びとアクションを整理"
                   >
@@ -938,19 +938,21 @@ ${action}
               />
 
               {/* アクション */}
-              <ExpandableTextDisplay
-                recordId={record.id}
-                field="action"
-                text={record.action}
-                displayText={getDisplayText(record.id, 'action', record.action)}
-                isTextLong={isTextLong(record.action)}
-                isExpanded={expandedTexts[record.id]?.action || false}
-                onToggle={() => toggleTextExpansion(record.id, 'action')}
-                bgColor="bg-green-50"
-                borderColor="border-green-400"
-                icon="🎯"
-                title="明日のアクション"
-              />
+              {record.action && (
+                <ExpandableTextDisplay
+                  recordId={record.id}
+                  field="action"
+                  text={record.action}
+                  displayText={getDisplayText(record.id, 'action', record.action)}
+                  isTextLong={isTextLong(record.action)}
+                  isExpanded={expandedTexts[record.id]?.action || false}
+                  onToggle={() => toggleTextExpansion(record.id, 'action')}
+                  bgColor="bg-green-50"
+                  borderColor="border-green-400"
+                  icon="🎯"
+                  title="明日のアクション"
+                />
+              )}
 
               {/* 備考（マイページでのみ表示） */}
               {record.notes && (
