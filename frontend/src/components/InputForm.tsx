@@ -60,6 +60,15 @@ function InputForm() {
   }>>([]);
   const [isSearchingPastBooks, setIsSearchingPastBooks] = useState(false);
   
+  // 読みたい・見たいものリスト関連のstate
+  const [isWishlistAccordionOpen, setIsWishlistAccordionOpen] = useState(false);
+  const [wishlistItems, setWishlistItems] = useState<Array<{
+    id: number;
+    title: string;
+    link: string;
+    is_not_book: boolean;
+  }>>([]);
+  
   // デバウンス用のref
   const titleDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const linkDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -81,6 +90,13 @@ function InputForm() {
   useEffect(() => {
     if (isAuthenticated && token) {
       fetchUserThemes();
+    }
+  }, [isAuthenticated, token]);
+
+  // 読みたい・見たいものリストを取得
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      loadWishlistItems();
     }
   }, [isAuthenticated, token]);
 
@@ -240,6 +256,35 @@ function InputForm() {
     // 検索結果をクリア
     setPastBooksSearchResults([]);
     setPastBooksSearchTerm('');
+  };
+
+  // 読みたい・見たいものリストを読み込む
+  const loadWishlistItems = async () => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const items = await response.json();
+        setWishlistItems(items);
+      }
+    } catch (error) {
+      console.error('読みたいものリストの取得に失敗しました:', error);
+    }
+  };
+
+  // 読みたいものリストから選択
+  const selectWishlistItem = (item: { id: number; title: string; link: string; is_not_book: boolean }) => {
+    setFormData(prev => ({
+      ...prev,
+      title: item.title,
+      isNotBook: item.is_not_book,
+      customLink: item.link || ''
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -624,6 +669,61 @@ function InputForm() {
               {pastBooksSearchTerm && pastBooksSearchResults.length === 0 && !isSearchingPastBooks && (
                 <div className="mt-3 text-sm text-gray-500">
                   該当する過去の読書記録が見つかりませんでした
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 読みたい・見たいものリストから登録するアコーディオン */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setIsWishlistAccordionOpen(!isWishlistAccordionOpen)}
+            className="w-full flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-medium text-blue-800">
+                読みたい・見たいものリストから登録する
+              </span>
+            </div>
+            <svg
+              className={`h-5 w-5 text-blue-400 transition-transform ${isWishlistAccordionOpen ? 'rotate-180' : ''}`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          {isWishlistAccordionOpen && (
+            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              {wishlistItems.length > 0 ? (
+                <>
+                  <h4 className="text-sm font-medium text-blue-700 mb-2">読みたい・見たいものリスト</h4>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {wishlistItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => selectWishlistItem(item)}
+                        className="w-full text-left p-2 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        <div className="text-sm font-medium text-gray-800">{item.title}</div>
+                        <div className="text-xs text-gray-500">
+                          {item.is_not_book ? '📄 記事・動画など' : '📚 書籍'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-gray-500">
+                  まだ読みたい・見たいものが登録されていません。
+                  <br />
+                  <a href="/reading" className="text-blue-600 hover:underline">こちら</a>から登録してください。
                 </div>
               )}
             </div>
