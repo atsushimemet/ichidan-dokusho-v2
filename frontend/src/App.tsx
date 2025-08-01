@@ -101,7 +101,7 @@ function AppContent() {
                     onClick={() => setIsMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                   >
-                    📖 読む（入力画面）
+                    📝 メモ（入力画面）
                   </Link>
                   <Link
                     to="/draft-output"
