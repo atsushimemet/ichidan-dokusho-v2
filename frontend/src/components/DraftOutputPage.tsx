@@ -180,49 +180,73 @@ function DraftOutputPage() {
     }
   };
 
-  // クリップボードにコピー（フォールバック付き）
-  const copyToClipboard = async (text: string): Promise<boolean> => {
-    // 現代的なClipboard APIを試行（セキュリティコンテキストの条件を緩和）
-    if (navigator.clipboard) {
+  // モバイル環境を判定
+  const isMobile = (): boolean => {
+    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  // クリップボードにコピー（モバイル対応改善版）
+  const copyToClipboard = async (text: string): Promise<{ success: boolean; method: string }> => {
+    // 現代的なClipboard APIを試行
+    if (navigator.clipboard && window.isSecureContext) {
       try {
         await navigator.clipboard.writeText(text);
-        return true;
+        return { success: true, method: 'modern' };
       } catch (error) {
-        console.warn('Clipboard API failed, falling back to legacy method:', error);
+        console.warn('Clipboard API failed:', error);
       }
     }
 
-    // フォールバック：レガシーメソッド
+    // フォールバック：レガシーメソッド（モバイル対応改善）
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      textArea.style.top = '-999999px';
+      
+      // モバイル環境では異なるスタイリングを適用
+      if (isMobile()) {
+        textArea.style.position = 'absolute';
+        textArea.style.left = '0';
+        textArea.style.top = '0';
+        textArea.style.width = '1px';
+        textArea.style.height = '1px';
+        textArea.style.padding = '0';
+        textArea.style.border = 'none';
+        textArea.style.outline = 'none';
+        textArea.style.boxShadow = 'none';
+        textArea.style.background = 'transparent';
+        textArea.style.fontSize = '16px'; // iOSでズームを防ぐ
+      } else {
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+      }
+      
       document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
+      
+      // モバイル環境では選択方法を調整
+      if (isMobile()) {
+        textArea.contentEditable = 'true';
+        textArea.readOnly = false;
+        textArea.focus();
+        textArea.setSelectionRange(0, text.length);
+      } else {
+        textArea.focus();
+        textArea.select();
+      }
       
       const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
       
-      // レガシーメソッドでは、document.execCommand('copy')がfalseを返すことがあるが、
-      // 実際にはコピーが成功している場合がある。モバイル環境では特に信頼性が低い。
-      if (successful) {
-        return true;
-      } else {
-        // モバイル環境ではレガシーメソッドの戻り値が信頼できないため、
-        // 成功したと仮定する（ユーザーがクリップボードを確認できる）
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-          return true;
-        }
-        return false;
+      // モバイル環境では成功とみなす（ユーザーが確認可能）
+      if (successful || isMobile()) {
+        return { success: true, method: 'legacy' };
       }
+      
+      return { success: false, method: 'legacy' };
     } catch (error) {
       console.warn('Legacy clipboard method failed:', error);
+      return { success: false, method: 'failed' };
     }
-
-    return false;
   };
 
   const handleGenerateDraft = async () => {
@@ -240,27 +264,60 @@ function DraftOutputPage() {
 
     setGenerating(true);
     setMessage('');
+    const mobile = isMobile();
 
     try {
       // プロンプトを生成
       const prompt = await generatePrompt();
       
-      // クリップボードにコピー（フォールバック付き）
-      const copySuccess = await copyToClipboard(prompt);
+      // クリップボードにコピー（モバイル対応改善版）
+      const copyResult = await copyToClipboard(prompt);
       
-      if (copySuccess) {
-        // ChatGPTに遷移
-        window.open('https://chatgpt.com/', '_blank');
-        setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
-      } else {
-        // クリップボードコピーに失敗した場合は、プロンプトを表示
-        setMessage(`クリップボードへのコピーに失敗しました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}`);
-        // ChatGPTも開く
-        window.open('https://chatgpt.com/', '_blank');
+      // ChatGPTに遷移（モバイル環境を考慮）
+      let chatGPTOpened = false;
+      try {
+        if (mobile) {
+          // モバイル環境：同一タブでChatGPTを開く（ポップアップブロック回避）
+          window.location.href = 'https://chatgpt.com/';
+          chatGPTOpened = true;
+        } else {
+          // デスクトップ環境：新しいタブでChatGPTを開く
+          const chatWindow = window.open('https://chatgpt.com/', '_blank');
+          chatGPTOpened = !!chatWindow;
+        }
+      } catch (error) {
+        console.warn('ChatGPT遷移に失敗:', error);
+        chatGPTOpened = false;
       }
+      
+      // 結果に応じてメッセージを設定
+      if (copyResult.success && chatGPTOpened) {
+        if (mobile) {
+          setMessage('プロンプトをクリップボードにコピーしました。ChatGPTが開いたら、プロンプトを貼り付けて実行してください。');
+        } else {
+          setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
+        }
+      } else if (copyResult.success && !chatGPTOpened) {
+        setMessage('プロンプトをクリップボードにコピーしました。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
+      } else if (!copyResult.success && chatGPTOpened) {
+        if (mobile) {
+          setMessage(`クリップボードへのコピーができませんでした。ChatGPTが開いたら、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
+        } else {
+          setMessage(`クリップボードへのコピーに失敗しました。ChatGPTを開きましたので、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
+        }
+      } else {
+        // 両方失敗した場合
+        setMessage(`処理に問題が発生しました。以下のプロンプトを手動でコピーし、ChatGPT（https://chatgpt.com/）で使用してください：\n\n${prompt}`);
+      }
+      
+      // モバイル環境での追加ヒント
+      if (mobile && !copyResult.success) {
+        setMessage(prev => prev + '\n\n📱 モバイルでのコピー方法：\n• 上記のテキストを長押しして「コピー」を選択\n• または、テキストをダブルタップして選択してからコピー');
+      }
+      
     } catch (error) {
       console.error('草稿生成エラー:', error);
-      setMessage('草稿生成に失敗しました');
+      setMessage('草稿生成に失敗しました。ネットワーク接続を確認して再試行してください。');
     } finally {
       setGenerating(false);
     }
@@ -487,6 +544,21 @@ function DraftOutputPage() {
                   選択したテーマの記録数が不足しています
                 </p>
               )}
+              
+              {/* モバイル環境での操作ヒント */}
+              {selectedThemeId && isThemeReady(selectedThemeId) && isMobile() && (
+                <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <div className="flex items-start space-x-2">
+                    <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="text-xs text-amber-700">
+                      <div className="font-medium mb-1">📱 モバイル版の動作について</div>
+                      <div>ボタンをタップすると、プロンプトをコピーしてChatGPTに移動します。ChatGPTでプロンプトを貼り付けて実行してください。</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -504,9 +576,14 @@ function DraftOutputPage() {
               <div className="whitespace-pre-wrap break-words">
                 {message}
               </div>
-              {message.includes('以下のプロンプトを手動でコピー') && (
-                <div className="mt-2 text-xs text-orange-600">
-                  💡 ヒント: 上記のテキストを長押し（またはダブルタップ）して選択し、コピーしてください
+              {(message.includes('以下のプロンプトを手動でコピー') || message.includes('手動でコピーして貼り付けてください')) && (
+                <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                  <div className="text-xs text-blue-700 font-medium mb-1">📱 モバイルでのコピー手順：</div>
+                  <ol className="text-xs text-blue-600 space-y-1 ml-4">
+                    <li>1. 上記のプロンプトテキストを長押し</li>
+                    <li>2. 「すべて選択」または「コピー」をタップ</li>
+                    <li>3. ChatGPTで貼り付けして実行</li>
+                  </ol>
                 </div>
               )}
             </div>
@@ -520,6 +597,9 @@ function DraftOutputPage() {
               <li>• 生成される草稿は、あなたの学びや気づき、アクションプランを整理したものです</li>
               <li>• 十分な記録数（{userSettings.draftThreshold}件以上）があるテーマでのみ利用可能です</li>
               <li>• 生成された草稿は、noteやX、その他媒体用の素材として活用できます</li>
+              {isMobile() && (
+                <li className="text-amber-600 font-medium">• 📱 モバイル環境では、プロンプトをコピーして手動でChatGPTに貼り付けてください</li>
+              )}
             </ul>
           </div>
         </div>
