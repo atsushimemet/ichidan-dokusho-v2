@@ -23,7 +23,6 @@ import {
     getUserSettings,
     getUserWishlistItems,
     getUserWritingThemes,
-    PromptTemplate,
     ReadingRecord,
     ReadingWishlistItem,
     removeLike,
@@ -524,9 +523,9 @@ app.post('/api/reading-records', authenticateToken, async (req, res) => {
     const userEmail = req.user?.email;
 
     // バリデーション
-    if (!title || !reading_amount || !learning || !action) {
+    if (!title || !reading_amount || !learning) {
       return res.status(400).json({ 
-        message: 'Missing required fields: title, reading_amount, learning, action' 
+        message: 'Missing required fields: title, reading_amount, learning' 
       });
     }
 
@@ -600,7 +599,7 @@ app.put('/api/reading-records/:id', async (req, res) => {
     }
     if (reading_amount) updateData.reading_amount = reading_amount;
     if (learning) updateData.learning = learning;
-    if (action) updateData.action = action;
+    if (action !== undefined) updateData.action = action;
     if (notes !== undefined) updateData.notes = notes;
     if (containsSpoiler !== undefined) updateData.contains_spoiler = containsSpoiler;
     if (theme_id !== undefined) updateData.theme_id = theme_id;
