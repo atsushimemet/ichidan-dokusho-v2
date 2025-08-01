@@ -237,16 +237,18 @@ function DraftOutputPage() {
       const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
       
-      // モバイル環境では成功とみなす（ユーザーが確認可能）
-      if (successful || isMobile()) {
-        return { success: true, method: 'legacy' };
+      // モバイル環境ではレガシーメソッドの戻り値が信頼できないため、
+      // 成功したと仮定する（ユーザーがクリップボードを確認できる）
+      if (isMobile()) {
+        return { success: true, method: 'legacy-mobile' };
       }
       
-      return { success: false, method: 'legacy' };
+      return { success: successful, method: 'legacy' };
     } catch (error) {
       console.warn('Legacy clipboard method failed:', error);
-      return { success: false, method: 'failed' };
     }
+
+    return { success: false, method: 'failed' };
   };
 
   const handleGenerateDraft = async () => {
@@ -277,9 +279,9 @@ function DraftOutputPage() {
       let chatGPTOpened = false;
       try {
         if (mobile) {
-          // モバイル環境：同一タブでChatGPTを開く（ポップアップブロック回避）
-          window.location.href = 'https://chatgpt.com/';
-          chatGPTOpened = true;
+          // モバイル環境：新しいタブでChatGPTを開く（Issue #134の修正）
+          const newWindow = window.open('https://chatgpt.com/', '_blank');
+          chatGPTOpened = !!newWindow;
         } else {
           // デスクトップ環境：新しいタブでChatGPTを開く
           const chatWindow = window.open('https://chatgpt.com/', '_blank');
@@ -293,15 +295,15 @@ function DraftOutputPage() {
       // 結果に応じてメッセージを設定
       if (copyResult.success && chatGPTOpened) {
         if (mobile) {
-          setMessage('プロンプトをクリップボードにコピーしました。ChatGPTが開いたら、プロンプトを貼り付けて実行してください。');
+          setMessage('プロンプトをクリップボードにコピーしました。ChatGPTが新しいタブで開かれました。ChatGPTにプロンプトを貼り付けて実行してください。');
         } else {
           setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
         }
       } else if (copyResult.success && !chatGPTOpened) {
-        setMessage('プロンプトをクリップボードにコピーしました。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
+        setMessage('プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
       } else if (!copyResult.success && chatGPTOpened) {
         if (mobile) {
-          setMessage(`クリップボードへのコピーができませんでした。ChatGPTが開いたら、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
+          setMessage(`クリップボードへのコピーに失敗しました。ChatGPTが新しいタブで開かれました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}\n\n💡 ヒント: 上記のテキストを長押しして選択し、コピーしてください`);
         } else {
           setMessage(`クリップボードへのコピーに失敗しました。ChatGPTを開きましたので、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
         }
@@ -544,21 +546,6 @@ function DraftOutputPage() {
                   選択したテーマの記録数が不足しています
                 </p>
               )}
-              
-              {/* モバイル環境での操作ヒント */}
-              {selectedThemeId && isThemeReady(selectedThemeId) && isMobile() && (
-                <div className="mt-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                  <div className="flex items-start space-x-2">
-                    <svg className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="text-xs text-amber-700">
-                      <div className="font-medium mb-1">📱 モバイル版の動作について</div>
-                      <div>ボタンをタップすると、プロンプトをコピーしてChatGPTに移動します。ChatGPTでプロンプトを貼り付けて実行してください。</div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -576,16 +563,6 @@ function DraftOutputPage() {
               <div className="whitespace-pre-wrap break-words">
                 {message}
               </div>
-              {(message.includes('以下のプロンプトを手動でコピー') || message.includes('手動でコピーして貼り付けてください')) && (
-                <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
-                  <div className="text-xs text-blue-700 font-medium mb-1">📱 モバイルでのコピー手順：</div>
-                  <ol className="text-xs text-blue-600 space-y-1 ml-4">
-                    <li>1. 上記のプロンプトテキストを長押し</li>
-                    <li>2. 「すべて選択」または「コピー」をタップ</li>
-                    <li>3. ChatGPTで貼り付けして実行</li>
-                  </ol>
-                </div>
-              )}
             </div>
           )}
 
@@ -597,9 +574,6 @@ function DraftOutputPage() {
               <li>• 生成される草稿は、あなたの学びや気づき、アクションプランを整理したものです</li>
               <li>• 十分な記録数（{userSettings.draftThreshold}件以上）があるテーマでのみ利用可能です</li>
               <li>• 生成された草稿は、noteやX、その他媒体用の素材として活用できます</li>
-              {isMobile() && (
-                <li className="text-amber-600 font-medium">• 📱 モバイル環境では、プロンプトをコピーして手動でChatGPTに貼り付けてください</li>
-              )}
             </ul>
           </div>
         </div>
