@@ -259,7 +259,6 @@ function DraftOutputPage() {
       
       // モバイル環境の検出
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-      const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
       
       // クリップボードにコピー
       const copySuccess = await copyToClipboard(prompt);
