@@ -9,6 +9,7 @@ import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
 import QAPage from './components/QAPage';
+import ReadingPage from './components/ReadingPage';
 import SelectionScreen from './components/SelectionScreen';
 import SettingsPage from './components/SettingsPage';
 import Timeline from './components/Timeline';
@@ -96,6 +97,13 @@ function AppContent() {
               </Link>
               {isAuthenticated && (
                 <>
+                  <Link
+                    to="/reading"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                  >
+                    📖 読む（登録画面）
+                  </Link>
                   <Link
                     to="/input"
                     onClick={() => setIsMenuOpen(false)}
@@ -185,6 +193,14 @@ function AppContent() {
             <AuthScreen />
           </div>
         } />
+        <Route 
+          path="/reading" 
+          element={
+            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+              <ReadingPage />
+            </div>
+          }
+        />
         <Route 
           path="/input" 
           element={
