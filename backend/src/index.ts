@@ -5,9 +5,11 @@ import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
     addLike,
     createReadingRecord,
+    createWishlistItem,
     createWritingTheme,
     deleteReadingRecord,
     deleteUserPromptTemplate,
+    deleteWishlistItem,
     deleteWritingTheme,
     getAllReadingRecords,
     getAllThemeReadingStats,
@@ -19,13 +21,16 @@ import {
     getUserPromptTemplates,
     getUserReadingRecords,
     getUserSettings,
+    getUserWishlistItems,
     getUserWritingThemes,
     PromptTemplate,
     ReadingRecord,
+    ReadingWishlistItem,
     removeLike,
     searchReadingRecordsByTitle,
     testConnection,
     updateReadingRecord,
+    updateWishlistItem,
     updateWritingTheme,
     upsertPromptTemplate,
     upsertUserSettings,
@@ -1358,6 +1363,128 @@ app.delete('/api/prompt-templates/:mode', authenticateToken, async (req, res) =>
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// ========================================
+// 読みたいものリスト関連のAPI
+// ========================================
+
+// 読みたいものリストの作成
+app.post('/api/wishlist', authenticateToken, async (req, res) => {
+  try {
+    const { title, link, isNotBook } = req.body;
+    const userId = req.user.userId || req.user.id;
+    
+    console.log('Wishlist Debug - req.user:', req.user);
+    console.log('Wishlist Debug - userId:', userId);
+
+    if (!title) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const wishlistItem: ReadingWishlistItem = {
+      user_id: userId,
+      title,
+      link: link || '',
+      is_not_book: isNotBook || false
+    };
+
+    const result = await createWishlistItem(wishlistItem);
+
+    if (result.success) {
+      res.status(201).json(result.data);
+    } else {
+      console.error('Create wishlist item error:', result.error);
+      res.status(500).json({ error: result.error || 'Failed to create wishlist item' });
+    }
+  } catch (error) {
+    console.error('Create wishlist item error:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// ユーザーの読みたいものリストの取得
+app.get('/api/wishlist', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    const result = await getUserWishlistItems(userId);
+
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      console.error('Get wishlist items error:', result.error);
+      res.status(500).json({ error: result.error || 'Failed to get wishlist items' });
+    }
+  } catch (error) {
+    console.error('Get wishlist items error:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// 読みたいものリストアイテムの削除
+app.delete('/api/wishlist/:id', authenticateToken, async (req, res) => {
+  try {
+    const itemId = parseInt(req.params.id);
+    const userId = req.user.userId || req.user.id;
+
+    if (isNaN(itemId)) {
+      return res.status(400).json({ error: 'Invalid item ID' });
+    }
+
+    const result = await deleteWishlistItem(itemId, userId);
+
+    if (result.success) {
+      res.json({ message: 'Wishlist item deleted successfully' });
+    } else {
+      console.error('Delete wishlist item error:', result.error);
+      res.status(500).json({ error: result.error || 'Failed to delete wishlist item' });
+    }
+  } catch (error) {
+    console.error('Delete wishlist item error:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
+// 読みたいものリストアイテムの更新
+app.put('/api/wishlist/:id', authenticateToken, async (req, res) => {
+  try {
+    const itemId = parseInt(req.params.id);
+    const userId = req.user.userId || req.user.id;
+    const { title, link, isNotBook } = req.body;
+
+    if (isNaN(itemId)) {
+      return res.status(400).json({ error: 'Invalid item ID' });
+    }
+
+    const updates: Partial<ReadingWishlistItem> = {};
+    if (title !== undefined) updates.title = title;
+    if (link !== undefined) updates.link = link;
+    if (isNotBook !== undefined) updates.is_not_book = isNotBook;
+
+    const result = await updateWishlistItem(itemId, userId, updates);
+
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      console.error('Update wishlist item error:', result.error);
+      res.status(500).json({ error: result.error || 'Failed to update wishlist item' });
+    }
+  } catch (error) {
+    console.error('Update wishlist item error:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
 });
 
 // アプリケーション起動時のエラーハンドリング

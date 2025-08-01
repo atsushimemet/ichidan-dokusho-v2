@@ -314,6 +314,17 @@ export interface WritingTheme {
   updated_at?: string;
 }
 
+// 読みたいものリストの型定義
+export interface ReadingWishlistItem {
+  id?: number;
+  user_id: string;
+  title: string;
+  link?: string;
+  is_not_book?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // プロンプトテンプレートの型定義
 export interface PromptTemplate {
   id?: number;
@@ -799,6 +810,107 @@ export const deleteUserPromptTemplate = async (userId: string, mode: 'fact' | 'e
     return { success: true, data: result.rows[0] };
   } catch (error) {
     console.error('Delete user prompt template error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// ========================================
+// 読みたいものリスト関連の関数
+// ========================================
+
+// 読みたいものリストを作成
+export const createWishlistItem = async (item: ReadingWishlistItem) => {
+  try {
+    const query = `
+      INSERT INTO reading_wishlist (user_id, title, link, is_not_book)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `;
+    const values = [item.user_id, item.title, item.link || null, item.is_not_book || false];
+    const result = await pool.query(query, values);
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Create wishlist item error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// ユーザーの読みたいものリストを取得
+export const getUserWishlistItems = async (userId: string) => {
+  try {
+    const query = `
+      SELECT * FROM reading_wishlist 
+      WHERE user_id = $1 
+      ORDER BY created_at DESC
+    `;
+    const result = await pool.query(query, [userId]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get user wishlist items error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 読みたいものリストアイテムを削除
+export const deleteWishlistItem = async (itemId: number, userId: string) => {
+  try {
+    const query = `
+      DELETE FROM reading_wishlist 
+      WHERE id = $1 AND user_id = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [itemId, userId]);
+    if (result.rows.length === 0) {
+      return { success: false, error: 'Item not found or unauthorized' };
+    }
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Delete wishlist item error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 読みたいものリストアイテムを更新
+export const updateWishlistItem = async (itemId: number, userId: string, updates: Partial<ReadingWishlistItem>) => {
+  try {
+    const fields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (updates.title !== undefined) {
+      fields.push(`title = $${paramIndex++}`);
+      values.push(updates.title);
+    }
+    if (updates.link !== undefined) {
+      fields.push(`link = $${paramIndex++}`);
+      values.push(updates.link);
+    }
+    if (updates.is_not_book !== undefined) {
+      fields.push(`is_not_book = $${paramIndex++}`);
+      values.push(updates.is_not_book);
+    }
+
+    if (fields.length === 0) {
+      return { success: false, error: 'No fields to update' };
+    }
+
+    fields.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(itemId, userId);
+
+    const query = `
+      UPDATE reading_wishlist 
+      SET ${fields.join(', ')}
+      WHERE id = $${paramIndex++} AND user_id = $${paramIndex++}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) {
+      return { success: false, error: 'Item not found or unauthorized' };
+    }
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Update wishlist item error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
