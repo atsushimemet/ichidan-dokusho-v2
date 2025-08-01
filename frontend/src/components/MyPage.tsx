@@ -33,7 +33,7 @@ interface WritingTheme {
 
 
 function MyPage() {
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, user } = useAuth();
   const [records, setRecords] = useState<ReadingRecord[]>([]);
   const [themes, setThemes] = useState<WritingTheme[]>([]);
   const [loading, setLoading] = useState(true);
@@ -503,6 +503,11 @@ ${action}
             マイページ
           </h1>
         </div>
+        {user && (
+          <div className="text-center mb-4">
+            <p className="text-gray-600 text-sm">ログイン中: {user.name || user.email}</p>
+          </div>
+        )}
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
         </div>
@@ -519,6 +524,11 @@ ${action}
             マイページ
           </h1>
         </div>
+        {user && (
+          <div className="text-center mb-4">
+            <p className="text-gray-600 text-sm">ログイン中: {user.name || user.email}</p>
+          </div>
+        )}
         <div className="text-center py-12">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -540,7 +550,11 @@ ${action}
           マイページ
         </h1>
       </div>
-
+      {user && (
+        <div className="text-center mb-4">
+          <p className="text-gray-600 text-sm">ログイン中: {user.name || user.email}</p>
+        </div>
+      )}
 
       
       {records.length === 0 ? (
