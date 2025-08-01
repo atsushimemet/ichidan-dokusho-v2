@@ -30,6 +30,10 @@ function DraftOutputPage() {
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState('');
   const [draftMode, setDraftMode] = useState<'fact' | 'essay'>('fact');
+  const [draftText, setDraftText] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState<'x' | 'note' | 'zenn'>('x');
+  const [formattedText, setFormattedText] = useState('');
+  const [showDraftFormatter, setShowDraftFormatter] = useState(false);
 
   useEffect(() => {
     if (user && token) {
@@ -177,6 +181,101 @@ function DraftOutputPage() {
       return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から客観的なファクトを抽出し、整理してください。\n\n${recordsText}\n\n# 指示\n- 客観的事実のみを抽出\n- データや統計、専門家の見解を重視\n- 個人的な感想や主観は除外\n- 論理的で体系的な構成\n- 引用元を明確に`;
     } else {
       return `以下は「${themeName}」というテーマで蓄積した読書記録です。これらの記録から個人的な意見や洞察を抽出し、エッセイ形式で整理してください。\n\n${recordsText}\n\n# 指示\n- 個人的な体験や感想を重視\n- 主観的な洞察や気づきを表現\n- ストーリー性のある構成\n- 読者の共感を呼ぶ内容\n- 具体的なエピソードを交える`;
+    }
+  };
+
+  // プラットフォーム別フォーマッター
+  const formatTextForPlatform = (text: string, platform: 'x' | 'note' | 'zenn'): string => {
+    if (!text.trim()) return '';
+
+    switch (platform) {
+      case 'x':
+        // Xの場合: 140文字制限で分割、区切り文字を挿入
+        const chunks = [];
+        const sentences = text.split(/[。！？\n]/);
+        let currentChunk = '';
+        
+        for (const sentence of sentences) {
+          if (!sentence.trim()) continue;
+          
+          const proposedChunk = currentChunk + sentence + '。';
+          if (proposedChunk.length <= 140) {
+            currentChunk = proposedChunk;
+          } else {
+            if (currentChunk) chunks.push(currentChunk.trim());
+            currentChunk = sentence + '。';
+          }
+        }
+        
+        if (currentChunk) chunks.push(currentChunk.trim());
+        return chunks.join('\n\n----------\n\n');
+
+      case 'note':
+      case 'zenn':
+        // note/zennの場合: プレーンテキスト、見出しは#で表現
+        return text
+          .replace(/^【(.+)】/gm, '# $1')  // 【見出し】→ # 見出し
+          .replace(/^\*\*(.+)\*\*/gm, '# $1')  // **見出し**→ # 見出し
+          .replace(/^■(.+)/gm, '## $1')  // ■見出し→ ## 見出し
+          .replace(/^▼(.+)/gm, '### $1')  // ▼見出し→ ### 見出し
+          .replace(/^(\d+)\.\s/gm, '$1. ')  // 番号付きリストの整形
+          .replace(/^・/gm, '- ')  // 箇条書きの整形
+          .trim();
+
+      default:
+        return text;
+    }
+  };
+
+  // プラットフォーム情報
+  const platformInfo = {
+    x: {
+      name: 'X (Twitter)',
+      description: '140文字制限で自動分割',
+      url: 'https://x.com/compose/tweet',
+      icon: '🐦'
+    },
+    note: {
+      name: 'note',
+      description: 'Markdown形式で整形',
+      url: 'https://note.com/',
+      icon: '📝'
+    },
+    zenn: {
+      name: 'Zenn',
+      description: 'Markdown形式で整形',
+      url: 'https://zenn.dev/',
+      icon: '⚡'
+    }
+  };
+
+  // 草稿フォーマット処理
+  const handleFormatDraft = () => {
+    const formatted = formatTextForPlatform(draftText, selectedPlatform);
+    setFormattedText(formatted);
+  };
+
+  // プラットフォームに遷移
+  const handleNavigateToPlatform = async () => {
+    if (!formattedText) {
+      setMessage('まず草稿をフォーマットしてください');
+      return;
+    }
+
+    try {
+      // クリップボードにコピー
+      const copySuccess = await copyToClipboard(formattedText);
+      
+      if (copySuccess) {
+        // プラットフォームのURLを開く
+        window.open(platformInfo[selectedPlatform].url, '_blank');
+        setMessage(`${platformInfo[selectedPlatform].name}を開き、フォーマット済みテキストをクリップボードにコピーしました。`);
+      } else {
+        setMessage('クリップボードへのコピーに失敗しました。テキストを手動でコピーしてください。');
+      }
+    } catch (error) {
+      console.error('Platform navigation error:', error);
+      setMessage('エラーが発生しました。');
     }
   };
 
@@ -511,6 +610,103 @@ function DraftOutputPage() {
               )}
             </div>
           )}
+
+          {/* 草稿を整備する */}
+          <div className="mt-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-indigo-800 flex items-center">
+                <span className="mr-2">✨</span>
+                草稿を整備する
+              </h3>
+              <button
+                onClick={() => setShowDraftFormatter(!showDraftFormatter)}
+                className="text-indigo-600 hover:text-indigo-800 text-sm underline"
+              >
+                {showDraftFormatter ? '閉じる' : '開く'}
+              </button>
+            </div>
+            
+            <p className="text-sm text-indigo-700 mb-4">
+              ChatGPTで生成した草稿をX、note、zennなどのプラットフォーム向けに自動整形・共有できます
+            </p>
+
+            {showDraftFormatter && (
+              <div className="space-y-6">
+                {/* 草稿入力 */}
+                <div>
+                  <label htmlFor="draftInput" className="block text-sm font-medium text-gray-700 mb-2">
+                    草稿テキストを入力
+                  </label>
+                  <textarea
+                    id="draftInput"
+                    value={draftText}
+                    onChange={(e) => setDraftText(e.target.value)}
+                    placeholder="ChatGPTで生成した草稿をここに貼り付けてください..."
+                    className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* プラットフォーム選択 */}
+                <div>
+                  <label htmlFor="platformSelect" className="block text-sm font-medium text-gray-700 mb-2">
+                    投稿先プラットフォーム
+                  </label>
+                  <select
+                    id="platformSelect"
+                    value={selectedPlatform}
+                    onChange={(e) => setSelectedPlatform(e.target.value as 'x' | 'note' | 'zenn')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    {Object.entries(platformInfo).map(([key, info]) => (
+                      <option key={key} value={key}>
+                        {info.icon} {info.name} - {info.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* アクションボタン */}
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleFormatDraft}
+                    disabled={!draftText.trim()}
+                    className="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 focus:ring-4 focus:ring-indigo-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    フォーマット実行
+                  </button>
+                  <button
+                    onClick={handleNavigateToPlatform}
+                    disabled={!formattedText}
+                    className="flex-1 bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 focus:ring-4 focus:ring-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {platformInfo[selectedPlatform].name}で投稿
+                  </button>
+                </div>
+
+                {/* プレビュー */}
+                {formattedText && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      📄 プレビュー ({platformInfo[selectedPlatform].name}形式)
+                    </h4>
+                    <div className="p-4 bg-white border border-gray-200 rounded-lg max-h-60 overflow-y-auto">
+                      <div className="text-sm text-gray-800 whitespace-pre-wrap break-words">
+                        {formattedText}
+                      </div>
+                    </div>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={() => copyToClipboard(formattedText)}
+                        className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                      >
+                        📋 クリップボードにコピー
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* 説明 */}
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
