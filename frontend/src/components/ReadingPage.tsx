@@ -12,7 +12,7 @@ interface BookToRead {
 }
 
 function ReadingPage() {
-  const { token, isAuthenticated, user } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const [booksToRead, setBooksToRead] = useState<BookToRead[]>([]);
   const [newBook, setNewBook] = useState({
     title: '',
