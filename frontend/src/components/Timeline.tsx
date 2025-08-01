@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { isAmazonLink } from '../utils/amazonUtils';
 import { useExpandableText } from '../hooks/useExpandableText';
+import { isAmazonLink } from '../utils/amazonUtils';
 import BookIcon from './BookIcon';
 import ExpandableTextDisplay from './ExpandableTextDisplay';
 
@@ -11,7 +11,7 @@ interface ReadingRecord {
   link?: string;
   reading_amount: string;
   learning: string;
-  action: string;
+  action?: string;
   created_at: string;
   updated_at: string;
   like_count?: number | string;
@@ -411,19 +411,21 @@ function Timeline() {
               />
 
               {/* アクション */}
-              <ExpandableTextDisplay
-                recordId={record.id}
-                field="action"
-                text={record.action}
-                displayText={getDisplayText(record.id, 'action', record.action)}
-                isTextLong={isTextLong(record.action)}
-                isExpanded={expandedTexts[record.id]?.action || false}
-                onToggle={() => toggleTextExpansion(record.id, 'action')}
-                bgColor="bg-green-50"
-                borderColor="border-green-400"
-                icon="🎯"
-                title="明日のアクション"
-              />
+              {record.action && (
+                <ExpandableTextDisplay
+                  recordId={record.id}
+                  field="action"
+                  text={record.action}
+                  displayText={getDisplayText(record.id, 'action', record.action)}
+                  isTextLong={isTextLong(record.action)}
+                  isExpanded={expandedTexts[record.id]?.action || false}
+                  onToggle={() => toggleTextExpansion(record.id, 'action')}
+                  bgColor="bg-green-50"
+                  borderColor="border-green-400"
+                  icon="🎯"
+                  title="明日のアクション"
+                />
+              )}
             </div>
           ))}
         </div>

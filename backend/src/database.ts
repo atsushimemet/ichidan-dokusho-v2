@@ -36,7 +36,7 @@ export interface ReadingRecord {
   link?: string;
   reading_amount: string;
   learning: string;
-  action: string;
+  action?: string;
   notes?: string;
   is_not_book?: boolean;
   custom_link?: string;

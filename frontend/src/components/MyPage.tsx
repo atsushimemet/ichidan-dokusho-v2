@@ -12,7 +12,7 @@ interface ReadingRecord {
   link?: string;
   reading_amount: string;
   learning: string;
-  action: string;
+  action?: string;
   notes?: string;
   user_id?: string;
   user_email?: string;

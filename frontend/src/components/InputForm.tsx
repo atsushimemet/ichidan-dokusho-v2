@@ -8,7 +8,7 @@ interface FormData {
   title: string;
   readingAmount: string;
   learning: string;
-  action: string;
+  action?: string;
   notes: string;
   isNotBook: boolean;
   customLink: string;
@@ -800,21 +800,23 @@ function InputForm() {
           />
         </div>
 
-        {/* 4. 明日の小さなアクション */}
+        {/* 4. 明日の小さなアクション（任意） */}
         <div>
           <label htmlFor="action" className="block text-sm font-medium text-gray-700 mb-2">
-            4. 明日の小さなアクション
+            4. 明日の小さなアクション <span className="text-xs text-gray-500">（任意）</span>
           </label>
           <textarea
             id="action"
             name="action"
             value={formData.action}
             onChange={handleInputChange}
-            placeholder="例：「朝会で相手の話をさえぎらずに聞く」"
+            placeholder="例：「朝会で相手の話をさえぎらずに聞く」（学ぶだけの場合は空欄でもOK）"
             rows={3}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors resize-none"
-            required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            学ぶだけの場合は空欄でも問題ありません
+          </p>
         </div>
 
         {/* 5. 備考（マイページでのみ表示） */}
@@ -881,7 +883,7 @@ function InputForm() {
           <button
             type="button"
             onClick={() => {
-              if (formData.action.trim()) {
+              if (formData.action?.trim()) {
                 const prompt = `以下の読書から得た学びとアクションについて、学んだ内容の整理と具体的で実行可能なアクションに深掘りしてください。
 
 【読んだ本】
@@ -918,7 +920,7 @@ ${formData.action}
                 alert('明日の小さなアクションを入力してからお試しください。');
               }
             }}
-            disabled={!formData.action.trim()}
+            disabled={!formData.action?.trim()}
             className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
