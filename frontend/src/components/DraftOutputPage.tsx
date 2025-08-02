@@ -180,75 +180,209 @@ function DraftOutputPage() {
     }
   };
 
-  // モバイル環境を判定
-  const isMobile = (): boolean => {
-    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  // Web Share APIを使用してプロンプトを共有
+  const sharePrompt = async (prompt: string): Promise<boolean> => {
+    if (!('share' in navigator && 'canShare' in navigator)) {
+      return false;
+    }
+
+    try {
+      const shareData = {
+        title: '一段読書 - 草稿プロンプト',
+        text: prompt,
+        url: 'https://chatgpt.com/'
+      };
+
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return true;
+      }
+    } catch (error) {
+      // ユーザーがキャンセルした場合は正常な動作として扱う
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Web Share was canceled by user');
+        return false;
+      }
+      console.warn('Web Share API failed:', error);
+    }
+
+    return false;
   };
 
-  // クリップボードにコピー（モバイル対応改善版）
+  // シンプルなクリップボードコピー関数
   const copyToClipboard = async (text: string): Promise<{ success: boolean; method: string }> => {
-    // 現代的なClipboard APIを試行
+    // Step 1: 現代的なClipboard APIを試行
     if (navigator.clipboard && window.isSecureContext) {
       try {
-        await navigator.clipboard.writeText(text);
-        return { success: true, method: 'modern' };
+        // フォーカスを確実にする
+        if (document.hasFocus()) {
+          await navigator.clipboard.writeText(text);
+          return { success: true, method: 'clipboard-api' };
+        }
       } catch (error) {
         console.warn('Clipboard API failed:', error);
       }
     }
 
-    // フォールバック：レガシーメソッド（モバイル対応改善）
+    // Step 2: execCommandで自動コピーを試行
     try {
       const textArea = document.createElement('textarea');
       textArea.value = text;
-      
-      // モバイル環境では異なるスタイリングを適用
-      if (isMobile()) {
-        textArea.style.position = 'absolute';
-        textArea.style.left = '0';
-        textArea.style.top = '0';
-        textArea.style.width = '1px';
-        textArea.style.height = '1px';
-        textArea.style.padding = '0';
-        textArea.style.border = 'none';
-        textArea.style.outline = 'none';
-        textArea.style.boxShadow = 'none';
-        textArea.style.background = 'transparent';
-        textArea.style.fontSize = '16px'; // iOSでズームを防ぐ
-      } else {
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-      }
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
       
       document.body.appendChild(textArea);
-      
-      // モバイル環境では選択方法を調整
-      if (isMobile()) {
-        textArea.contentEditable = 'true';
-        textArea.readOnly = false;
-        textArea.focus();
-        textArea.setSelectionRange(0, text.length);
-      } else {
-        textArea.focus();
-        textArea.select();
-      }
+      textArea.focus();
+      textArea.select();
       
       const successful = document.execCommand('copy');
       document.body.removeChild(textArea);
       
-      // モバイル環境ではレガシーメソッドの戻り値が信頼できないため、
-      // 成功したと仮定する（ユーザーがクリップボードを確認できる）
-      if (isMobile()) {
-        return { success: true, method: 'legacy-mobile' };
+      if (successful) {
+        return { success: true, method: 'exec-command' };
       }
-      
-      return { success: successful, method: 'legacy' };
     } catch (error) {
-      console.warn('Legacy clipboard method failed:', error);
+      console.warn('execCommand failed:', error);
     }
 
-    return { success: false, method: 'failed' };
+    // Step 3: 手動コピー用UIを表示
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '50%';
+    textArea.style.top = '50%';
+    textArea.style.transform = 'translate(-50%, -50%)';
+    textArea.style.width = '90vw';
+    textArea.style.height = '60vh';
+    textArea.style.padding = '16px';
+    textArea.style.border = '2px solid #3b82f6';
+    textArea.style.borderRadius = '8px';
+    textArea.style.outline = 'none';
+    textArea.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+    textArea.style.background = 'white';
+    textArea.style.fontSize = '16px';
+    textArea.style.lineHeight = '1.5';
+    textArea.style.zIndex = '9999';
+    textArea.style.resize = 'none';
+    textArea.readOnly = true;
+    textArea.placeholder = 'プロンプトが表示されています。コピーボタンを押してコピーしてください。';
+
+    // コピーボタン
+    const copyButton = document.createElement('button');
+    copyButton.textContent = '📋 コピー';
+    copyButton.style.position = 'fixed';
+    copyButton.style.left = '50%';
+    copyButton.style.top = 'calc(50% + 35vh)';
+    copyButton.style.transform = 'translateX(-50%)';
+    copyButton.style.padding = '12px 24px';
+    copyButton.style.backgroundColor = '#3b82f6';
+    copyButton.style.color = 'white';
+    copyButton.style.border = 'none';
+    copyButton.style.borderRadius = '8px';
+    copyButton.style.fontSize = '16px';
+    copyButton.style.fontWeight = 'bold';
+    copyButton.style.zIndex = '10000';
+    copyButton.style.cursor = 'pointer';
+    copyButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+
+    // 閉じるボタン
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '✕ 閉じる';
+    closeButton.style.position = 'fixed';
+    closeButton.style.left = '50%';
+    closeButton.style.top = 'calc(50% + 35vh + 60px)';
+    closeButton.style.transform = 'translateX(-50%)';
+    closeButton.style.padding = '8px 16px';
+    closeButton.style.backgroundColor = '#6b7280';
+    closeButton.style.color = 'white';
+    closeButton.style.border = 'none';
+    closeButton.style.borderRadius = '6px';
+    closeButton.style.fontSize = '14px';
+    closeButton.style.zIndex = '10000';
+    closeButton.style.cursor = 'pointer';
+
+    // 説明メッセージ
+    const messageDiv = document.createElement('div');
+    messageDiv.innerHTML = `
+      <div style="
+        position: fixed;
+        left: 50%;
+        top: calc(50% - 40vh);
+        transform: translateX(-50%);
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #92400e;
+        z-index: 10000;
+        max-width: 80vw;
+        text-align: center;
+      ">
+        <strong>⚠️ 自動コピーに失敗しました</strong><br>
+        コピーボタンを押してプロンプトをコピーし、ChatGPTに遷移してください。
+      </div>
+    `;
+
+    document.body.appendChild(textArea);
+    document.body.appendChild(copyButton);
+    document.body.appendChild(closeButton);
+    document.body.appendChild(messageDiv);
+
+    textArea.focus();
+    textArea.select();
+
+    // コピーボタンのクリックイベント
+    copyButton.onclick = () => {
+      try {
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        if (successful) {
+          copyButton.textContent = '✅ コピー完了';
+          copyButton.style.backgroundColor = '#10b981';
+          copyButton.style.cursor = 'default';
+          
+          // 3秒後にUIを削除
+          setTimeout(() => {
+            if (document.body.contains(textArea)) {
+              document.body.removeChild(textArea);
+              document.body.removeChild(copyButton);
+              document.body.removeChild(closeButton);
+              document.body.removeChild(messageDiv);
+            }
+          }, 3000);
+        } else {
+          copyButton.textContent = '❌ コピー失敗';
+          copyButton.style.backgroundColor = '#ef4444';
+          setTimeout(() => {
+            copyButton.textContent = '📋 コピー';
+            copyButton.style.backgroundColor = '#3b82f6';
+            copyButton.style.cursor = 'pointer';
+          }, 2000);
+        }
+      } catch (error) {
+        console.warn('Copy failed:', error);
+        copyButton.textContent = '❌ コピー失敗';
+        copyButton.style.backgroundColor = '#ef4444';
+        setTimeout(() => {
+          copyButton.textContent = '📋 コピー';
+          copyButton.style.backgroundColor = '#3b82f6';
+          copyButton.style.cursor = 'pointer';
+        }, 2000);
+      }
+    };
+
+    // 閉じるボタンのクリックイベント
+    closeButton.onclick = () => {
+      document.body.removeChild(textArea);
+      document.body.removeChild(copyButton);
+      document.body.removeChild(closeButton);
+      document.body.removeChild(messageDiv);
+    };
+
+    return { success: false, method: 'manual-copy-with-button' };
   };
 
   const handleGenerateDraft = async () => {
@@ -266,11 +400,21 @@ function DraftOutputPage() {
 
     setGenerating(true);
     setMessage('');
-    const mobile = isMobile();
+    const mobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     try {
       // プロンプトを生成
       const prompt = await generatePrompt();
+      
+      // Web Share APIを試行（モバイル環境のみ）
+      let shareResult = false;
+      if (mobile) {
+        shareResult = await sharePrompt(prompt);
+        if (shareResult) {
+          setMessage('✅ プロンプトを共有しました。ChatGPTアプリまたはブラウザでプロンプトを確認してください。');
+          return;
+        }
+      }
       
       // クリップボードにコピー（モバイル対応改善版）
       const copyResult = await copyToClipboard(prompt);
@@ -294,27 +438,22 @@ function DraftOutputPage() {
       
       // 結果に応じてメッセージを設定
       if (copyResult.success && chatGPTOpened) {
-        if (mobile) {
-          setMessage('プロンプトをクリップボードにコピーしました。ChatGPTが新しいタブで開かれました。ChatGPTにプロンプトを貼り付けて実行してください。');
-        } else {
-          setMessage('プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
-        }
+        setMessage('✅ プロンプトをクリップボードにコピーしました。ChatGPTが新しいタブで開かれました。ChatGPTにプロンプトを貼り付けて実行してください。');
       } else if (copyResult.success && !chatGPTOpened) {
-        setMessage('プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
+        setMessage('✅ プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
       } else if (!copyResult.success && chatGPTOpened) {
-        if (mobile) {
-          setMessage(`クリップボードへのコピーに失敗しました。ChatGPTが新しいタブで開かれました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}\n\n💡 ヒント: 上記のテキストを長押しして選択し、コピーしてください`);
+        if (copyResult.method === 'manual-copy-with-button') {
+          setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPTに貼り付けて実行してください。');
         } else {
-          setMessage(`クリップボードへのコピーに失敗しました。ChatGPTを開きましたので、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
+          setMessage(`⚠️ クリップボードへのコピーに失敗しました。ChatGPTが新しいタブで開かれました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}`);
         }
       } else {
         // 両方失敗した場合
-        setMessage(`処理に問題が発生しました。以下のプロンプトを手動でコピーし、ChatGPT（https://chatgpt.com/）で使用してください：\n\n${prompt}`);
-      }
-      
-      // モバイル環境での追加ヒント
-      if (mobile && !copyResult.success) {
-        setMessage(prev => prev + '\n\n📱 モバイルでのコピー方法：\n• 上記のテキストを長押しして「コピー」を選択\n• または、テキストをダブルタップして選択してからコピー');
+        if (copyResult.method === 'manual-copy-with-button') {
+          setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPT（https://chatgpt.com/）を開いて貼り付けて実行してください。');
+        } else {
+          setMessage(`❌ 処理に問題が発生しました。以下のプロンプトを手動でコピーし、ChatGPT（https://chatgpt.com/）で使用してください：\n\n${prompt}`);
+        }
       }
       
     } catch (error) {
