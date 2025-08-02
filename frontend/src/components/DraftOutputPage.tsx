@@ -406,53 +406,46 @@ function DraftOutputPage() {
       // プロンプトを生成
       const prompt = await generatePrompt();
       
-      // Web Share APIを試行（モバイル環境のみ）
-      let shareResult = false;
       if (mobile) {
-        shareResult = await sharePrompt(prompt);
+        // モバイル環境：Web Share APIを試行
+        const shareResult = await sharePrompt(prompt);
         if (shareResult) {
           setMessage('✅ プロンプトを共有しました。ChatGPTアプリまたはブラウザでプロンプトを確認してください。');
-          return;
-        }
-      }
-      
-      // クリップボードにコピー（モバイル対応改善版）
-      const copyResult = await copyToClipboard(prompt);
-      
-      // ChatGPTに遷移（モバイル環境を考慮）
-      let chatGPTOpened = false;
-      try {
-        if (mobile) {
-          // モバイル環境：新しいタブでChatGPTを開く（Issue #134の修正）
-          const newWindow = window.open('https://chatgpt.com/', '_blank');
-          chatGPTOpened = !!newWindow;
         } else {
-          // デスクトップ環境：新しいタブでChatGPTを開く
-          const chatWindow = window.open('https://chatgpt.com/', '_blank');
-          chatGPTOpened = !!chatWindow;
-        }
-      } catch (error) {
-        console.warn('ChatGPT遷移に失敗:', error);
-        chatGPTOpened = false;
-      }
-      
-      // 結果に応じてメッセージを設定
-      if (copyResult.success && chatGPTOpened) {
-        setMessage('✅ プロンプトをクリップボードにコピーしました。ChatGPTが新しいタブで開かれました。ChatGPTにプロンプトを貼り付けて実行してください。');
-      } else if (copyResult.success && !chatGPTOpened) {
-        setMessage('✅ プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
-      } else if (!copyResult.success && chatGPTOpened) {
-        if (copyResult.method === 'manual-copy-with-button') {
-          setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPTに貼り付けて実行してください。');
-        } else {
-          setMessage(`⚠️ クリップボードへのコピーに失敗しました。ChatGPTが新しいタブで開かれました。以下のプロンプトを手動でコピーしてChatGPTで使用してください：\n\n${prompt}`);
+          setMessage('📱 プロンプトが共有されました。コピーを押下して、ユーザーご自身でChatGPTアプリにペーストしてください。');
         }
       } else {
-        // 両方失敗した場合
-        if (copyResult.method === 'manual-copy-with-button') {
-          setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPT（https://chatgpt.com/）を開いて貼り付けて実行してください。');
+        // PC環境：クリップボードにコピーしてChatGPTに遷移
+        const copyResult = await copyToClipboard(prompt);
+        
+        // ChatGPTに遷移
+        let chatGPTOpened = false;
+        try {
+          const chatWindow = window.open('https://chatgpt.com/', '_blank');
+          chatGPTOpened = !!chatWindow;
+        } catch (error) {
+          console.warn('ChatGPT遷移に失敗:', error);
+          chatGPTOpened = false;
+        }
+        
+        // 結果に応じてメッセージを設定
+        if (copyResult.success && chatGPTOpened) {
+          setMessage('✅ プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
+        } else if (copyResult.success && !chatGPTOpened) {
+          setMessage('✅ プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
+        } else if (!copyResult.success && chatGPTOpened) {
+          if (copyResult.method === 'manual-copy-with-button') {
+            setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPTに貼り付けて実行してください。');
+          } else {
+            setMessage(`⚠️ クリップボードへのコピーに失敗しました。ChatGPTを開きましたので、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
+          }
         } else {
-          setMessage(`❌ 処理に問題が発生しました。以下のプロンプトを手動でコピーし、ChatGPT（https://chatgpt.com/）で使用してください：\n\n${prompt}`);
+          // 両方失敗した場合
+          if (copyResult.method === 'manual-copy-with-button') {
+            setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPT（https://chatgpt.com/）を開いて貼り付けて実行してください。');
+          } else {
+            setMessage(`❌ 処理に問題が発生しました。以下のプロンプトを手動でコピーし、ChatGPT（https://chatgpt.com/）で使用してください：\n\n${prompt}`);
+          }
         }
       }
       
@@ -657,6 +650,21 @@ function DraftOutputPage() {
           {/* 草稿生成ボタン */}
           {availableThemes.length > 0 && (
             <div className="mb-6">
+              {/* モバイル用注釈 */}
+              {/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="text-sm text-blue-800">
+                      <strong>📱 スマホで生成する場合：</strong><br />
+                      Webシェアが起動された後、コピーを押下して、ユーザーご自身でChatGPTアプリにペーストしてください。
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <button
                 onClick={handleGenerateDraft}
                 disabled={!selectedThemeId || generating || !isThemeReady(selectedThemeId)}
