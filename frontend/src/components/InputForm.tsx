@@ -548,7 +548,7 @@ function InputForm() {
               <ul className="text-xs text-gray-500 space-y-1">
                 <li>• 小説、ビジネス書、技術書</li>
                 <li>• 電子書籍、オーディオブック</li>
-                <li>• Amazonリンクから自動取得</li>
+                <li>※ 将来的にタイトルからAmazonリンクを自動取得</li>
               </ul>
             </div>
 
