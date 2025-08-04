@@ -123,7 +123,27 @@ function QAPage() {
           </div>
         </div>
 
-
+        {/* 意見の匿名送信 */}
+        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+          <h2 className="text-xl font-semibold text-purple-800 mb-4 flex items-center">
+            <span className="mr-2">💭</span>
+            意見の匿名送信
+          </h2>
+          <p className="text-gray-700 mb-4">
+            匿名でご意見やご提案をお送りいただけます。お気軽にご利用ください。
+          </p>
+          <div className="text-center">
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSdPDR8vn1mH0tI9PdU3tyfZcrjEJer-gdTOYx2QKdCzK5Aouw/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200"
+            >
+              <span className="mr-2">💭</span>
+              匿名で意見を送信
+            </a>
+          </div>
+        </div>
 
         {/* 戻るボタン */}
         <div className="text-center pt-4">
