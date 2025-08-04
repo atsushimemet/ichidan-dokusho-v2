@@ -123,31 +123,6 @@ function QAPage() {
           </div>
         </div>
 
-        {/* Googleフォーム */}
-        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-          <h2 className="text-xl font-semibold text-green-800 mb-4 flex items-center">
-            <span className="mr-2">📝</span>
-            お問い合わせ・フィードバック
-          </h2>
-          <p className="text-gray-700 mb-4">
-            ご質問やご意見、改善提案などがございましたら、以下のフォームからお気軽にお送りください。
-          </p>
-          <div className="bg-white rounded-lg p-4 border border-green-100">
-            <iframe
-              src="https://forms.gle/KiRMCHHv6PYFEJZS6"
-              width="100%"
-              height="600"
-              frameBorder="0"
-              marginHeight={0}
-              marginWidth={0}
-              title="お問い合わせフォーム"
-              className="rounded-lg"
-            >
-              お問い合わせフォームを読み込んでいます...
-            </iframe>
-          </div>
-        </div>
-
         {/* 意見の匿名送信 */}
         <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
           <h2 className="text-xl font-semibold text-purple-800 mb-4 flex items-center">
