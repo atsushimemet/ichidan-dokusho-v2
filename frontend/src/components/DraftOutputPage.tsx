@@ -224,7 +224,6 @@ function DraftOutputPage() {
       
       // メモ画面と同様のシンプルなコピー・遷移処理
       await copyToClipboardAndOpenChatGPT(prompt);
-      setMessage('✅ プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
       
     } catch (error) {
       console.error('草稿生成エラー:', error);
