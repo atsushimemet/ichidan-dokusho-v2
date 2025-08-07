@@ -149,15 +149,18 @@ function AppContent() {
               >
                 ❓ Q&A
               </Link>
-              <a
-                href="https://ichidan-dokusho-place-frontend.onrender.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-              >
-                📍 場所を探す
-              </a>
+              
+              <div className="border-t border-orange-100 mt-2 pt-2">
+                <a
+                  href="https://ichidan-dokusho-place-frontend.onrender.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  📍 場所を探す
+                </a>
+              </div>
               
               {isAuthenticated && (
                 <button
@@ -168,6 +171,17 @@ function AppContent() {
                 </button>
               )}
               
+              <div className="border-t border-orange-100 mt-2 pt-2">
+                <a
+                  href="https://ichidan-dokusho-place-frontend.onrender.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  📍 場所を選ぶ
+                </a>
+              </div>
 
             </div>
           </div>
