@@ -5,6 +5,7 @@ import './App.css';
 import AuthScreen from './components/AuthScreen';
 import Dashboard from './components/Dashboard';
 import DraftOutputPage from './components/DraftOutputPage';
+import FindLocationPage from './components/FindLocationPage';
 import InputForm from './components/InputForm';
 import LandingPage from './components/LandingPage';
 import MyPage from './components/MyPage';
@@ -155,6 +156,13 @@ function AppContent() {
               >
                 ❓ Q&A
               </Link>
+              <Link
+                to="/find-location"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+              >
+                📍 場所を探す
+              </Link>
               <a
                 href="https://docs.google.com/forms/d/e/1FAIpQLSdPDR8vn1mH0tI9PdU3tyfZcrjEJer-gdTOYx2QKdCzK5Aouw/viewform"
                 target="_blank"
@@ -246,6 +254,11 @@ function AppContent() {
         <Route path="/settings" element={
           <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <SettingsPage />
+          </div>
+        } />
+        <Route path="/find-location" element={
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <FindLocationPage />
           </div>
         } />
       </Routes>
