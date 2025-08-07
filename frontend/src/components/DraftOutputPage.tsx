@@ -180,209 +180,26 @@ function DraftOutputPage() {
     }
   };
 
-  // Web Share APIを使用してプロンプトを共有
-  const sharePrompt = async (prompt: string): Promise<boolean> => {
-    if (!('share' in navigator && 'canShare' in navigator)) {
-      return false;
-    }
-
+  // シンプルなクリップボードコピーとChatGPT遷移（メモ画面と同様の実装）
+  const copyToClipboardAndOpenChatGPT = async (prompt: string): Promise<void> => {
     try {
-      const shareData = {
-        title: '一段読書 - 草稿プロンプト',
-        text: prompt,
-        url: 'https://chatgpt.com/'
-      };
-
-      if (navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        return true;
-      }
-    } catch (error) {
-      // ユーザーがキャンセルした場合は正常な動作として扱う
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Web Share was canceled by user');
-        return false;
-      }
-      console.warn('Web Share API failed:', error);
-    }
-
-    return false;
-  };
-
-  // シンプルなクリップボードコピー関数
-  const copyToClipboard = async (text: string): Promise<{ success: boolean; method: string }> => {
-    // Step 1: 現代的なClipboard APIを試行
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        // フォーカスを確実にする
-        if (document.hasFocus()) {
-          await navigator.clipboard.writeText(text);
-          return { success: true, method: 'clipboard-api' };
-        }
-      } catch (error) {
-        console.warn('Clipboard API failed:', error);
-      }
-    }
-
-    // Step 2: execCommandで自動コピーを試行
-    try {
+      // クリップボードにプロンプトをコピー
+      await navigator.clipboard.writeText(prompt);
+      // ChatGPTを新しいタブで開く
+      window.open('https://chat.openai.com/', '_blank');
+    } catch (err) {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+      // フォールバック: 古いブラウザ対応
       const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      textArea.style.top = '-999999px';
-      
+      textArea.value = prompt;
       document.body.appendChild(textArea);
-      textArea.focus();
       textArea.select();
-      
-      const successful = document.execCommand('copy');
+      document.execCommand('copy');
       document.body.removeChild(textArea);
       
-      if (successful) {
-        return { success: true, method: 'exec-command' };
-      }
-    } catch (error) {
-      console.warn('execCommand failed:', error);
+      // ChatGPTを新しいタブで開く
+      window.open('https://chat.openai.com/', '_blank');
     }
-
-    // Step 3: 手動コピー用UIを表示
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.left = '50%';
-    textArea.style.top = '50%';
-    textArea.style.transform = 'translate(-50%, -50%)';
-    textArea.style.width = '90vw';
-    textArea.style.height = '60vh';
-    textArea.style.padding = '16px';
-    textArea.style.border = '2px solid #3b82f6';
-    textArea.style.borderRadius = '8px';
-    textArea.style.outline = 'none';
-    textArea.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-    textArea.style.background = 'white';
-    textArea.style.fontSize = '16px';
-    textArea.style.lineHeight = '1.5';
-    textArea.style.zIndex = '9999';
-    textArea.style.resize = 'none';
-    textArea.readOnly = true;
-    textArea.placeholder = 'プロンプトが表示されています。コピーボタンを押してコピーしてください。';
-
-    // コピーボタン
-    const copyButton = document.createElement('button');
-    copyButton.textContent = '📋 コピー';
-    copyButton.style.position = 'fixed';
-    copyButton.style.left = '50%';
-    copyButton.style.top = 'calc(50% + 35vh)';
-    copyButton.style.transform = 'translateX(-50%)';
-    copyButton.style.padding = '12px 24px';
-    copyButton.style.backgroundColor = '#3b82f6';
-    copyButton.style.color = 'white';
-    copyButton.style.border = 'none';
-    copyButton.style.borderRadius = '8px';
-    copyButton.style.fontSize = '16px';
-    copyButton.style.fontWeight = 'bold';
-    copyButton.style.zIndex = '10000';
-    copyButton.style.cursor = 'pointer';
-    copyButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-
-    // 閉じるボタン
-    const closeButton = document.createElement('button');
-    closeButton.textContent = '✕ 閉じる';
-    closeButton.style.position = 'fixed';
-    closeButton.style.left = '50%';
-    closeButton.style.top = 'calc(50% + 35vh + 60px)';
-    closeButton.style.transform = 'translateX(-50%)';
-    closeButton.style.padding = '8px 16px';
-    closeButton.style.backgroundColor = '#6b7280';
-    closeButton.style.color = 'white';
-    closeButton.style.border = 'none';
-    closeButton.style.borderRadius = '6px';
-    closeButton.style.fontSize = '14px';
-    closeButton.style.zIndex = '10000';
-    closeButton.style.cursor = 'pointer';
-
-    // 説明メッセージ
-    const messageDiv = document.createElement('div');
-    messageDiv.innerHTML = `
-      <div style="
-        position: fixed;
-        left: 50%;
-        top: calc(50% - 40vh);
-        transform: translateX(-50%);
-        background: #fef3c7;
-        border: 1px solid #f59e0b;
-        border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 14px;
-        color: #92400e;
-        z-index: 10000;
-        max-width: 80vw;
-        text-align: center;
-      ">
-        <strong>⚠️ 自動コピーに失敗しました</strong><br>
-        コピーボタンを押してプロンプトをコピーし、ChatGPTに遷移してください。
-      </div>
-    `;
-
-    document.body.appendChild(textArea);
-    document.body.appendChild(copyButton);
-    document.body.appendChild(closeButton);
-    document.body.appendChild(messageDiv);
-
-    textArea.focus();
-    textArea.select();
-
-    // コピーボタンのクリックイベント
-    copyButton.onclick = () => {
-      try {
-        textArea.focus();
-        textArea.select();
-        const successful = document.execCommand('copy');
-        if (successful) {
-          copyButton.textContent = '✅ コピー完了';
-          copyButton.style.backgroundColor = '#10b981';
-          copyButton.style.cursor = 'default';
-          
-          // 3秒後にUIを削除
-          setTimeout(() => {
-            if (document.body.contains(textArea)) {
-              document.body.removeChild(textArea);
-              document.body.removeChild(copyButton);
-              document.body.removeChild(closeButton);
-              document.body.removeChild(messageDiv);
-            }
-          }, 3000);
-        } else {
-          copyButton.textContent = '❌ コピー失敗';
-          copyButton.style.backgroundColor = '#ef4444';
-          setTimeout(() => {
-            copyButton.textContent = '📋 コピー';
-            copyButton.style.backgroundColor = '#3b82f6';
-            copyButton.style.cursor = 'pointer';
-          }, 2000);
-        }
-      } catch (error) {
-        console.warn('Copy failed:', error);
-        copyButton.textContent = '❌ コピー失敗';
-        copyButton.style.backgroundColor = '#ef4444';
-        setTimeout(() => {
-          copyButton.textContent = '📋 コピー';
-          copyButton.style.backgroundColor = '#3b82f6';
-          copyButton.style.cursor = 'pointer';
-        }, 2000);
-      }
-    };
-
-    // 閉じるボタンのクリックイベント
-    closeButton.onclick = () => {
-      document.body.removeChild(textArea);
-      document.body.removeChild(copyButton);
-      document.body.removeChild(closeButton);
-      document.body.removeChild(messageDiv);
-    };
-
-    return { success: false, method: 'manual-copy-with-button' };
   };
 
   const handleGenerateDraft = async () => {
@@ -400,54 +217,13 @@ function DraftOutputPage() {
 
     setGenerating(true);
     setMessage('');
-    const mobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     try {
       // プロンプトを生成
       const prompt = await generatePrompt();
       
-      if (mobile) {
-        // モバイル環境：Web Share APIを試行
-        const shareResult = await sharePrompt(prompt);
-        if (shareResult) {
-          setMessage('✅ プロンプトを共有しました。ChatGPTアプリまたはブラウザでプロンプトを確認してください。');
-        } else {
-          setMessage('📱 プロンプトが共有されました。コピーを押下して、ユーザーご自身でChatGPTアプリにペーストしてください。');
-        }
-      } else {
-        // PC環境：クリップボードにコピーしてChatGPTに遷移
-        const copyResult = await copyToClipboard(prompt);
-        
-        // ChatGPTに遷移
-        let chatGPTOpened = false;
-        try {
-          const chatWindow = window.open('https://chatgpt.com/', '_blank');
-          chatGPTOpened = !!chatWindow;
-        } catch (error) {
-          console.warn('ChatGPT遷移に失敗:', error);
-          chatGPTOpened = false;
-        }
-        
-        // 結果に応じてメッセージを設定
-        if (copyResult.success && chatGPTOpened) {
-          setMessage('✅ プロンプトをクリップボードにコピーし、ChatGPTを開きました。ChatGPTにプロンプトを貼り付けて実行してください。');
-        } else if (copyResult.success && !chatGPTOpened) {
-          setMessage('✅ プロンプトをクリップボードにコピーしました。ブラウザの設定でポップアップがブロックされている可能性があります。手動でChatGPT（https://chatgpt.com/）を開いて、プロンプトを貼り付けて実行してください。');
-        } else if (!copyResult.success && chatGPTOpened) {
-          if (copyResult.method === 'manual-copy-with-button') {
-            setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPTに貼り付けて実行してください。');
-          } else {
-            setMessage(`⚠️ クリップボードへのコピーに失敗しました。ChatGPTを開きましたので、以下のプロンプトを手動でコピーして貼り付けてください：\n\n${prompt}`);
-          }
-        } else {
-          // 両方失敗した場合
-          if (copyResult.method === 'manual-copy-with-button') {
-            setMessage('📱 プロンプトが画面に表示されました。コピーボタンを押してプロンプトをコピーし、ChatGPT（https://chatgpt.com/）を開いて貼り付けて実行してください。');
-          } else {
-            setMessage(`❌ 処理に問題が発生しました。以下のプロンプトを手動でコピーし、ChatGPT（https://chatgpt.com/）で使用してください：\n\n${prompt}`);
-          }
-        }
-      }
+      // メモ画面と同様のシンプルなコピー・遷移処理
+      await copyToClipboardAndOpenChatGPT(prompt);
       
     } catch (error) {
       console.error('草稿生成エラー:', error);
@@ -650,20 +426,6 @@ function DraftOutputPage() {
           {/* 草稿生成ボタン */}
           {availableThemes.length > 0 && (
             <div className="mb-6">
-              {/* モバイル用注釈 */}
-              {/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="text-sm text-blue-800">
-                      <strong>📱 スマホで生成する場合：</strong><br />
-                      Webシェアが起動された後、コピーを押下して、ユーザーご自身でChatGPTアプリにペーストしてください。
-                    </div>
-                  </div>
-                </div>
-              )}
               
               <button
                 onClick={handleGenerateDraft}
@@ -693,6 +455,9 @@ function DraftOutputPage() {
                   選択したテーマの記録数が不足しています
                 </p>
               )}
+              <p className="text-xs text-gray-500 mt-1 text-center">
+                テーマを選択後、このボタンを押すとChatGPTで草稿を生成し、具体的な内容を作成できます
+              </p>
             </div>
           )}
 
@@ -701,10 +466,6 @@ function DraftOutputPage() {
             <div className={`p-3 rounded-lg text-sm ${
               message.includes('失敗') || message.includes('不足')
                 ? 'bg-red-100 text-red-700' 
-                : message.includes('開発中')
-                ? 'bg-yellow-100 text-yellow-700'
-                : message.includes('クリップボードへのコピーに失敗')
-                ? 'bg-orange-100 text-orange-700'
                 : 'bg-green-100 text-green-700'
             }`}>
               <div className="whitespace-pre-wrap break-words">
@@ -721,6 +482,7 @@ function DraftOutputPage() {
               <li>• 生成される草稿は、あなたの学びや気づき、アクションプランを整理したものです</li>
               <li>• 十分な記録数（{userSettings.draftThreshold}件以上）があるテーマでのみ利用可能です</li>
               <li>• 生成された草稿は、noteやX、その他媒体用の素材として活用できます</li>
+              <li>• ボタンを押すとプロンプトがクリップボードにコピーされ、ChatGPTが自動で開きます</li>
             </ul>
           </div>
         </div>
