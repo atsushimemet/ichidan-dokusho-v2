@@ -88,13 +88,7 @@ function AppContent() {
                   🏠 ホーム
                 </Link>
               )}
-              <Link
-                to="/landing_page"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-              >
-                📖 私たちについて
-              </Link>
+
               {isAuthenticated && (
                 <>
                   <Link
