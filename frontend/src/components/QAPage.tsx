@@ -11,6 +11,26 @@ function QAPage() {
       </div>
       
       <div className="space-y-8">
+        {/* 私たちについて */}
+        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
+          <h2 className="text-xl font-semibold text-purple-800 mb-4 flex items-center">
+            <span className="mr-2">📖</span>
+            私たちについて
+          </h2>
+          <p className="text-gray-700 mb-4">
+            一段読書について詳しく知りたい方は、以下のリンクから詳細をご確認ください。
+          </p>
+          <div className="text-center">
+            <a
+              href="/landing_page"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200"
+            >
+              <span className="mr-2">📖</span>
+              私たちについて詳しく見る
+            </a>
+          </div>
+        </div>
+
         {/* 各アイコンの使い方 */}
         <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
           <h2 className="text-xl font-semibold text-yellow-800 mb-4 flex items-center">
@@ -98,26 +118,6 @@ function QAPage() {
                 <p className="text-sm text-gray-600">本全体を読んだ場合</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* 私たちについて */}
-        <div className="bg-purple-50 rounded-xl p-6 border border-purple-200">
-          <h2 className="text-xl font-semibold text-purple-800 mb-4 flex items-center">
-            <span className="mr-2">📖</span>
-            私たちについて
-          </h2>
-          <p className="text-gray-700 mb-4">
-            一段読書について詳しく知りたい方は、以下のリンクから詳細をご確認ください。
-          </p>
-          <div className="text-center">
-            <a
-              href="/landing_page"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200"
-            >
-              <span className="mr-2">📖</span>
-              私たちについて詳しく見る
-            </a>
           </div>
         </div>
 
