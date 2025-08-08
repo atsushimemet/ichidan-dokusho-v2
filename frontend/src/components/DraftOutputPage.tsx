@@ -30,12 +30,23 @@ function DraftOutputPage() {
   const [generating, setGenerating] = useState(false);
   const [message, setMessage] = useState('');
   const [draftMode, setDraftMode] = useState<'fact' | 'essay'>('fact');
+  const [preGeneratedPrompt, setPreGeneratedPrompt] = useState<string>('');
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
 
   useEffect(() => {
     if (user && token) {
       loadData();
     }
   }, [user, token]);
+
+  // テーマまたはモードが変更されたときにプロンプトを事前生成
+  useEffect(() => {
+    if (selectedThemeId && isThemeReady(selectedThemeId) && user && token) {
+      generatePromptAsync();
+    } else {
+      setPreGeneratedPrompt('');
+    }
+  }, [selectedThemeId, draftMode, user, token]);
 
   const loadData = async () => {
     try {
@@ -180,29 +191,24 @@ function DraftOutputPage() {
     }
   };
 
-  // シンプルなクリップボードコピーとChatGPT遷移（メモ画面と同様の実装）
-  const copyToClipboardAndOpenChatGPT = async (prompt: string): Promise<void> => {
+  // プロンプト事前生成用の非同期関数
+  const generatePromptAsync = async () => {
+    setIsGeneratingPrompt(true);
+    setMessage('');
     try {
-      // クリップボードにプロンプトをコピー
-      await navigator.clipboard.writeText(prompt);
-      // ChatGPTを新しいタブで開く
-      window.open('https://chat.openai.com/', '_blank');
-    } catch (err) {
-      console.error('クリップボードへのコピーに失敗しました:', err);
-      // フォールバック: 古いブラウザ対応
-      const textArea = document.createElement('textarea');
-      textArea.value = prompt;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      // ChatGPTを新しいタブで開く
-      window.open('https://chat.openai.com/', '_blank');
+      const prompt = await generatePrompt();
+      setPreGeneratedPrompt(prompt);
+    } catch (error) {
+      console.error('プロンプト事前生成エラー:', error);
+      setPreGeneratedPrompt('');
+      setMessage('プロンプトの生成に失敗しました。ネットワーク接続を確認してください。');
+    } finally {
+      setIsGeneratingPrompt(false);
     }
   };
 
-  const handleGenerateDraft = async () => {
+
+  const handleGenerateDraft = () => {
     if (!selectedThemeId) {
       setMessage('テーマを選択してください');
       return;
@@ -215,19 +221,36 @@ function DraftOutputPage() {
       return;
     }
 
+    if (!preGeneratedPrompt) {
+      setMessage('プロンプトを準備中です。しばらくお待ちください。');
+      return;
+    }
+
     setGenerating(true);
     setMessage('');
 
     try {
-      // プロンプトを生成
-      const prompt = await generatePrompt();
-      
-      // メモ画面と同様のシンプルなコピー・遷移処理
-      await copyToClipboardAndOpenChatGPT(prompt);
+      // 事前生成されたプロンプトを即座にコピー（InputFormと同様の実装）
+      navigator.clipboard.writeText(preGeneratedPrompt).then(() => {
+        window.open('https://chat.openai.com/', '_blank');
+        setMessage('✅ プロンプトがクリップボードにコピーされ、ChatGPTが開かれました！');
+      }).catch(err => {
+        console.error('クリップボードへのコピーに失敗しました:', err);
+        // フォールバック: 古いブラウザ対応
+        const textArea = document.createElement('textarea');
+        textArea.value = preGeneratedPrompt;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        window.open('https://chat.openai.com/', '_blank');
+        setMessage('✅ プロンプトがコピーされ、ChatGPTが開かれました！（フォールバック方式）');
+      });
       
     } catch (error) {
       console.error('草稿生成エラー:', error);
-      setMessage('草稿生成に失敗しました。ネットワーク接続を確認して再試行してください。');
+      setMessage('草稿生成に失敗しました。再試行してください。');
     } finally {
       setGenerating(false);
     }
@@ -423,13 +446,40 @@ function DraftOutputPage() {
             </div>
           )}
 
+          {/* プロンプト準備状況の表示 */}
+          {selectedThemeId && isThemeReady(selectedThemeId) && (
+            <div className="mb-4">
+              {isGeneratingPrompt ? (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-500 mr-2"></div>
+                    <span className="text-sm text-yellow-800">プロンプトを準備しています...</span>
+                  </div>
+                </div>
+              ) : preGeneratedPrompt ? (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-sm text-green-800">プロンプトの準備が完了しました！</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <span className="text-sm text-gray-600">プロンプトを準備中です...</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 草稿生成ボタン */}
           {availableThemes.length > 0 && (
             <div className="mb-6">
               
               <button
                 onClick={handleGenerateDraft}
-                disabled={!selectedThemeId || generating || !isThemeReady(selectedThemeId)}
+                disabled={!selectedThemeId || generating || !isThemeReady(selectedThemeId) || !preGeneratedPrompt || isGeneratingPrompt}
                 className={`w-full font-semibold py-4 px-6 rounded-lg focus:ring-4 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
                   draftMode === 'fact'
                     ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 focus:ring-blue-300'
@@ -439,7 +489,16 @@ function DraftOutputPage() {
                 {generating ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>草稿生成中...</span>
+                    <span>ChatGPTに遷移中...</span>
+                  </>
+                ) : isGeneratingPrompt ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>プロンプト準備中...</span>
+                  </>
+                ) : !preGeneratedPrompt ? (
+                  <>
+                    <span>⏳ プロンプトを準備中</span>
                   </>
                 ) : (
                   <>
