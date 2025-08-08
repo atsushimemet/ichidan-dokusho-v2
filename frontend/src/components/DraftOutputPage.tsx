@@ -207,27 +207,6 @@ function DraftOutputPage() {
     }
   };
 
-  // シンプルなクリップボードコピーとChatGPT遷移（メモ画面と同様の実装）
-  const copyToClipboardAndOpenChatGPT = async (prompt: string): Promise<void> => {
-    try {
-      // クリップボードにプロンプトをコピー
-      await navigator.clipboard.writeText(prompt);
-      // ChatGPTを新しいタブで開く
-      window.open('https://chat.openai.com/', '_blank');
-    } catch (err) {
-      console.error('クリップボードへのコピーに失敗しました:', err);
-      // フォールバック: 古いブラウザ対応
-      const textArea = document.createElement('textarea');
-      textArea.value = prompt;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      // ChatGPTを新しいタブで開く
-      window.open('https://chat.openai.com/', '_blank');
-    }
-  };
 
   const handleGenerateDraft = () => {
     if (!selectedThemeId) {
