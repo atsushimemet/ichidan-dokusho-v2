@@ -13,6 +13,7 @@ import ReadingPage from './components/ReadingPage';
 import SelectionScreen from './components/SelectionScreen';
 import SettingsPage from './components/SettingsPage';
 import Timeline from './components/Timeline';
+import BottomNavigationBar from './components/BottomNavigationBar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -92,46 +93,11 @@ function AppContent() {
               {isAuthenticated && (
                 <>
                   <Link
-                    to="/reading"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                  >
-                    📖 読む（登録画面）
-                  </Link>
-                  <Link
-                    to="/input"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                  >
-                    📝 メモ（入力画面）
-                  </Link>
-                  <Link
-                    to="/draft-output"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                  >
-                    ✍️ 書く（出力画面）
-                  </Link>
-                  <Link
                     to="/dashboard"
                     onClick={() => setIsMenuOpen(false)}
                     className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                   >
                     📊 ダッシュボード
-                  </Link>
-                  <Link
-                    to="/mypage"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                  >
-                    📚 マイページ
-                  </Link>
-                  <Link
-                    to="/settings"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-                  >
-                    ⚙️ 設定
                   </Link>
                 </>
               )}
@@ -142,6 +108,17 @@ function AppContent() {
               >
                 🌟 タイムライン
               </Link>
+              
+              {isAuthenticated && (
+                <Link
+                  to="/settings"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+                >
+                  ⚙️ 設定
+                </Link>
+              )}
+              
               <Link
                 to="/qa"
                 onClick={() => setIsMenuOpen(false)}
@@ -182,19 +159,19 @@ function AppContent() {
       <Routes>
         <Route path="/landing_page" element={<LandingPage />} />
         <Route path="/" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
             {isAuthenticated ? <Timeline /> : <SelectionScreen />}
           </div>
         } />
         <Route path="/auth" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
             <AuthScreen />
           </div>
         } />
         <Route 
           path="/reading" 
           element={
-            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-0">
               <ReadingPage />
             </div>
           }
@@ -202,7 +179,7 @@ function AppContent() {
         <Route 
           path="/input" 
           element={
-            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-0">
               <InputForm />
             </div>
           } 
@@ -210,7 +187,7 @@ function AppContent() {
         <Route 
           path="/draft-output" 
           element={
-            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
               <DraftOutputPage />
             </div>
           } 
@@ -218,7 +195,7 @@ function AppContent() {
         <Route 
           path="/mypage" 
           element={
-            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
               <MyPage />
             </div>
           } 
@@ -226,28 +203,31 @@ function AppContent() {
         <Route 
           path="/dashboard" 
           element={
-            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
               <Dashboard />
             </div>
           } 
         />
         <Route path="/timeline" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
             <Timeline />
           </div>
         } />
         <Route path="/qa" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
             <QAPage />
           </div>
         } />
         <Route path="/settings" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
             <SettingsPage />
           </div>
         } />
 
       </Routes>
+      
+      {/* Bottom Navigation Bar */}
+      <BottomNavigationBar />
     </div>
   );
 }
