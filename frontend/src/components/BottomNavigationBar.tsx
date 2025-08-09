@@ -1,4 +1,4 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 interface NavigationItem {
@@ -11,6 +11,7 @@ interface NavigationItem {
 
 const BottomNavigationBar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
   const navigationItems: NavigationItem[] = [
@@ -44,14 +45,15 @@ const BottomNavigationBar: React.FC = () => {
     }
   ];
 
-  // 認証が必要な項目を認証状態に応じてフィルタリング
-  const visibleItems = navigationItems.filter(item => 
-    !item.requiresAuth || (item.requiresAuth && isAuthenticated)
-  );
+  // 認証が必要な項目も表示し、クリック時に適切にハンドリング
+  const visibleItems = navigationItems;
 
-  if (visibleItems.length === 0) {
-    return null;
-  }
+  const handleNavigation = (item: NavigationItem, event: React.MouseEvent) => {
+    if (item.requiresAuth && !isAuthenticated) {
+      event.preventDefault();
+      navigate('/auth');
+    }
+  };
 
   return (
     <nav 
@@ -66,6 +68,7 @@ const BottomNavigationBar: React.FC = () => {
             <Link
               key={item.id}
               to={item.path}
+              onClick={(event) => handleNavigation(item, event)}
               className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 min-w-0 ${
                 isActive
                   ? 'bg-orange-100 text-orange-700'
