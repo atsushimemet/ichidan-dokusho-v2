@@ -70,11 +70,11 @@ const BottomNavigationBar: React.FC = () => {
   // CSS ホバー効果用のスタイル
   const hoverStyles = `
     .bottom-nav-container {
-      display: block;
+      display: block !important;
     }
     @media (min-width: 768px) {
       .bottom-nav-container {
-        display: none;
+        display: none !important;
       }
     }
     .bottom-nav-item {
@@ -99,7 +99,7 @@ const BottomNavigationBar: React.FC = () => {
       <style dangerouslySetInnerHTML={{ __html: hoverStyles }} />
 
       <nav 
-        className="bottom-nav-container"
+        className="bottom-nav-container block md:hidden"
         style={{
           position: 'fixed',
           bottom: 0,
@@ -111,7 +111,6 @@ const BottomNavigationBar: React.FC = () => {
           color: 'white',
           padding: '12px',
           zIndex: 999999,
-          display: 'block',
           pointerEvents: 'auto',
           minHeight: '60px'
         }}
