@@ -1,5 +1,6 @@
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { createPortal } from 'react-dom';
 
 interface NavigationItem {
   id: string;
@@ -10,9 +11,13 @@ interface NavigationItem {
 }
 
 const BottomNavigationBar: React.FC = () => {
+  console.log('🚀 BottomNavigationBar component rendering...');
+  
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  
+  console.log('🔍 Navigation state:', { isAuthenticated, currentPath: location.pathname });
   
   const navigationItems: NavigationItem[] = [
     {
@@ -45,9 +50,6 @@ const BottomNavigationBar: React.FC = () => {
     }
   ];
 
-  // 認証が必要な項目も表示し、クリック時に適切にハンドリング
-  const visibleItems = navigationItems;
-
   const handleNavigation = (item: NavigationItem, event: React.MouseEvent) => {
     if (item.requiresAuth && !isAuthenticated) {
       event.preventDefault();
@@ -55,40 +57,99 @@ const BottomNavigationBar: React.FC = () => {
     }
   };
 
-  return (
-    <nav 
-      className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-orange-100 py-3 z-40 block md:hidden"
-      role="navigation"
-      aria-label="メインナビゲーション"
-    >
-      <div className="flex justify-around items-center max-w-2xl mx-auto px-4">
-        {visibleItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.id}
-              to={item.path}
-              onClick={(event) => handleNavigation(item, event)}
-              className={`flex flex-col items-center px-3 py-2 rounded-lg transition-all duration-200 min-w-0 ${
-                isActive
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
-              }`}
-              aria-label={`${item.label}ページに移動`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              <span className="text-xl mb-1" role="img" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="text-xs font-medium truncate">
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
+  console.log('📱 About to render navigation with', navigationItems.length, 'items');
+
+  // Portal用の要素を作成または取得
+  let portalRoot = document.getElementById('bottom-nav-portal');
+  if (!portalRoot) {
+    portalRoot = document.createElement('div');
+    portalRoot.id = 'bottom-nav-portal';
+    document.body.appendChild(portalRoot);
+  }
+
+  // CSS ホバー効果用のスタイル
+  const hoverStyles = `
+    .bottom-nav-container {
+      display: block;
+    }
+    @media (min-width: 768px) {
+      .bottom-nav-container {
+        display: none;
+      }
+    }
+    .bottom-nav-item {
+      transition: all 0.2s ease;
+      background-color: transparent;
+      color: rgb(75, 85, 99);
+    }
+    .bottom-nav-item:hover {
+      background-color: rgba(251, 146, 60, 0.1) !important;
+      color: rgb(234, 88, 12) !important;
+      transform: scale(1.05) !important;
+    }
+    .bottom-nav-item.active {
+      background-color: rgba(251, 146, 60, 0.1) !important;
+      color: rgb(234, 88, 12) !important;
+    }
+  `;
+
+  const navigationBar = (
+    <div>
+      {/* CSS ホバー効果用スタイル注入 */}
+      <style dangerouslySetInnerHTML={{ __html: hoverStyles }} />
+
+      <nav 
+        className="bottom-nav-container"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(251, 146, 60, 0.1)',
+          color: 'white',
+          padding: '12px',
+          zIndex: 999999,
+          display: 'block',
+          pointerEvents: 'auto',
+          minHeight: '60px'
+        }}
+        role="navigation"
+        aria-label="メインナビゲーション"
+      >
+        <div className="flex items-stretch justify-center max-w-2xl mx-auto px-2">
+          {navigationItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.id}
+                to={item.path}
+                onClick={(event) => handleNavigation(item, event)}
+                className={`bottom-nav-item flex flex-col items-center justify-center px-2 py-2 rounded-lg min-w-0 flex-1 ${
+                  isActive ? 'active' : ''
+                }`}
+                aria-label={`${item.label}ページに移動`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <div className="flex items-center justify-center w-8 h-8 mb-1">
+                  <span className="text-2xl leading-none" role="img" aria-hidden="true">
+                    {item.icon}
+                  </span>
+                </div>
+                <span className="text-xs font-medium truncate text-center w-full">
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
   );
+
+  // React Portalを使用してdocument.bodyに直接レンダリング
+  return createPortal(navigationBar, portalRoot);
 };
 
 export default BottomNavigationBar;
