@@ -1,6 +1,6 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useEffect, useState } from 'react';
-import { Link, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import AuthScreen from './components/AuthScreen';
 import Dashboard from './components/Dashboard';
@@ -12,7 +12,6 @@ import QAPage from './components/QAPage';
 import ReadingPage from './components/ReadingPage';
 import SelectionScreen from './components/SelectionScreen';
 import SettingsPage from './components/SettingsPage';
-import Timeline from './components/Timeline';
 import BottomNavigationBar from './components/BottomNavigationBar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -58,6 +57,7 @@ function AppContent() {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Google Analytics ページビュー追跡 */}
       <PageTracker />
@@ -101,14 +101,6 @@ function AppContent() {
                   </Link>
                 </>
               )}
-              <Link
-                to="/timeline"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
-              >
-                🌟 タイムライン
-              </Link>
-              
               {isAuthenticated && (
                 <Link
                   to="/settings"
@@ -159,19 +151,19 @@ function AppContent() {
       <Routes>
         <Route path="/landing_page" element={<LandingPage />} />
         <Route path="/" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
-            {isAuthenticated ? <Timeline /> : <SelectionScreen />}
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            {isAuthenticated ? <Navigate to="/mypage" replace /> : <SelectionScreen />}
           </div>
         } />
         <Route path="/auth" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <AuthScreen />
           </div>
         } />
         <Route 
           path="/reading" 
           element={
-            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-0">
+            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <ReadingPage />
             </div>
           }
@@ -179,7 +171,7 @@ function AppContent() {
         <Route 
           path="/input" 
           element={
-            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-0">
+            <div className="container mx-auto px-0 sm:px-4 pt-0 pb-0 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <InputForm />
             </div>
           } 
@@ -187,7 +179,7 @@ function AppContent() {
         <Route 
           path="/draft-output" 
           element={
-            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <DraftOutputPage />
             </div>
           } 
@@ -195,7 +187,7 @@ function AppContent() {
         <Route 
           path="/mypage" 
           element={
-            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <MyPage />
             </div>
           } 
@@ -203,32 +195,32 @@ function AppContent() {
         <Route 
           path="/dashboard" 
           element={
-            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
               <Dashboard />
             </div>
           } 
         />
-        <Route path="/timeline" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
-            <Timeline />
-          </div>
-        } />
+        {/* 旧タイムラインURL → MyPageにリダイレクト */}
+        <Route path="/timeline" element={<Navigate to="/mypage" replace />} />
         <Route path="/qa" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <QAPage />
           </div>
         } />
         <Route path="/settings" element={
-          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden mb-20 md:mb-2">
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <SettingsPage />
           </div>
         } />
 
       </Routes>
       
-      {/* Bottom Navigation Bar */}
-      <BottomNavigationBar />
+      
     </div>
+    
+    {/* Bottom Navigation Bar - 親コンテナの外側に配置 */}
+    <BottomNavigationBar />
+    </>
   );
 }
 

@@ -52,10 +52,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// セッションIDを生成する関数
-const generateSessionId = () => {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
+// タイムライン機能除却: セッションID生成関数を削除
+// 匿名アクセス機能の廃止により、セッション管理関数を完全停止
 
 // Amazonリンクをアフィリエイトリンクに変換する関数
 const convertToAffiliateLink = async (link: string): Promise<string> => {
@@ -427,29 +425,8 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// 全ての読書記録を取得（いいね情報付き）
-app.get('/api/reading-records', async (req, res) => {
-  try {
-    const sessionId = req.query.sessionId as string;
-    const result = await getAllReadingRecords(sessionId);
-    if (result.success) {
-      res.json({ 
-        message: 'Reading records retrieved successfully', 
-        data: result.data 
-      });
-    } else {
-      res.status(500).json({ 
-        message: 'Failed to retrieve reading records', 
-        error: result.error 
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error retrieving reading records', 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-  }
-});
+// タイムライン機能除却: 全ての読書記録取得APIを削除
+// プライバシー保護のため、他人の記録へのアクセスを完全に停止
 
 // 特定の読書記録を取得
 app.get('/api/reading-records/:id', async (req, res) => {
@@ -660,77 +637,15 @@ app.delete('/api/reading-records/:id', async (req, res) => {
   }
 });
 
-// いいねを追加
-app.post('/api/reading-records/:id/like', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid ID' });
-    }
+// タイムライン機能除却: いいね追加APIを削除
+// 社会的機能の廃止により、いいね機能を完全停止
 
-    const { sessionId } = req.body;
-    if (!sessionId) {
-      return res.status(400).json({ message: 'Session ID is required' });
-    }
-
-    const result = await addLike(id, sessionId);
-    if (result.success) {
-      res.json({ 
-        message: result.data ? 'Like added successfully' : 'Already liked',
-        data: result.data 
-      });
-    } else {
-      res.status(500).json({ 
-        message: 'Failed to add like', 
-        error: result.error 
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error adding like', 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-  }
-});
-
-// いいねを削除
-app.delete('/api/reading-records/:id/like', async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid ID' });
-    }
-
-    const { sessionId } = req.body;
-    if (!sessionId) {
-      return res.status(400).json({ message: 'Session ID is required' });
-    }
-
-    const result = await removeLike(id, sessionId);
-    if (result.success) {
-      res.json({ 
-        message: 'Like removed successfully',
-        data: result.data 
-      });
-    } else {
-      res.status(500).json({ 
-        message: 'Failed to remove like', 
-        error: result.error 
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error removing like', 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-  }
-});
+// タイムライン機能除却: いいね削除APIを削除
+// 社会的機能の廃止により、いいね機能を完全停止
 
 // セッションIDを生成
-app.post('/api/session', (req, res) => {
-  const sessionId = generateSessionId();
-  res.json({ sessionId });
-});
+// タイムライン機能除却: セッション管理APIを削除
+// 匿名アクセス機能の廃止により、セッション管理を完全停止
 
 // Google認証エンドポイント
 app.post('/api/auth/google', async (req, res) => {

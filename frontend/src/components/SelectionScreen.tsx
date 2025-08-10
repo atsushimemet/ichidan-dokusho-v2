@@ -5,9 +5,8 @@ import BookIcon from './BookIcon';
 const SelectionScreen: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleViewOnly = () => {
-    navigate('/timeline');
-  };
+  // タイムライン機能除却: 「見るだけ」導線を廃止
+  // プライバシー保護のため、認証なしアクセスを完全停止
 
   const handleUse = () => {
     navigate('/auth');
@@ -29,24 +28,19 @@ const SelectionScreen: React.FC = () => {
         </p>
 
         <div className="space-y-4">
-          <button
-            onClick={handleViewOnly}
-            className="w-full bg-gray-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-gray-600 transition-colors"
-          >
-            👀 見るだけ
-          </button>
+          {/* タイムライン機能除却: 「見るだけ」ボタンを削除 */}
+          {/* プライバシー保護のため、認証不要アクセスを完全停止 */}
           
           <button
             onClick={handleUse}
             className="w-full bg-orange-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-orange-600 transition-colors"
           >
-            ✍️ 使う
+            ✍️ はじめる
           </button>
         </div>
 
         <div className="mt-8 text-center text-xs text-gray-500">
-          <p>「見るだけ」: みんなの読書記録を閲覧</p>
-          <p>「使う」: Google認証でログインして投稿</p>
+          <p>「はじめる」: Google認証でログインして、あなただけの読書記録を作成</p>
         </div>
       </div>
     </div>
