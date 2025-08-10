@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS reading_records (
     notes TEXT,
     is_not_book BOOLEAN DEFAULT FALSE,
     custom_link TEXT,
-    contains_spoiler BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS likes (
 CREATE TABLE IF NOT EXISTS user_settings (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL UNIQUE,
-    hide_spoilers BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,8 +59,8 @@ CREATE TRIGGER update_user_settings_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- サンプルデータの挿入（テスト用）
-INSERT INTO reading_records (title, link, reading_amount, learning, action, contains_spoiler) VALUES
-('7つの習慣', 'https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=test', '1章', '人の話を聴くとは、同意することではない', '朝会で相手の話をさえぎらずに聞く', FALSE),
-('星の王子さま', 'https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=test', '1段落', '大切なものは目に見えない', '家族との時間を大切にする', FALSE),
-('嫌われる勇気', 'https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=test', '1文だけ', '過去は変えられないが、未来は変えられる', '今日から新しい習慣を始める', TRUE)
+INSERT INTO reading_records (title, link, reading_amount, learning, action) VALUES
+('7つの習慣', 'https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=test', '1章', '人の話を聴くとは、同意することではない', '朝会で相手の話をさえぎらずに聞く'),
+('星の王子さま', 'https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=test', '1段落', '大切なものは目に見えない', '家族との時間を大切にする'),
+('嫌われる勇気', 'https://www.amazon.co.jp/dp/ASIN/ref=nosim?tag=test', '1文だけ', '過去は変えられないが、未来は変えられる', '今日から新しい習慣を始める')
 ON CONFLICT DO NOTHING; 
