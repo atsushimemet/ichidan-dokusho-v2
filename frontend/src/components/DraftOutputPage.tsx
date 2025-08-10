@@ -268,7 +268,8 @@ function DraftOutputPage() {
   const unavailableThemes = themes.filter(theme => !isThemeReady(theme.id));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center mb-6">
@@ -548,6 +549,7 @@ function DraftOutputPage() {
       </div>
     </div>
     <div className="pb-20"></div>
+    </>
   );
 }
 

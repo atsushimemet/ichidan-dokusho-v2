@@ -143,7 +143,8 @@ function ReadingPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <div className="container mx-auto px-4 py-8">
       {/* ヘッダー部分 - /input画面のheading 1スタイルを使用 */}
       <div className="flex items-center justify-center mb-8">
         <BookIcon size={48} />
@@ -253,6 +254,7 @@ function ReadingPage() {
       )}
     </div>
     <div className="pb-20"></div>
+    </>
   );
 }
 

@@ -531,7 +531,8 @@ ${action}
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
+    <>
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-2 sm:p-8 border border-orange-100 mt-2 sm:mt-0">
       <div className="flex items-center justify-center mb-8">
         <BookIcon size={48} />
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-orange-800 ml-3 leading-tight">
@@ -940,6 +941,7 @@ ${action}
       )}
     </div>
     <div className="pb-20"></div>
+    </>
   );
 }
 
