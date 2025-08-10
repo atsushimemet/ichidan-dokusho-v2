@@ -40,7 +40,7 @@ export interface ReadingRecord {
   notes?: string;
   is_not_book?: boolean;
   custom_link?: string;
-  contains_spoiler?: boolean;
+
   user_id?: string;
   user_email?: string;
   theme_id?: number | null;
@@ -74,7 +74,7 @@ export const createReadingRecord = async (record: ReadingRecord) => {
     // カラムと値を動的に構築
     const columns = [
       'title', 'link', 'reading_amount', 'learning', 'action', 'notes', 
-      'is_not_book', 'custom_link', 'contains_spoiler', 'user_id', 'user_email'
+      'is_not_book', 'custom_link', 'user_id', 'user_email'
     ];
     const values: (string | boolean | undefined | null | number)[] = [
       record.title, 
@@ -85,7 +85,6 @@ export const createReadingRecord = async (record: ReadingRecord) => {
       record.notes, 
       record.is_not_book || false,
       record.custom_link,
-      record.contains_spoiler || false,
       record.user_id, 
       record.user_email
     ];
@@ -299,7 +298,6 @@ export const searchReadingRecordsByTitle = async (searchTerm: string, limit: num
 export interface UserSettings {
   id?: number;
   user_id: string;
-  hide_spoilers: boolean;
   draft_threshold?: number;
   created_at?: string;
   updated_at?: string;
@@ -364,7 +362,6 @@ export const getUserSettings = async (userId: string) => {
         success: true, 
         data: { 
           user_id: userId, 
-          hide_spoilers: false,
           draft_threshold: 5
         } 
       };
@@ -393,27 +390,25 @@ export const upsertUserSettings = async (settings: UserSettings) => {
 
     if (hasDraftThreshold) {
       query = `
-        INSERT INTO user_settings (user_id, hide_spoilers, draft_threshold)
-        VALUES ($1, $2, $3)
+        INSERT INTO user_settings (user_id, draft_threshold)
+        VALUES ($1, $2)
         ON CONFLICT (user_id) 
         DO UPDATE SET 
-          hide_spoilers = EXCLUDED.hide_spoilers,
           draft_threshold = EXCLUDED.draft_threshold,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *
       `;
-      values = [settings.user_id, settings.hide_spoilers, settings.draft_threshold || 5];
+      values = [settings.user_id, settings.draft_threshold || 5];
     } else {
       query = `
-        INSERT INTO user_settings (user_id, hide_spoilers)
-        VALUES ($1, $2)
+        INSERT INTO user_settings (user_id)
+        VALUES ($1)
         ON CONFLICT (user_id) 
         DO UPDATE SET 
-          hide_spoilers = EXCLUDED.hide_spoilers,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *
       `;
-      values = [settings.user_id, settings.hide_spoilers];
+      values = [settings.user_id];
     }
 
     const result = await pool.query(query, values);

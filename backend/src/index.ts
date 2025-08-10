@@ -3,7 +3,6 @@ import cors from 'cors';
 import express from 'express';
 import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
-    addLike,
     createReadingRecord,
     createWishlistItem,
     createWritingTheme,
@@ -11,7 +10,6 @@ import {
     deleteUserPromptTemplate,
     deleteWishlistItem,
     deleteWritingTheme,
-    getAllReadingRecords,
     getAllThemeReadingStats,
     getDailyThemeReadingTrends,
     getPromptTemplate,
@@ -25,7 +23,6 @@ import {
     getUserWritingThemes,
     ReadingRecord,
     ReadingWishlistItem,
-    removeLike,
     searchReadingRecordsByTitle,
     testConnection,
     updateReadingRecord,
@@ -494,7 +491,7 @@ app.get('/api/reading-records/search/title', async (req, res) => {
 // 新しい読書記録を作成（認証必須）
 app.post('/api/reading-records', authenticateToken, async (req, res) => {
   try {
-    const { title, reading_amount, learning, action, isNotBook, customLink, containsSpoiler, themeId } = req.body;
+    const { title, reading_amount, learning, action, isNotBook, customLink, themeId } = req.body;
     // 認証されたユーザー情報を取得
     const userId = req.user?.userId || req.user?.sub;
     const userEmail = req.user?.email;
@@ -532,7 +529,7 @@ app.post('/api/reading-records', authenticateToken, async (req, res) => {
       notes: req.body.notes,
       is_not_book: isNotBook,
       custom_link: customLink,
-      contains_spoiler: containsSpoiler || false,
+
       user_id: userId,
       user_email: userEmail,
       theme_id: themeId ? parseInt(themeId) : null
@@ -566,7 +563,7 @@ app.put('/api/reading-records/:id', async (req, res) => {
       return res.status(400).json({ message: 'Invalid ID' });
     }
 
-    const { title, link, reading_amount, learning, action, notes, containsSpoiler, theme_id } = req.body;
+    const { title, link, reading_amount, learning, action, notes, theme_id } = req.body;
     const updateData: Partial<ReadingRecord> = {};
 
     if (title) updateData.title = title;
@@ -578,7 +575,7 @@ app.put('/api/reading-records/:id', async (req, res) => {
     if (learning) updateData.learning = learning;
     if (action !== undefined) updateData.action = action;
     if (notes !== undefined) updateData.notes = notes;
-    if (containsSpoiler !== undefined) updateData.contains_spoiler = containsSpoiler;
+
     if (theme_id !== undefined) updateData.theme_id = theme_id;
 
     const result = await updateReadingRecord(id, updateData);
@@ -729,7 +726,6 @@ app.get('/api/user-settings', authenticateToken, async (req, res) => {
     
     if (result.success) {
       res.json({
-        hideSpoilers: result.data.hide_spoilers,
         draftThreshold: result.data.draft_threshold || 5
       });
     } else {
@@ -750,11 +746,10 @@ app.get('/api/user-settings', authenticateToken, async (req, res) => {
 app.put('/api/user-settings', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.sub || 'dev-user-123';
-    const { hideSpoilers, draftThreshold } = req.body;
+    const { draftThreshold } = req.body;
     
     const result = await upsertUserSettings({
       user_id: userId,
-      hide_spoilers: hideSpoilers,
       draft_threshold: draftThreshold
     });
     
@@ -762,7 +757,6 @@ app.put('/api/user-settings', authenticateToken, async (req, res) => {
       res.json({
         message: 'User settings updated successfully',
         settings: {
-          hideSpoilers: result.data.hide_spoilers,
           draftThreshold: result.data.draft_threshold || 5
         }
       });

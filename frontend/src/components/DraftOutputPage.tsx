@@ -547,6 +547,7 @@ function DraftOutputPage() {
         </div>
       </div>
     </div>
+    <div className="pb-20"></div>
   );
 }
 

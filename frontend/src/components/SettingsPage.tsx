@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface UserSettings {
-  hideSpoilers: boolean;
   draftThreshold: number;
 }
 
@@ -27,7 +26,6 @@ interface PromptTemplate {
 function SettingsPage() {
   const { user, token } = useAuth();
   const [settings, setSettings] = useState<UserSettings>({
-    hideSpoilers: false,
     draftThreshold: 5
   });
   const [themes, setThemes] = useState<WritingTheme[]>([]);
@@ -63,11 +61,11 @@ function SettingsPage() {
         setSettings(userSettings);
       } else {
         // デフォルト設定を使用
-        setSettings({ hideSpoilers: false, draftThreshold: 5 });
+        setSettings({ draftThreshold: 5 });
       }
     } catch (error) {
       console.error('設定の読み込みに失敗しました:', error);
-      setSettings({ hideSpoilers: false, draftThreshold: 5 });
+      setSettings({ draftThreshold: 5 });
     } finally {
       setLoading(false);
     }
@@ -124,7 +122,7 @@ function SettingsPage() {
     }
   };
 
-  const handleSettingChange = (key: keyof UserSettings, value: boolean | number) => {
+  const handleSettingChange = (key: keyof UserSettings, value: number) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
@@ -448,30 +446,7 @@ function SettingsPage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">設定</h1>
           
-          {/* ネタバレ設定 */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">タイムライン設定</h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <h3 className="font-medium text-gray-900">ネタバレを非表示</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    タイムラインでネタバレを含む投稿を非表示にします
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.hideSpoilers}
-                    onChange={(e) => handleSettingChange('hideSpoilers', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                </label>
-              </div>
-            </div>
-          </div>
+
 
           {/* 草稿出力設定 */}
           <div className="mb-8">
@@ -835,6 +810,7 @@ function SettingsPage() {
         </div>
       </div>
     </div>
+    <div className="pb-20"></div>
   );
 }
 

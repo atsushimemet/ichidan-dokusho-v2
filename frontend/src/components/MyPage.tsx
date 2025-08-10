@@ -18,7 +18,6 @@ interface ReadingRecord {
   user_email?: string;
   created_at: string;
   updated_at: string;
-  containsSpoiler?: boolean;
   theme_id?: number | null;
 }
 
@@ -50,7 +49,6 @@ function MyPage() {
     action: string;
     notes: string;
     link: string;
-    containsSpoiler: boolean;
     theme_id: number | null;
   }>({
     title: '',
@@ -59,7 +57,6 @@ function MyPage() {
     action: '',
     notes: '',
     link: '',
-    containsSpoiler: false,
     theme_id: null
   });
 
@@ -113,7 +110,6 @@ function MyPage() {
       // バックエンドのスネークケースをキャメルケースに変換
       const convertedRecords = (result.data || []).map((record: any) => ({
         ...record,
-        containsSpoiler: record.contains_spoiler,
         theme_id: record.theme_id
       }));
       console.log('変換後のレコード:', convertedRecords);
@@ -192,7 +188,6 @@ function MyPage() {
   const startEdit = (record: ReadingRecord) => {
     console.log('=== 編集開始 ===');
     console.log('編集対象レコード:', record);
-    console.log('元のcontainsSpoiler:', record.containsSpoiler);
     console.log('元のtheme_id:', record.theme_id);
     
     setEditingRecord(record.id);
@@ -203,7 +198,6 @@ function MyPage() {
       action: record.action || '',
       notes: record.notes || '',
       link: record.link || '',
-      containsSpoiler: record.containsSpoiler || false,
       theme_id: record.theme_id || null
     };
     console.log('初期フォームデータ:', initialFormData);
@@ -220,7 +214,6 @@ function MyPage() {
       action: '',
       notes: '',
       link: '',
-      containsSpoiler: false,
       theme_id: null
     });
     // テキストエリアの展開状態もリセット
@@ -243,8 +236,6 @@ function MyPage() {
       console.log('=== 更新処理開始 ===');
       console.log('更新対象ID:', id);
       console.log('更新データ:', editFormData);
-      console.log('containsSpoilerの値:', editFormData.containsSpoiler);
-      console.log('containsSpoilerの型:', typeof editFormData.containsSpoiler);
       
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       const requestBody = JSON.stringify(editFormData);
@@ -263,16 +254,13 @@ function MyPage() {
         const updatedRecord = await response.json();
         console.log('更新成功 - レスポンス:', updatedRecord);
         console.log('更新後のデータ:', updatedRecord.data);
-        console.log('更新後のcontainsSpoiler:', updatedRecord.data.containsSpoiler);
         
         // バックエンドのスネークケースをキャメルケースに変換
         const convertedData = {
           ...updatedRecord.data,
-          containsSpoiler: updatedRecord.data.contains_spoiler,
           theme_id: updatedRecord.data.theme_id
         };
         console.log('変換後のデータ:', convertedData);
-        console.log('変換後のcontainsSpoiler:', convertedData.containsSpoiler);
         
         // レコードリストを更新
         setRecords(prevRecords => 
@@ -829,58 +817,7 @@ ${action}
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ネタバレを含む
-                    </label>
-                    <div className="flex items-center space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="containsSpoiler"
-                          value="false"
-                          checked={!editFormData.containsSpoiler}
-                          onChange={(e) => {
-                            console.log('ネタバレなし選択:', e.target.value);
-                            console.log('設定前のeditFormData:', editFormData);
-                            const newValue = e.target.value === 'true';
-                            console.log('設定する値:', newValue);
-                            setEditFormData({
-                              ...editFormData,
-                              containsSpoiler: newValue
-                            });
-                            console.log('設定後のeditFormData:', { ...editFormData, containsSpoiler: newValue });
-                          }}
-                          className="mr-2 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">なし</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="containsSpoiler"
-                          value="true"
-                          checked={editFormData.containsSpoiler}
-                          onChange={(e) => {
-                            console.log('ネタバレあり選択:', e.target.value);
-                            console.log('設定前のeditFormData:', editFormData);
-                            const newValue = e.target.value === 'true';
-                            console.log('設定する値:', newValue);
-                            setEditFormData({
-                              ...editFormData,
-                              containsSpoiler: newValue
-                            });
-                            console.log('設定後のeditFormData:', { ...editFormData, containsSpoiler: newValue });
-                          }}
-                          className="mr-2 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">あり</span>
-                      </label>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      ネタバレを含む場合は、タイムラインで他のユーザーに表示されないように設定できます
-                    </p>
-                  </div>
+
 
                   {/* 編集ボタン */}
                   <div className="flex space-x-2 pt-4">
@@ -976,17 +913,7 @@ ${action}
                 </>
               )}
 
-              {/* ネタバレ設定（ネタバレありの場合のみ表示） */}
-              {record.containsSpoiler && (
-                <div className="mb-4">
-                  <h4 className="font-medium text-gray-700 mb-2">⚠️ ネタバレあり</h4>
-                  <div className="min-h-[60px] bg-red-50 p-3 rounded-lg border-l-4 border-red-400 flex items-center">
-                    <p className="text-gray-800">
-                      この投稿はネタバレを含むため、タイムラインで他のユーザーに表示されません
-                    </p>
-                  </div>
-                </div>
-              )}
+
 
 
 
@@ -1012,6 +939,7 @@ ${action}
         </div>
       )}
     </div>
+    <div className="pb-20"></div>
   );
 }
 
