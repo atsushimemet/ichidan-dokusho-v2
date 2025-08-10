@@ -19,6 +19,13 @@ const BottomNavigationBar: React.FC = () => {
   
   console.log('🔍 Navigation state:', { isAuthenticated, currentPath: location.pathname });
   
+  // GitHubイシュー#175: Google One Tapとの重複防止のため認証画面で非表示
+  const isAuthScreen = location.pathname === '/auth';
+  if (isAuthScreen) {
+    console.log('🚫 Auth screen detected - hiding Bottom Navigation Bar for Google One Tap');
+    return null;
+  }
+  
   const navigationItems: NavigationItem[] = [
     {
       id: 'mypage',

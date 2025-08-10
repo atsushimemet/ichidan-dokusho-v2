@@ -7,6 +7,15 @@ import { trackError, trackUserLogin } from '../utils/analytics';
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  
+  // Google One Tap デバッグ用
+  React.useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    console.log('🔍 AuthScreen mounted');
+    console.log('🔍 Google Client ID:', clientId);
+    console.log('🔍 Current URL:', window.location.href);
+    console.log('🔍 User Agent (Mobile check):', /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop');
+  }, []);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
@@ -44,7 +53,9 @@ const AuthScreen: React.FC = () => {
   };
 
   const handleGoogleError = () => {
-    console.error('Google login failed');
+    console.error('🚨 Google login failed');
+    console.error('🚨 User Agent:', navigator.userAgent);
+    console.error('🚨 Current URL:', window.location.href);
     trackError('google_login_failed', 'Google OAuth error');
     alert('Google認証に失敗しました。もう一度お試しください。');
   };
@@ -65,7 +76,6 @@ const AuthScreen: React.FC = () => {
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            useOneTap
           />
         </div>
 
