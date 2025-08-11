@@ -7,6 +7,8 @@
 ```
 docs/
 ├── README.md                    # このファイル
+├── user-guide/                 # ユーザー向けガイド
+│   └── service-overview.md     # サービス概要・利用ガイド
 ├── api/                        # API関連ドキュメント
 │   └── endpoints.md            # APIエンドポイント仕様
 ├── deployment/                 # デプロイ関連
@@ -34,6 +36,7 @@ docs/
 
 | やりたいこと | 参照ドキュメント |
 |------------|----------------|
+| サービスの概要を知りたい | [user-guide/service-overview.md](./user-guide/service-overview.md) |
 | 開発環境を構築したい | [development/getting-started.md](./development/getting-started.md) |
 | 本番環境にデプロイしたい | [deployment/production-guide.md](./deployment/production-guide.md) |
 | データベースを更新したい | [migrations/how-to-migrate.md](./migrations/how-to-migrate.md) |
