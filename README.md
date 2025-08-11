@@ -40,6 +40,7 @@ open http://localhost:3003
 | ドキュメント | 説明 |
 |------------|------|
 | [📖 ドキュメント索引](./docs/README.md) | 全ドキュメントの目次・検索ガイド |
+| [👥 ユーザーガイド](./docs/user-guide/service-overview.md) | サービス概要・利用方法 |
 | [🚀 開発環境セットアップ](./docs/development/getting-started.md) | 開発を始めるための手順 |
 | [📡 API仕様書](./docs/api/endpoints.md) | バックエンドAPI詳細 |
 | [🗄️ マイグレーション手順](./docs/migrations/how-to-migrate.md) | データベース更新方法 |
@@ -50,6 +51,7 @@ open http://localhost:3003
 
 | やりたいこと | 参照ドキュメント |
 |------------|----------------|
+| サービスについて知りたい | [service-overview.md](./docs/user-guide/service-overview.md) |
 | 開発を始めたい | [getting-started.md](./docs/development/getting-started.md) |
 | APIの使い方を知りたい | [endpoints.md](./docs/api/endpoints.md) |
 | データベースを更新したい | [how-to-migrate.md](./docs/migrations/how-to-migrate.md) |
