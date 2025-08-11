@@ -38,6 +38,14 @@ function InputForm() {
     id: number;
     theme_name: string;
   }>>([]);
+
+  // GPT下書き生成用のstate
+  const [isDraftGenerating, setIsDraftGenerating] = useState(false);
+  const [draftResult, setDraftResult] = useState<{
+    learningInsights: string;
+    actionPlan?: string;
+  } | null>(null);
+  const [showDraftAreas, setShowDraftAreas] = useState(false);
   
   // Amazon検索機能は無効化（503エラー対応）
   // const [amazonSearchResults, setAmazonSearchResults] = useState<Array<{
@@ -418,6 +426,62 @@ function InputForm() {
     } catch (error) {
       console.error('テーマ取得エラー:', error);
     }
+  };
+
+  // GPT下書き生成のモックハンドラー（Phase2: モックUI実装）
+  const handleGenerateDraft = async () => {
+    if (!formData.learning?.trim()) {
+      alert('今日の学びを入力してください。');
+      return;
+    }
+
+    setIsDraftGenerating(true);
+    
+    // モックデータでの応答をシミュレート（2秒後に表示）
+    setTimeout(() => {
+      const mockLearningInsights = `【${formData.title || 'この本'}からの学びと気づき】
+
+${formData.learning}から得られた核心的なポイントを整理すると、以下の3つの重要な洞察が浮かび上がります：
+
+1. **実践的な価値**: この学びは日常生活や仕事において、具体的な改善をもたらす実用性の高い知識です。
+
+2. **継続的な成長**: 一時的な理解ではなく、長期的な成長と発展に寄与する基盤となる洞察です。
+
+3. **応用可能性**: この学びは複数の場面や状況に応用でき、柔軟な思考力を育む要素を含んでいます。
+
+これらの気づきを通じて、あなたの認識や行動パターンに新たな視点が加わり、より効果的な判断や行動につながることが期待できます。`;
+
+      let mockActionPlan: string | undefined = undefined;
+      
+      if (formData.action?.trim()) {
+        mockActionPlan = `【具体的な実行プラン】
+
+現在設定されているアクション「${formData.action}」を、より実行可能で測定可能なステップに分解します：
+
+**今日から始める小さなステップ:**
+• 明日の朝、まず5分間この学びについて振り返る時間を作る
+• ${formData.action}を実行するための具体的な準備を今日中に整える
+• 実行した結果を記録するための簡単なメモ環境を用意する
+
+**継続のための工夫:**
+• 週末に今週の実行状況を振り返る時間を15分間設ける
+• うまくいかなかった場合の代替案を事前に2つ準備しておく
+• 成功した時の自分への小さなご褒美を設定する
+
+**成功の指標:**
+• 1週間継続できた場合は「習慣化の第一段階クリア」
+• 2週間継続できた場合は「定着化成功」として次のレベルに進む
+
+このプランにより、学びを実際の行動変化につなげ、持続可能な成長サイクルを構築できます。`;
+      }
+
+      setDraftResult({
+        learningInsights: mockLearningInsights,
+        actionPlan: mockActionPlan
+      });
+      setShowDraftAreas(true);
+      setIsDraftGenerating(false);
+    }, 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -882,56 +946,67 @@ function InputForm() {
         <div>
           <button
             type="button"
-            onClick={() => {
-              if (formData.action?.trim()) {
-                const prompt = `以下の読書から得た学びとアクションについて、学んだ内容の整理と具体的で実行可能なアクションに深掘りしてください。
-
-【読んだ本】
-${formData.title || '書籍名未入力'}
-
-【今日の学び】
-${formData.learning || '学び未入力'}
-
-【現在のアクション】
-${formData.action}
-
-【お願い】
-1. 学んだ内容を1000文字以内のテキストで整理し、核心的なポイントを明確にしてください
-2. 整理された学びを基に、現在のアクションをより具体的で実行可能なステップに分解してください
-3. いつ、どこで、どのように実行するかを明確にしてください
-4. 成功の指標や確認方法も含めてください
-5. 必要に応じて、複数の小さなアクションに分けてください
-
-学んだ内容の整理と実践的で継続可能なアクションプランを作成してください。`;
-
-                navigator.clipboard.writeText(prompt).then(() => {
-                  window.open('https://chat.openai.com/', '_blank');
-                }).catch(err => {
-                  console.error('クリップボードへのコピーに失敗しました:', err);
-                  const textArea = document.createElement('textarea');
-                  textArea.value = prompt;
-                  document.body.appendChild(textArea);
-                  textArea.select();
-                  document.execCommand('copy');
-                  document.body.removeChild(textArea);
-                  window.open('https://chat.openai.com/', '_blank');
-                });
-              } else {
-                alert('明日の小さなアクションを入力してからお試しください。');
-              }
-            }}
-            disabled={!formData.action?.trim()}
+            onClick={handleGenerateDraft}
+            disabled={!formData.learning?.trim() || isDraftGenerating}
             className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-600 hover:to-indigo-600 focus:ring-4 focus:ring-purple-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            <span>ChatGPTで学びとアクションを整理</span>
+            {isDraftGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>下書きを生成中...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>下書きを生成する</span>
+              </>
+            )}
           </button>
           <p className="text-xs text-gray-500 mt-1 text-center">
-            学びとアクションを入力後、このボタンを押すとChatGPTで学んだ内容を整理し、具体的なアクションプランを作成できます
+            学びを入力後、このボタンを押すとアプリ内で下書きを生成できます
           </p>
         </div>
+
+        {/* 9. 生成された下書きテキストエリア（条件付き表示） */}
+        {showDraftAreas && draftResult && (
+          <div className="space-y-4">
+            {/* 今日の学び・気づき by GPT */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                9-1. 今日の学び・気づき by GPT
+              </label>
+              <textarea
+                value={draftResult.learningInsights}
+                readOnly
+                rows={12}
+                className="w-full px-4 py-3 border border-green-300 bg-green-50 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                GPTが生成した学びの整理です。必要に応じて編集してご活用ください。
+              </p>
+            </div>
+
+            {/* 明日の小さなアクション by GPT（actionが入力されている場合のみ表示） */}
+            {draftResult.actionPlan && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  9-2. 明日の小さなアクション by GPT
+                </label>
+                <textarea
+                  value={draftResult.actionPlan}
+                  readOnly
+                  rows={10}
+                  className="w-full px-4 py-3 border border-blue-300 bg-blue-50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  GPTが生成したアクションプランです。あなたの状況に合わせて調整してください。
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 送信ボタン */}
         <div className="pt-4 pb-20">
