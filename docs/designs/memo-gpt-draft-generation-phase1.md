@@ -62,7 +62,27 @@ interface FormData {
 }
 ```
 
-## gpt-oss-20b API統合アーキテクチャ設計
+## GPT-OSS-20B統合アーキテクチャ設計
+
+### GPT-OSS-20Bの実際の仕様
+- **モデルサイズ**: 21.5Bパラメータ
+- **ライセンス**: Apache 2.0
+- **推論レベル**: Low, Medium, High（設定可能な reasoning effort）
+- **特徴**: Full chain-of-thought reasoning、agentic capabilities
+- **レスポンス形式**: harmony response format使用
+
+### 推論方法の選択肢
+1. **vLLM（推奨）**: OpenAI互換webserver
+   - インストール: `uv pip install --pre vllm`
+   - OpenAI互換APIを提供、既存SDKパターン活用可能
+
+2. **Ollama**: ローカル実行
+   - セットアップ: `ollama pull gpt-oss:20b`
+   - ローカル開発・テスト環境向け
+
+3. **Transformers**: 直接Python統合
+   - インストール: `pip install -U transformers kernels torch`
+   - カスタム統合が必要
 
 ### APIエンドポイント設計
 ```
@@ -140,7 +160,7 @@ app.post('/api/gpt-draft-generation', authenticateToken, async (req, res) => {
 });
 ```
 
-#### gpt-oss-20b統合サービス
+#### GPT-OSS-20B統合サービス設計
 ```typescript
 // 新規作成予定: backend/src/services/gptService.ts
 interface GPTServiceRequest {
@@ -150,18 +170,34 @@ interface GPTServiceRequest {
 }
 
 class GPTService {
+  private apiUrl: string;      // vLLM OpenAI互換サーバーのURL
+  private model: string;       // 'gpt-oss-20b'
+  private reasoningLevel: 'low' | 'medium' | 'high';
+
+  constructor() {
+    this.apiUrl = process.env.VLLM_API_URL || 'http://localhost:8000';
+    this.model = 'gpt-oss-20b';
+    this.reasoningLevel = 'medium'; // デフォルト推論レベル
+  }
+
   async generateDraft(request: GPTServiceRequest): Promise<GPTDraftResponse['data']> {
-    // gpt-oss-20bへのAPIリクエスト
-    // プロンプト生成とレスポンス解析
+    // vLLMのOpenAI互換APIを使用
+    // harmony response formatでのプロンプト設計
+    // chain-of-thought reasoningの活用
   }
 }
 ```
 
-## プロンプト戦略
+## プロンプト戦略（GPT-OSS-20B対応）
 
-### 学び・気づき生成プロンプト
+### Harmony Response Formatの活用
+GPT-OSS-20Bの特徴であるharmony response formatを活用し、structured outputと chain-of-thought reasoning を組み合わせる。
+
+### 学び・気づき生成プロンプト（更新版）
 ```
-以下の読書記録から、今日の学びを1000文字以内で整理してください。
+あなたは読書記録の整理を専門とするAIアシスタントです。以下の読書記録から、今日の学びを体系的に整理してください。
+
+<reasoning_level>medium</reasoning_level>
 
 【読んだ本】
 ${title}
@@ -169,15 +205,34 @@ ${title}
 【今日の学び】
 ${learning}
 
+【タスク】
+以下の観点から学びを分析し、1000文字以内で構造化して整理してください：
+1. 実践的な価値の分析
+2. 長期的な成長への寄与
+3. 他領域への応用可能性
+
+【出力形式】
+以下のマークダウン形式で出力してください：
+
+【${title}からの学びと気づき】
+
+<思考過程>
+（あなたの分析プロセスをここに記載）
+</思考過程>
+
+（整理された学びの内容）
+
 【要求】
-- 学びの核心的なポイントを明確に
-- 実践的で活用可能な知識として整理
-- 読み手にとって価値のある洞察を提供
+- chain-of-thought reasoning を活用した深い分析
+- harmony response format に準拠した構造化出力
+- 実践的で価値のある洞察の提供
 ```
 
-### アクション生成プロンプト（actionが入力されている場合のみ）
+### アクション生成プロンプト（更新版）
 ```
-以下の読書記録とアクションプランから、具体的で実行可能な明日の小さなアクションを提案してください。
+あなたは行動計画の最適化を専門とするAIアシスタントです。以下の情報から、実行可能な行動計画を設計してください。
+
+<reasoning_level>high</reasoning_level>
 
 【読んだ本】
 ${title}
@@ -188,10 +243,24 @@ ${learning}
 【現在のアクション】
 ${action}
 
+【タスク】
+現在のアクションを分析し、より具体的で実行可能なステップに最適化してください。
+
+【出力形式】
+以下のマークダウン形式で出力してください：
+
+【具体的な実行プラン】
+
+<分析プロセス>
+（現在のアクションの分析と改善点の特定）
+</分析プロセス>
+
+（最適化されたアクションプラン）
+
 【要求】
-- より具体的で実行可能なステップに分解
-- いつ、どこで、どのように実行するかを明確に
-- 成功の指標や確認方法を含める
+- chain-of-thought reasoning による段階的な分析
+- SMART原則（Specific, Measurable, Achievable, Relevant, Time-bound）の適用
+- 継続可能性を考慮した実践的な提案
 ```
 
 ## エラーハンドリング設計

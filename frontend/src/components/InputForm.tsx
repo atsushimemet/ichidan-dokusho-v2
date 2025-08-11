@@ -428,7 +428,7 @@ function InputForm() {
     }
   };
 
-  // GPT下書き生成のモックハンドラー（Phase2: モックUI実装）
+  // GPT下書き生成のAPIハンドラー（Phase3: API統合実装）
   const handleGenerateDraft = async () => {
     if (!formData.learning?.trim()) {
       alert('今日の学びを入力してください。');
@@ -437,51 +437,74 @@ function InputForm() {
 
     setIsDraftGenerating(true);
     
-    // モックデータでの応答をシミュレート（2秒後に表示）
-    setTimeout(() => {
-      const mockLearningInsights = `【${formData.title || 'この本'}からの学びと気づき】
-
-${formData.learning}から得られた核心的なポイントを整理すると、以下の3つの重要な洞察が浮かび上がります：
-
-1. **実践的な価値**: この学びは日常生活や仕事において、具体的な改善をもたらす実用性の高い知識です。
-
-2. **継続的な成長**: 一時的な理解ではなく、長期的な成長と発展に寄与する基盤となる洞察です。
-
-3. **応用可能性**: この学びは複数の場面や状況に応用でき、柔軟な思考力を育む要素を含んでいます。
-
-これらの気づきを通じて、あなたの認識や行動パターンに新たな視点が加わり、より効果的な判断や行動につながることが期待できます。`;
-
-      let mockActionPlan: string | undefined = undefined;
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       
-      if (formData.action?.trim()) {
-        mockActionPlan = `【具体的な実行プラン】
+      // タイムアウト設定付きでfetch実行（60秒）
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      
+      const response = await fetch(`${API_BASE_URL}/api/gpt-draft-generation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: formData.title || 'この本',
+          learning: formData.learning,
+          action: formData.action
+        }),
+        signal: controller.signal
+      });
 
-現在設定されているアクション「${formData.action}」を、より実行可能で測定可能なステップに分解します：
+      clearTimeout(timeoutId);
 
-**今日から始める小さなステップ:**
-• 明日の朝、まず5分間この学びについて振り返る時間を作る
-• ${formData.action}を実行するための具体的な準備を今日中に整える
-• 実行した結果を記録するための簡単なメモ環境を用意する
-
-**継続のための工夫:**
-• 週末に今週の実行状況を振り返る時間を15分間設ける
-• うまくいかなかった場合の代替案を事前に2つ準備しておく
-• 成功した時の自分への小さなご褒美を設定する
-
-**成功の指標:**
-• 1週間継続できた場合は「習慣化の第一段階クリア」
-• 2週間継続できた場合は「定着化成功」として次のレベルに進む
-
-このプランにより、学びを実際の行動変化につなげ、持続可能な成長サイクルを構築できます。`;
+      // HTTPステータスエラーのチェック
+      if (!response.ok) {
+        if (response.status === 401) {
+          alert('認証が必要です。ログインしてから再度お試しください。');
+          return;
+        } else if (response.status === 400) {
+          alert('入力データに問題があります。入力内容を確認してください。');
+          return;
+        } else if (response.status >= 500) {
+          alert('サーバーエラーが発生しました。しばらく待ってから再度お試しください。');
+          return;
+        } else {
+          alert(`エラーが発生しました (${response.status})`);
+          return;
+        }
       }
 
-      setDraftResult({
-        learningInsights: mockLearningInsights,
-        actionPlan: mockActionPlan
-      });
-      setShowDraftAreas(true);
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setDraftResult({
+          learningInsights: result.data.learningInsights,
+          actionPlan: result.data.actionPlan
+        });
+        setShowDraftAreas(true);
+      } else {
+        alert(`下書き生成に失敗しました: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Draft generation error:', error);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          alert('下書き生成がタイムアウトしました。しばらく待ってから再度お試しください。');
+        } else if (error.message.includes('Failed to fetch')) {
+          alert('ネットワーク接続を確認してください。');
+        } else {
+          alert(`下書き生成に失敗しました: ${error.message}`);
+        }
+      } else {
+        alert('下書き生成に失敗しました。再度お試しください。');
+      }
+    } finally {
       setIsDraftGenerating(false);
-    }, 2000);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

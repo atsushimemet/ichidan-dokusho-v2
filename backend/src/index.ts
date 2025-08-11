@@ -2,6 +2,7 @@ import axios from 'axios';
 import cors from 'cors';
 import express from 'express';
 import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
+import { gptService } from './services/gptService';
 import {
     createReadingRecord,
     createWishlistItem,
@@ -1265,6 +1266,48 @@ app.delete('/api/prompt-templates/:mode', authenticateToken, async (req, res) =>
     res.status(500).json({
       message: 'Error resetting prompt template',
       error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GPT下書き生成API (Phase3実装)
+app.post('/api/gpt-draft-generation', authenticateToken, async (req, res) => {
+  try {
+    const { title, learning, action } = req.body;
+    const userId = req.user?.userId || req.user?.sub;
+
+    // バリデーション
+    if (!title || !learning) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title and learning are required'
+      });
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'User authentication required'
+      });
+    }
+
+    // gpt-oss-20b APIサービスとの統合
+    const response = await gptService.generateDraft({
+      title,
+      learning,
+      action
+    });
+
+    // レスポンス形式をPhase1設計に合わせる
+    res.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    console.error('GPT draft generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'GPT API呼び出しに失敗しました'
     });
   }
 });
