@@ -3,13 +3,17 @@ import cors from 'cors';
 import express from 'express';
 import { authenticateToken, generateToken, verifyGoogleToken } from './auth';
 import {
+    createBook,
     createReadingRecord,
     createWishlistItem,
     createWritingTheme,
+    deleteBook,
     deleteReadingRecord,
     deleteUserPromptTemplate,
     deleteWishlistItem,
     deleteWritingTheme,
+    getAllBooks,
+    getAllTags,
     getAllThemeReadingStats,
     getDailyThemeReadingTrends,
     getPromptTemplate,
@@ -1436,6 +1440,99 @@ const startServer = async () => {
     });
   }
 };
+
+// 管理者認証ミドルウェア
+const authenticateAdmin = (req: any, res: any, next: any) => {
+  const { username, password } = req.body;
+  
+  if (username === 'noap3b69n' && password === '19930322') {
+    next();
+  } else {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+// 書籍登録API
+app.post('/api/admin/books', authenticateAdmin, async (req, res) => {
+  try {
+    const { title, amazon_link, tags } = req.body;
+    
+    if (!title || !amazon_link) {
+      return res.status(400).json({ error: 'Title and Amazon link are required' });
+    }
+
+    const result = await createBook({ 
+      title, 
+      amazon_link, 
+      tags: tags || [] 
+    });
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Book creation error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 書籍一覧取得API
+app.get('/api/books', async (req, res) => {
+  try {
+    const result = await getAllBooks();
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Get books error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 書籍削除API
+app.delete('/api/admin/books/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, password } = req.headers;
+    
+    // 管理者認証
+    if (username !== 'noap3b69n' || password !== '19930322') {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const result = await deleteBook(parseInt(id));
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Delete book error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// タグ一覧取得API
+app.get('/api/tags', async (req, res) => {
+  try {
+    const result = await getAllTags();
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Get tags error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // グレースフルシャットダウン
 process.on('SIGTERM', () => {

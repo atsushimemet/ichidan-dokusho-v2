@@ -910,4 +910,127 @@ export const updateWishlistItem = async (itemId: number, userId: string, updates
   }
 };
 
+// 書籍の型定義
+export interface Book {
+  id?: number;
+  title: string;
+  amazon_link: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// タグの型定義
+export interface Tag {
+  id?: number;
+  name: string;
+  created_at?: string;
+}
+
+// 書籍とタグの関連情報を含む型
+export interface BookWithTags extends Book {
+  tags: Tag[];
+}
+
+// 書籍を作成
+export const createBook = async (bookData: { title: string; amazon_link: string; tags: string[] }) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 書籍を作成
+    const bookQuery = `
+      INSERT INTO books (title, amazon_link)
+      VALUES ($1, $2)
+      RETURNING *
+    `;
+    const bookResult = await client.query(bookQuery, [bookData.title, bookData.amazon_link]);
+    const book = bookResult.rows[0];
+
+    // タグを処理
+    if (bookData.tags && bookData.tags.length > 0) {
+      for (const tagName of bookData.tags) {
+        // タグが存在しない場合は作成
+        const tagQuery = `
+          INSERT INTO tags (name) 
+          VALUES ($1) 
+          ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+          RETURNING id
+        `;
+        const tagResult = await client.query(tagQuery, [tagName.trim()]);
+        const tagId = tagResult.rows[0].id;
+
+        // 書籍とタグを関連付け
+        const bookTagQuery = `
+          INSERT INTO book_tags (book_id, tag_id)
+          VALUES ($1, $2)
+          ON CONFLICT (book_id, tag_id) DO NOTHING
+        `;
+        await client.query(bookTagQuery, [book.id, tagId]);
+      }
+    }
+
+    await client.query('COMMIT');
+    return { success: true, data: book };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Create book error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  } finally {
+    client.release();
+  }
+};
+
+// 全ての書籍を取得（タグ付き）
+export const getAllBooks = async () => {
+  try {
+    const query = `
+      SELECT 
+        b.*,
+        COALESCE(
+          json_agg(
+            json_build_object('id', t.id, 'name', t.name, 'created_at', t.created_at)
+          ) FILTER (WHERE t.id IS NOT NULL),
+          '[]'::json
+        ) as tags
+      FROM books b
+      LEFT JOIN book_tags bt ON b.id = bt.book_id
+      LEFT JOIN tags t ON bt.tag_id = t.id
+      GROUP BY b.id
+      ORDER BY b.created_at DESC
+    `;
+    const result = await pool.query(query);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get books error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 書籍を削除
+export const deleteBook = async (id: number) => {
+  try {
+    const query = 'DELETE FROM books WHERE id = $1 RETURNING *';
+    const result = await pool.query(query, [id]);
+    if (result.rows.length === 0) {
+      return { success: false, error: 'Book not found' };
+    }
+    return { success: true, data: result.rows[0] };
+  } catch (error) {
+    console.error('Delete book error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+// 全てのタグを取得
+export const getAllTags = async () => {
+  try {
+    const query = 'SELECT * FROM tags ORDER BY name ASC';
+    const result = await pool.query(query);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get tags error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
 export default pool; 
