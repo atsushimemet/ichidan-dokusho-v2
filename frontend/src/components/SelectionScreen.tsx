@@ -51,21 +51,27 @@ const SelectionScreen: React.FC = () => {
           </div>
         )}
 
-        <div className="space-y-4">
-          {/* タイムライン機能除却: 「見るだけ」ボタンを削除 */}
-          {/* プライバシー保護のため、認証不要アクセスを完全停止 */}
-          
-          <button
-            onClick={handleUse}
-            className="w-full bg-orange-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-orange-600 transition-colors"
-          >
-            ✍️ はじめる
-          </button>
-        </div>
+        {/* WebView環境では「はじめる」ボタンを非表示 */}
+        {!isWebView() && (
+          <div className="space-y-4">
+            {/* タイムライン機能除却: 「見るだけ」ボタンを削除 */}
+            {/* プライバシー保護のため、認証不要アクセスを完全停止 */}
+            
+            <button
+              onClick={handleUse}
+              className="w-full bg-orange-500 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-orange-600 transition-colors"
+            >
+              ✍️ はじめる
+            </button>
+          </div>
+        )}
 
-        <div className="mt-8 text-center text-xs text-gray-500">
-          <p>「はじめる」: Google認証でログインして、あなただけの読書記録を作成</p>
-        </div>
+        {/* WebView環境では説明文も非表示 */}
+        {!isWebView() && (
+          <div className="mt-8 text-center text-xs text-gray-500">
+            <p>「はじめる」: Google認証でログインして、あなただけの読書記録を作成</p>
+          </div>
+        )}
       </div>
     </div>
   );
