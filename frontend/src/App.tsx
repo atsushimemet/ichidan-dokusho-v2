@@ -76,9 +76,17 @@ function AppContent() {
           </div>
         </button>
         
+        {/* メニューバックドロップオーバーレイ */}
+        {isMenuOpen && (
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={() => setIsMenuOpen(false)}
+          />
+        )}
+        
         {/* ドロップダウンメニュー */}
         {isMenuOpen && (
-          <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-orange-100 min-w-64 max-w-80">
+          <div className="absolute top-full right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl border border-orange-100 min-w-64 max-w-80 z-50">
             <div className="py-2">
               {!isAuthenticated && (
                 <Link
