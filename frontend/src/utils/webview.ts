@@ -4,62 +4,37 @@
 
 /**
  * 現在の環境がWebViewかどうかを判定
+ * メモに基づいたシンプルな検知ロジック
  * @returns WebViewの場合true、通常のブラウザの場合false
  */
 export const isWebView = (): boolean => {
-  const userAgent = navigator.userAgent;
+  const ua = navigator.userAgent.toLowerCase();
   
-  // Android WebView検知
-  if (userAgent.includes('Android')) {
-    // Android 5.0以上: "wv"フィールドで判定
-    if (userAgent.includes('wv')) {
-      return true;
-    }
-    
-    // Android 4.4以下: "Version/"フィールドで判定
-    if (userAgent.includes('Version/') && userAgent.includes('Chrome')) {
-      return true;
-    }
-    
-    // Chrome以外のブラウザはWebViewの可能性が高い
-    if (!userAgent.includes('Chrome') && userAgent.includes('Mobile')) {
+  // メモに基づく簡素化されたアプリ内ブラウザ検知
+  const isInApp = /line|twitter|fbav|instagram|x\.com|micromessenger|whatsapp/.test(ua);
+  
+  if (isInApp) {
+    return true;
+  }
+  
+  // Android WebView検知（従来のロジックを維持）
+  if (ua.includes('android')) {
+    if (ua.includes('wv') || 
+        (ua.includes('version/') && ua.includes('chrome')) ||
+        (!ua.includes('chrome') && ua.includes('mobile'))) {
       return true;
     }
   }
   
-  // iOS WebView検知
-  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-    // Safari以外のアプリ内ブラウザ（WebView）
-    if (!userAgent.includes('Safari')) {
-      return true;
-    }
-    
-    // Safari内でもWebViewの場合がある
-    if (userAgent.includes('WebView')) {
-      return true;
-    }
-    
-    // LINE, Twitter, Instagram等の特定アプリ検知
-    if (userAgent.includes('Line/') || 
-        userAgent.includes('FBAN/') || 
-        userAgent.includes('FBAV/') ||
-        userAgent.includes('Instagram') ||
-        userAgent.includes('Twitter') ||
-        userAgent.includes('X.com') || // X (旧Twitter)
-        userAgent.includes('LINE/') || // LINE追加検知
-        userAgent.includes('MicroMessenger') || // WeChat
-        userAgent.includes('WhatsApp')) {
-      return true;
-    }
-    
-    // CriOS（Chrome for iOS）もWebViewとして扱う場合がある
-    if (userAgent.includes('CriOS/')) {
+  // iOS WebView検知（従来のロジックを維持）
+  if (ua.includes('iphone') || ua.includes('ipad')) {
+    if (!ua.includes('safari') || ua.includes('webview') || ua.includes('crios/')) {
       return true;
     }
   }
   
   // Desktop環境でのWebView検知（Electron等）
-  if (userAgent.includes('Electron/')) {
+  if (ua.includes('electron/')) {
     return true;
   }
   
