@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import AuthScreen from './components/AuthScreen';
+import BookRegisterPage from './components/BookRegisterPage';
 import Dashboard from './components/Dashboard';
 import DraftOutputPage from './components/DraftOutputPage';
 import InputForm from './components/InputForm';
@@ -220,6 +221,7 @@ function AppContent() {
             <SettingsPage />
           </div>
         } />
+        <Route path="/admin/register" element={<BookRegisterPage />} />
 
       </Routes>
       
