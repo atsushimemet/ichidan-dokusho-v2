@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { trackError, trackUserLogin } from '../utils/analytics';
-import { isWebView, getWebViewInfo, showBrowserOpenPrompt, handleExternalBrowserOpen } from '../utils/webview';
+import { isWebView, getWebViewInfo, handleExternalBrowserOpen } from '../utils/webview';
 
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();

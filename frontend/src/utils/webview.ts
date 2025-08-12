@@ -81,7 +81,6 @@ export const getWebViewInfo = () => {
  */
 export const openInBrowser = (url?: string) => {
   const targetUrl = url || window.location.href;
-  const userAgent = navigator.userAgent;
   
   console.log('🚀 Opening URL in external browser from WebView:', targetUrl);
   
