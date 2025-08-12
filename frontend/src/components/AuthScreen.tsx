@@ -3,18 +3,33 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { trackError, trackUserLogin } from '../utils/analytics';
+import { isWebView, getWebViewInfo, showBrowserOpenPrompt } from '../utils/webview';
 
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   
-  // Google One Tap デバッグ用
+  // WebView検知とデバッグ用
   React.useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const webViewInfo = getWebViewInfo();
+    
     console.log('🔍 AuthScreen mounted');
     console.log('🔍 Google Client ID:', clientId);
     console.log('🔍 Current URL:', window.location.href);
-    console.log('🔍 User Agent (Mobile check):', /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop');
+    console.log('🔍 WebView Info:', webViewInfo);
+    
+    // WebView環境の場合、ブラウザで開くことを促す
+    if (webViewInfo.isWebView) {
+      console.log('⚠️ WebView detected:', webViewInfo.webViewType);
+      // 自動的にブラウザオープンを促す（3秒後）
+      setTimeout(() => {
+        showBrowserOpenPrompt(() => {
+          // ブラウザで開いた後のトラッキング
+          trackError('webview_browser_redirect', `${webViewInfo.webViewType} -> Browser`);
+        });
+      }, 3000);
+    }
   }, []);
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
@@ -71,6 +86,29 @@ const AuthScreen: React.FC = () => {
           読書記録を投稿するには<br />
           Googleアカウントでログインしてください
         </p>
+
+        {/* WebView検知時の注意メッセージ */}
+        {isWebView() && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <span className="text-yellow-600 mr-2">⚠️</span>
+              <div>
+                <p className="text-sm text-yellow-800 font-medium mb-1">
+                  アプリ内ブラウザで開いています
+                </p>
+                <p className="text-xs text-yellow-700">
+                  ログインできない場合は、外部ブラウザで開いてください
+                </p>
+                <button
+                  onClick={() => showBrowserOpenPrompt()}
+                  className="text-xs text-yellow-800 underline hover:text-yellow-900 mt-2"
+                >
+                  → 外部ブラウザで開く
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-center mb-6">
           <GoogleLogin

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookIcon from './BookIcon';
+import { isWebView, showBrowserOpenPrompt } from '../utils/webview';
 
 const SelectionScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,29 @@ const SelectionScreen: React.FC = () => {
           完璧じゃなくていい。<br />
           1ページの前進が、思考と行動を変えていく。
         </p>
+
+        {/* WebView検知時の注意メッセージ */}
+        {isWebView() && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <span className="text-yellow-600 mr-2">⚠️</span>
+              <div>
+                <p className="text-sm text-yellow-800 font-medium mb-1">
+                  アプリ内ブラウザで開いています
+                </p>
+                <p className="text-xs text-yellow-700">
+                  ログイン機能を正常に利用するには外部ブラウザをご利用ください
+                </p>
+                <button
+                  onClick={() => showBrowserOpenPrompt()}
+                  className="text-xs text-yellow-800 underline hover:text-yellow-900 mt-2"
+                >
+                  → 外部ブラウザで開く
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           {/* タイムライン機能除却: 「見るだけ」ボタンを削除 */}
