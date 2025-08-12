@@ -76,66 +76,23 @@ export const getWebViewInfo = () => {
 };
 
 /**
- * プラットフォーム別に最適化されたブラウザオープン機能
+ * WebView環境でのみ使用する外部ブラウザオープン機能
+ * 通常のWebアプリでは使用されない
  */
 export const openInBrowser = (url?: string) => {
   const targetUrl = url || window.location.href;
-  const userAgent = navigator.userAgent;
   
-  console.log('🚀 Attempting to open URL in browser:', targetUrl);
+  console.log('🚀 Opening URL in external browser from WebView:', targetUrl);
   
-  // iOS環境の場合
-  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-    try {
-      // iOS: カスタムスキームを使用してSafariで開く
-      const safariUrl = `x-web-search://?${encodeURIComponent(targetUrl)}`;
-      window.location.href = safariUrl;
-      
-      // フォールバック1: 通常のwindow.open
-      setTimeout(() => {
-        const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
-        if (!newWindow) {
-          // フォールバック2: 直接遷移
-          window.location.href = targetUrl;
-        }
-      }, 500);
-      
-      return;
-    } catch (error) {
-      console.error('iOS browser open failed:', error);
-    }
-  }
-  
-  // Android環境の場合
-  if (userAgent.includes('Android')) {
-    try {
-      // Android: intent:スキームを使用
-      const intentUrl = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
-      window.location.href = intentUrl;
-      
-      // フォールバック: 通常のwindow.open
-      setTimeout(() => {
-        const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
-        if (!newWindow) {
-          window.location.href = targetUrl;
-        }
-      }, 500);
-      
-      return;
-    } catch (error) {
-      console.error('Android browser open failed:', error);
-    }
-  }
-  
-  // デスクトップ・その他の環境
   try {
-    // 通常のwindow.openを試行
+    // WebView環境での確実な外部ブラウザオープン
+    // 最もシンプルで確実な方法: window.open
     const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
     
-    // ポップアップブロック等でwindow.openが失敗した場合
+    // window.openが失敗した場合のフォールバック
     if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      console.log('⚠️ window.open blocked, using fallback');
-      // 即座にフォールバック実行
+      console.log('⚠️ window.open failed, trying direct navigation');
+      // 直接遷移（多くのWebViewで外部ブラウザに転送される）
       window.location.href = targetUrl;
     }
   } catch (error) {
@@ -147,6 +104,7 @@ export const openInBrowser = (url?: string) => {
 
 /**
  * WebView環境でのブラウザオープンを促すメッセージを表示
+ * UIコンポーネント内で手動で呼び出される
  */
 export const showBrowserOpenPrompt = (onConfirm?: () => void) => {
   const webViewInfo = getWebViewInfo();
@@ -165,6 +123,7 @@ export const showBrowserOpenPrompt = (onConfirm?: () => void) => {
 
 /**
  * WebView環境で自動的にブラウザリダイレクトを試行
+ * 自動リダイレクトは削除し、手動のみとする
  */
 export const attemptBrowserRedirect = (onSuccess?: () => void, onFailure?: () => void) => {
   const webViewInfo = getWebViewInfo();
@@ -185,4 +144,16 @@ export const attemptBrowserRedirect = (onSuccess?: () => void, onFailure?: () =>
     if (onFailure) onFailure();
     return false;
   }
+};
+
+/**
+ * 外部ブラウザオープン用のイベントハンドラ
+ * WebView環境でのボタンクリック時に使用
+ */
+export const handleExternalBrowserOpen = (event: React.MouseEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  console.log('🔗 External browser button clicked');
+  openInBrowser();
 };

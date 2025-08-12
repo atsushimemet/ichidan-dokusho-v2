@@ -3,13 +3,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { trackError, trackUserLogin } from '../utils/analytics';
-import { isWebView, getWebViewInfo, showBrowserOpenPrompt, attemptBrowserRedirect } from '../utils/webview';
+import { isWebView, getWebViewInfo, handleExternalBrowserOpen } from '../utils/webview';
 
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   
-  // WebView検知とブラウザリダイレクト処理
+  // WebView検知ログ出力のみ
   React.useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     const webViewInfo = getWebViewInfo();
@@ -19,42 +19,9 @@ const AuthScreen: React.FC = () => {
     console.log('🔍 Current URL:', window.location.href);
     console.log('🔍 WebView Info:', webViewInfo);
     
-    // WebView環境の場合の処理
     if (webViewInfo.isWebView) {
       console.log('⚠️ WebView detected:', webViewInfo.webViewType);
-      
-      // 特定のWebView環境では自動リダイレクトを試行
-      const aggressiveRedirectApps = ['LINE', 'Instagram', 'Facebook', 'Twitter/X', 'WeChat'];
-      
-      if (aggressiveRedirectApps.includes(webViewInfo.webViewType)) {
-        console.log('🚀 Attempting automatic redirect for', webViewInfo.webViewType);
-        
-        // 1秒後に自動リダイレクトを試行
-        setTimeout(() => {
-          attemptBrowserRedirect(
-            () => {
-              // 成功時のトラッキング
-              trackError('webview_auto_redirect_success', `${webViewInfo.webViewType} -> Browser`);
-            },
-            () => {
-              // 失敗時は手動プロンプトを表示
-              console.log('💬 Showing manual prompt after auto-redirect failed');
-              setTimeout(() => {
-                showBrowserOpenPrompt(() => {
-                  trackError('webview_manual_redirect', `${webViewInfo.webViewType} -> Browser`);
-                });
-              }, 1000);
-            }
-          );
-        }, 1000);
-      } else {
-        // その他のWebView環境では2秒後に手動プロンプトを表示
-        setTimeout(() => {
-          showBrowserOpenPrompt(() => {
-            trackError('webview_browser_redirect', `${webViewInfo.webViewType} -> Browser`);
-          });
-        }, 2000);
-      }
+      console.log('💬 User should use the external browser button to login');
     }
   }, []);
 
@@ -127,13 +94,12 @@ const AuthScreen: React.FC = () => {
                 <p className="text-sm text-red-800 font-medium mb-2">
                   この画面はアプリ内ブラウザではGoogleログインできません
                 </p>
-                <a 
-                  href={window.location.href}
-                  rel="noopener"
+                <button
+                  onClick={handleExternalBrowserOpen}
                   className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
                   Safari/Chromeで開く
-                </a>
+                </button>
                 <p className="text-xs text-red-700 mt-2">
                   ※ 安全なログインのため、外部ブラウザでの利用を推奨します
                 </p>
