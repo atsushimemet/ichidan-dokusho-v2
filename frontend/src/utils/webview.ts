@@ -20,12 +20,22 @@ export const isWebView = (): boolean => {
     if (userAgent.includes('Version/') && userAgent.includes('Chrome')) {
       return true;
     }
+    
+    // Chrome以外のブラウザはWebViewの可能性が高い
+    if (!userAgent.includes('Chrome') && userAgent.includes('Mobile')) {
+      return true;
+    }
   }
   
   // iOS WebView検知
   if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
     // Safari以外のアプリ内ブラウザ（WebView）
-    if (!userAgent.includes('Safari') || userAgent.includes('WebView')) {
+    if (!userAgent.includes('Safari')) {
+      return true;
+    }
+    
+    // Safari内でもWebViewの場合がある
+    if (userAgent.includes('WebView')) {
       return true;
     }
     
@@ -33,9 +43,24 @@ export const isWebView = (): boolean => {
     if (userAgent.includes('Line/') || 
         userAgent.includes('FBAN/') || 
         userAgent.includes('FBAV/') ||
-        userAgent.includes('Instagram')) {
+        userAgent.includes('Instagram') ||
+        userAgent.includes('Twitter') ||
+        userAgent.includes('X.com') || // X (旧Twitter)
+        userAgent.includes('LINE/') || // LINE追加検知
+        userAgent.includes('MicroMessenger') || // WeChat
+        userAgent.includes('WhatsApp')) {
       return true;
     }
+    
+    // CriOS（Chrome for iOS）もWebViewとして扱う場合がある
+    if (userAgent.includes('CriOS/')) {
+      return true;
+    }
+  }
+  
+  // Desktop環境でのWebView検知（Electron等）
+  if (userAgent.includes('Electron/')) {
+    return true;
   }
   
   return false;
@@ -52,13 +77,13 @@ export const getWebViewInfo = () => {
   let webViewType = 'unknown';
   
   if (isWebViewEnv) {
-    if (userAgent.includes('Line/')) {
+    if (userAgent.includes('Line/') || userAgent.includes('LINE/')) {
       webViewType = 'LINE';
     } else if (userAgent.includes('FBAN/') || userAgent.includes('FBAV/')) {
       webViewType = 'Facebook';
     } else if (userAgent.includes('Instagram')) {
       webViewType = 'Instagram';
-    } else if (userAgent.includes('Twitter')) {
+    } else if (userAgent.includes('Twitter') || userAgent.includes('X.com')) {
       webViewType = 'Twitter/X';
     } else if (userAgent.includes('Android')) {
       webViewType = 'Android WebView';
@@ -76,20 +101,68 @@ export const getWebViewInfo = () => {
 };
 
 /**
- * 現在のURLをデフォルトブラウザで開く
- * WebView環境で外部ブラウザにリダイレクトするための関数
+ * プラットフォーム別に最適化されたブラウザオープン機能
  */
 export const openInBrowser = (url?: string) => {
   const targetUrl = url || window.location.href;
+  const userAgent = navigator.userAgent;
   
+  console.log('🚀 Attempting to open URL in browser:', targetUrl);
+  
+  // iOS環境の場合
+  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+    try {
+      // iOS: カスタムスキームを使用してSafariで開く
+      const safariUrl = `x-web-search://?${encodeURIComponent(targetUrl)}`;
+      window.location.href = safariUrl;
+      
+      // フォールバック1: 通常のwindow.open
+      setTimeout(() => {
+        const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          // フォールバック2: 直接遷移
+          window.location.href = targetUrl;
+        }
+      }, 500);
+      
+      return;
+    } catch (error) {
+      console.error('iOS browser open failed:', error);
+    }
+  }
+  
+  // Android環境の場合
+  if (userAgent.includes('Android')) {
+    try {
+      // Android: intent:スキームを使用
+      const intentUrl = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+      window.location.href = intentUrl;
+      
+      // フォールバック: 通常のwindow.open
+      setTimeout(() => {
+        const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        if (!newWindow) {
+          window.location.href = targetUrl;
+        }
+      }, 500);
+      
+      return;
+    } catch (error) {
+      console.error('Android browser open failed:', error);
+    }
+  }
+  
+  // デスクトップ・その他の環境
   try {
-    // 新しいウィンドウで開く（多くのWebViewでブラウザにリダイレクトされる）
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    // 通常のwindow.openを試行
+    const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
     
-    // フォールバック: location.hrefでの直接遷移
-    setTimeout(() => {
+    // ポップアップブロック等でwindow.openが失敗した場合
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      console.log('⚠️ window.open blocked, using fallback');
+      // 即座にフォールバック実行
       window.location.href = targetUrl;
-    }, 1000);
+    }
   } catch (error) {
     console.error('Failed to open in browser:', error);
     // 最終手段: 直接遷移
@@ -104,10 +177,37 @@ export const showBrowserOpenPrompt = (onConfirm?: () => void) => {
   const webViewInfo = getWebViewInfo();
   const appName = webViewInfo.webViewType !== 'unknown' ? webViewInfo.webViewType : 'アプリ';
   
-  const message = `${appName}内のブラウザでは正常にログインできない場合があります。\n\n外部ブラウザで開きますか？`;
+  const message = `${appName}内のブラウザではGoogleログインが制限される場合があります。\n\n外部ブラウザ（Safari/Chrome）で開いてログインしますか？\n\n※より安全で確実にログインできます`;
   
   if (confirm(message)) {
+    console.log('✅ User confirmed browser redirect');
     openInBrowser();
     if (onConfirm) onConfirm();
+  } else {
+    console.log('❌ User cancelled browser redirect');
+  }
+};
+
+/**
+ * WebView環境で自動的にブラウザリダイレクトを試行
+ */
+export const attemptBrowserRedirect = (onSuccess?: () => void, onFailure?: () => void) => {
+  const webViewInfo = getWebViewInfo();
+  
+  if (!webViewInfo.isWebView) {
+    console.log('ℹ️ Not in WebView environment, skipping redirect');
+    return false;
+  }
+  
+  console.log('🔄 Attempting automatic browser redirect from WebView');
+  
+  try {
+    openInBrowser();
+    if (onSuccess) onSuccess();
+    return true;
+  } catch (error) {
+    console.error('❌ Automatic browser redirect failed:', error);
+    if (onFailure) onFailure();
+    return false;
   }
 };

@@ -3,13 +3,13 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { trackError, trackUserLogin } from '../utils/analytics';
-import { isWebView, getWebViewInfo, showBrowserOpenPrompt } from '../utils/webview';
+import { isWebView, getWebViewInfo, showBrowserOpenPrompt, attemptBrowserRedirect } from '../utils/webview';
 
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   
-  // WebView検知とデバッグ用
+  // WebView検知とブラウザリダイレクト処理
   React.useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     const webViewInfo = getWebViewInfo();
@@ -19,16 +19,42 @@ const AuthScreen: React.FC = () => {
     console.log('🔍 Current URL:', window.location.href);
     console.log('🔍 WebView Info:', webViewInfo);
     
-    // WebView環境の場合、ブラウザで開くことを促す
+    // WebView環境の場合の処理
     if (webViewInfo.isWebView) {
       console.log('⚠️ WebView detected:', webViewInfo.webViewType);
-      // 自動的にブラウザオープンを促す（3秒後）
-      setTimeout(() => {
-        showBrowserOpenPrompt(() => {
-          // ブラウザで開いた後のトラッキング
-          trackError('webview_browser_redirect', `${webViewInfo.webViewType} -> Browser`);
-        });
-      }, 3000);
+      
+      // 特定のWebView環境では自動リダイレクトを試行
+      const aggressiveRedirectApps = ['LINE', 'Instagram', 'Facebook', 'Twitter/X', 'WeChat'];
+      
+      if (aggressiveRedirectApps.includes(webViewInfo.webViewType)) {
+        console.log('🚀 Attempting automatic redirect for', webViewInfo.webViewType);
+        
+        // 1秒後に自動リダイレクトを試行
+        setTimeout(() => {
+          attemptBrowserRedirect(
+            () => {
+              // 成功時のトラッキング
+              trackError('webview_auto_redirect_success', `${webViewInfo.webViewType} -> Browser`);
+            },
+            () => {
+              // 失敗時は手動プロンプトを表示
+              console.log('💬 Showing manual prompt after auto-redirect failed');
+              setTimeout(() => {
+                showBrowserOpenPrompt(() => {
+                  trackError('webview_manual_redirect', `${webViewInfo.webViewType} -> Browser`);
+                });
+              }, 1000);
+            }
+          );
+        }, 1000);
+      } else {
+        // その他のWebView環境では2秒後に手動プロンプトを表示
+        setTimeout(() => {
+          showBrowserOpenPrompt(() => {
+            trackError('webview_browser_redirect', `${webViewInfo.webViewType} -> Browser`);
+          });
+        }, 2000);
+      }
     }
   }, []);
 
