@@ -17,8 +17,14 @@ export const isWebView = (): boolean => {
     return true;
   }
   
-  // Android WebView検知（従来のロジックを維持）
+  // Android WebView検知（通常のChromeを除外）
   if (ua.includes('android')) {
+    // Android Chrome 通常ブラウザの判定
+    if (ua.includes('chrome/') && !ua.includes('wv')) {
+      return false;
+    }
+    
+    // WebView確実な指標
     if (ua.includes('wv') || 
         (ua.includes('version/') && ua.includes('chrome')) ||
         (!ua.includes('chrome') && ua.includes('mobile'))) {
@@ -26,9 +32,20 @@ export const isWebView = (): boolean => {
     }
   }
   
-  // iOS WebView検知（従来のロジックを維持）
+  // iOS WebView検知（通常のSafari/Chromeを除外）
   if (ua.includes('iphone') || ua.includes('ipad')) {
-    if (!ua.includes('safari') || ua.includes('webview') || ua.includes('crios/')) {
+    // iOS Chrome (CriOS) は通常ブラウザなのでfalse
+    if (ua.includes('crios/')) {
+      return false;
+    }
+    
+    // iOS Safari は通常ブラウザなのでfalse
+    if (ua.includes('safari') && !ua.includes('webview')) {
+      return false;
+    }
+    
+    // その他のiOSブラウザはWebViewと判定
+    if (ua.includes('webview') || !ua.includes('safari')) {
       return true;
     }
   }
