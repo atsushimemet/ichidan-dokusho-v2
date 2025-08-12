@@ -98,7 +98,7 @@ const BookRegisterPage: React.FC = () => {
         throw new Error('書籍登録に失敗しました');
       }
 
-      const data = await response.json();
+      await response.json();
       setSuccess('書籍が正常に登録されました');
       setBookForm({ title: '', amazon_link: '', tags: [] });
     } catch (err) {
