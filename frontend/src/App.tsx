@@ -227,7 +227,7 @@ function AppContent() {
     </div>
     
     {/* Bottom Navigation Bar - 親コンテナの外側に配置 */}
-    <BottomNavigationBar />
+    <BottomNavigationBar closeMenu={() => setIsMenuOpen(false)} />
     </>
   );
 }
