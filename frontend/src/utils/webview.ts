@@ -81,24 +81,145 @@ export const getWebViewInfo = () => {
  */
 export const openInBrowser = (url?: string) => {
   const targetUrl = url || window.location.href;
+  const userAgent = navigator.userAgent.toLowerCase();
   
   console.log('🚀 Opening URL in external browser from WebView:', targetUrl);
+  console.log('🔍 User Agent:', userAgent);
+  
+  // WebView環境別の最適化されたアプローチ
+  const webViewInfo = getWebViewInfo();
+  console.log('🔍 WebView Info:', webViewInfo);
   
   try {
-    // WebView環境での確実な外部ブラウザオープン
-    // 最もシンプルで確実な方法: window.open
-    const newWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    let success = false;
     
-    // window.openが失敗した場合のフォールバック
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      console.log('⚠️ window.open failed, trying direct navigation');
-      // 直接遷移（多くのWebViewで外部ブラウザに転送される）
-      window.location.href = targetUrl;
+    // 1. iOS ブラウザ対応（Safari + Chrome）
+    if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+      console.log('📱 Trying iOS browser approaches');
+      
+      // 1a. iOS Safari専用スキーム
+      const safariUrl = `x-safari-https://${new URL(targetUrl).host}${new URL(targetUrl).pathname}${new URL(targetUrl).search}`;
+      console.log('🔗 Trying Safari scheme:', safariUrl);
+      
+      try {
+        window.location.href = safariUrl;
+        success = true;
+        console.log('✅ iOS Safari scheme redirect attempted');
+        
+        // Safariで開けなかった場合のフォールバック（短時間待機後にChrome試行）
+        setTimeout(() => {
+          if (!success) {
+            console.log('🔄 Safari failed, trying Chrome fallback');
+            
+            // 1b. iOS Chrome専用スキーム
+            const chromeUrl = targetUrl.startsWith('https://') 
+              ? `googlechromes://${new URL(targetUrl).host}${new URL(targetUrl).pathname}${new URL(targetUrl).search}`
+              : `googlechrome://${new URL(targetUrl).host}${new URL(targetUrl).pathname}${new URL(targetUrl).search}`;
+            console.log('🔗 Trying Chrome scheme:', chromeUrl);
+            
+            try {
+              window.location.href = chromeUrl;
+              console.log('✅ iOS Chrome scheme redirect attempted');
+            } catch (chromeError) {
+              console.log('❌ iOS Chrome scheme failed:', chromeError);
+              success = false;
+            }
+          }
+        }, 500);
+        
+      } catch (e) {
+        console.log('❌ iOS Safari scheme failed, trying Chrome immediately:', e);
+        
+        // Safari失敗時は即座にChrome試行
+        const chromeUrl = targetUrl.startsWith('https://') 
+          ? `googlechromes://${new URL(targetUrl).host}${new URL(targetUrl).pathname}${new URL(targetUrl).search}`
+          : `googlechrome://${new URL(targetUrl).host}${new URL(targetUrl).pathname}${new URL(targetUrl).search}`;
+        console.log('🔗 Trying Chrome scheme:', chromeUrl);
+        
+        try {
+          window.location.href = chromeUrl;
+          success = true;
+          console.log('✅ iOS Chrome scheme redirect attempted');
+        } catch (chromeError) {
+          console.log('❌ iOS Chrome scheme also failed:', chromeError);
+          success = false;
+        }
+      }
     }
+    
+    // 2. Android Chrome Intent アプローチ
+    if (!success && userAgent.includes('android')) {
+      console.log('🤖 Trying Android Chrome intent approach');
+      
+      const intentUrl = `intent://${new URL(targetUrl).host}${new URL(targetUrl).pathname}${new URL(targetUrl).search}#Intent;scheme=https;package=com.android.chrome;end`;
+      console.log('🔗 Trying Chrome intent:', intentUrl);
+      
+      try {
+        window.location.href = intentUrl;
+        success = true;
+        console.log('✅ Android Chrome intent redirect attempted');
+      } catch (e) {
+        console.log('❌ Android Chrome intent failed:', e);
+      }
+    }
+    
+    // 3. 汎用的なwindow.open試行（ポップアップブロッカー回避）
+    if (!success) {
+      console.log('🌐 Trying enhanced window.open approach');
+      
+      // より強力なwindow.openパラメータ
+      const windowFeatures = 'noopener,noreferrer,popup=no,toolbar=yes,location=yes,menubar=yes,resizable=yes,scrollbars=yes,status=yes';
+      const newWindow = window.open(targetUrl, '_blank', windowFeatures);
+      
+      // window.openの成功判定を遅延実行
+      setTimeout(() => {
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          console.log('⚠️ Enhanced window.open failed after timeout check');
+          // フォールバック: location.href
+          console.log('🔄 Falling back to location.href');
+          window.location.href = targetUrl;
+        } else {
+          console.log('✅ Enhanced window.open succeeded');
+          success = true;
+        }
+      }, 100);
+    }
+    
+    // 4. 最終手段: 直接遷移（_top ターゲット指定）
+    if (!success) {
+      console.log('🎯 Final fallback: direct navigation with _top target');
+      
+      // iframe内でも確実に親ウィンドウで開く
+      if (window.top && window.top !== window.self) {
+        console.log('🪟 Opening in parent window (iframe detected)');
+        window.top.location.href = targetUrl;
+      } else {
+        console.log('🪟 Opening in current window');
+        window.location.href = targetUrl;
+      }
+      
+      success = true;
+    }
+    
+    console.log(success ? '✅ Browser redirect initiated successfully' : '❌ All redirect methods failed');
+    
   } catch (error) {
-    console.error('Failed to open in browser:', error);
-    // 最終手段: 直接遷移
-    window.location.href = targetUrl;
+    console.error('💥 Critical error in openInBrowser:', error);
+    console.error('📋 Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    });
+    
+    // 緊急フォールバック
+    console.log('🚨 Emergency fallback: simple location.href');
+    try {
+      window.location.href = targetUrl;
+    } catch (finalError) {
+      console.error('💀 Even emergency fallback failed:', finalError);
+      // ユーザーに手動での操作を促す
+      alert(`外部ブラウザでの開放に失敗しました。\n\n以下のURLを手動でコピーして外部ブラウザで開いてください:\n\n${targetUrl}`);
+    }
   }
 };
 
