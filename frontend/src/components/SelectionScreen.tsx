@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookIcon from './BookIcon';
-import { isWebView, showBrowserOpenPrompt } from '../utils/webview';
+import { isWebView, handleExternalBrowserOpen } from '../utils/webview';
 
 const SelectionScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const SelectionScreen: React.FC = () => {
                   ログイン機能を正常に利用するには外部ブラウザをご利用ください
                 </p>
                 <button
-                  onClick={() => showBrowserOpenPrompt()}
+                  onClick={handleExternalBrowserOpen}
                   className="text-xs text-yellow-800 underline hover:text-yellow-900 mt-2"
                 >
                   → 外部ブラウザで開く
