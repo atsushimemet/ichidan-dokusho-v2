@@ -10,7 +10,11 @@ interface NavigationItem {
   requiresAuth: boolean;
 }
 
-const BottomNavigationBar: React.FC = () => {
+interface BottomNavigationBarProps {
+  closeMenu?: () => void;
+}
+
+const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({ closeMenu }) => {
   console.log('🚀 BottomNavigationBar component rendering...');
   
   const location = useLocation();
@@ -58,6 +62,11 @@ const BottomNavigationBar: React.FC = () => {
   ];
 
   const handleNavigation = (item: NavigationItem, event: React.MouseEvent) => {
+    // ハンバーガーメニューが開いている場合は閉じる
+    if (closeMenu) {
+      closeMenu();
+    }
+    
     if (item.requiresAuth && !isAuthenticated) {
       event.preventDefault();
       navigate('/auth');
