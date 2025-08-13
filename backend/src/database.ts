@@ -1033,4 +1033,37 @@ export const getAllTags = async () => {
   }
 };
 
+// タグ名で書籍を取得
+export const getBooksByTagName = async (tagName: string) => {
+  try {
+    const query = `
+      SELECT 
+        b.*,
+        COALESCE(
+          json_agg(
+            json_build_object('id', t.id, 'name', t.name, 'created_at', t.created_at)
+          ) FILTER (WHERE t.id IS NOT NULL),
+          '[]'::json
+        ) as tags
+      FROM books b
+      LEFT JOIN book_tags bt ON b.id = bt.book_id
+      LEFT JOIN tags t ON bt.tag_id = t.id
+      WHERE b.id IN (
+        SELECT DISTINCT b2.id 
+        FROM books b2
+        JOIN book_tags bt2 ON b2.id = bt2.book_id
+        JOIN tags t2 ON bt2.tag_id = t2.id
+        WHERE t2.name = $1
+      )
+      GROUP BY b.id
+      ORDER BY b.created_at DESC
+    `;
+    const result = await pool.query(query, [tagName]);
+    return { success: true, data: result.rows };
+  } catch (error) {
+    console.error('Get books by tag error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
 export default pool; 
