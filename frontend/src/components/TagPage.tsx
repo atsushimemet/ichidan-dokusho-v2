@@ -21,7 +21,6 @@ const TagPage: React.FC = () => {
   const { tag } = useParams<{ tag: string }>();
   const navigate = useNavigate();
   const [books, setBooks] = useState<Book[]>([]);
-  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [originalTagName, setOriginalTagName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -42,7 +41,6 @@ const TagPage: React.FC = () => {
           throw new Error('タグの取得に失敗しました');
         }
         const tagsData = await tagsResponse.json();
-        setAllTags(tagsData);
 
         // ローマ字から元のタグ名を見つける
         const originalTag = findOriginalTagName(tag, tagsData);
