@@ -73,7 +73,7 @@ const TagsListPage: React.FC = () => {
 
   const handleTagClick = (tagName: string) => {
     // タグ名をそのままURLエンコードして使用
-    navigate(`/${encodeURIComponent(tagName)}`);
+    navigate(`/tags/${encodeURIComponent(tagName)}`);
   };
 
   if (isLoading) {
