@@ -45,7 +45,7 @@ function PageTracker() {
 
 function AppContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isLoading, logout } = useAuth();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -58,6 +58,20 @@ function AppContent() {
     // ログアウト後はホームページ（SelectionScreen）にリダイレクト
     navigate('/');
   };
+
+  // 認証状態の初期化中はローディング表示
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
+            <p className="text-gray-600 text-sm">初期化中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
