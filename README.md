@@ -136,6 +136,44 @@ open http://localhost:3001/health  # バックエンド (Health Check)
 docker compose -f docker-compose.dev.yml exec db psql -U postgres -d ichidan_dokusho
 ```
 
+### 🤖 GPT下書き生成機能（オプション）
+
+GPT-OSS-20Bを使った「今日の学び・気づき」と「明日の小さなアクション」の下書き生成機能を利用する場合：
+
+```bash
+# 1. vLLMをインストール（Python 3.8以上が必要）
+uv pip install --pre vllm
+# または
+pip install vllm
+
+# 2. GPT-OSS-20Bモデルでサーバー起動（OpenAI互換）
+python -m vllm.entrypoints.openai.api_server \
+  --model openai/gpt-oss-20b \
+  --port 8000 \
+  --host 0.0.0.0
+
+# 3. 環境変数にvLLMサーバーURLを設定
+echo "VLLM_API_URL=http://localhost:8000" >> backend/.env
+
+# 4. Docker環境を再起動
+docker compose -f docker-compose.dev.yml restart backend
+```
+
+**開発環境向けのOllama使用（軽量）:**
+```bash
+# Ollamaでのセットアップ
+ollama pull gpt-oss:20b
+ollama serve
+
+# 環境変数設定
+echo "VLLM_API_URL=http://localhost:11434" >> backend/.env
+```
+
+**注意事項:**
+- GPT-OSS-20B（21.5Bパラメータ）を動作させるには最低16GB RAM推奨
+- GPU利用の場合はNVIDIA GPUが推奨
+- vLLMサーバーが起動していない場合、モック応答が返されます
+
 詳細な手順は [開発環境セットアップガイド](./docs/development/getting-started.md) をご覧ください。
 
 ## 🌐 本番環境
