@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { romanizeTagName } from '../utils/romanization';
 
 interface Tag {
   id: number;
@@ -41,8 +40,8 @@ const TagsListPage: React.FC = () => {
   }, [API_BASE_URL]);
 
   const handleTagClick = (tagName: string) => {
-    const romanizedTag = romanizeTagName(tagName);
-    navigate(`/${romanizedTag}`);
+    // タグ名をそのままURLエンコードして使用
+    navigate(`/${encodeURIComponent(tagName)}`);
   };
 
   if (isLoading) {
@@ -123,7 +122,7 @@ const TagsListPage: React.FC = () => {
                         {tag.name}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        /{romanizeTagName(tag.name)}
+                        /{encodeURIComponent(tag.name)}
                       </p>
                     </div>
                   </div>

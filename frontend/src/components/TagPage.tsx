@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { findOriginalTagName } from '../utils/romanization';
 
 interface Tag {
   id: number;
@@ -21,7 +20,7 @@ const TagPage: React.FC = () => {
   const { tag } = useParams<{ tag: string }>();
   const navigate = useNavigate();
   const [books, setBooks] = useState<Book[]>([]);
-  const [originalTagName, setOriginalTagName] = useState<string>('');
+  const [tagName, setTagName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
 
@@ -35,25 +34,19 @@ const TagPage: React.FC = () => {
         setIsLoading(true);
         setError('');
 
-        // まず全てのタグを取得して、ローマ字から元のタグ名を逆引き
-        const tagsResponse = await fetch(`${API_BASE_URL}/api/tags`);
-        if (!tagsResponse.ok) {
-          throw new Error('タグの取得に失敗しました');
-        }
-        const tagsData = await tagsResponse.json();
-
-        // ローマ字から元のタグ名を見つける
-        const originalTag = findOriginalTagName(tag, tagsData);
-        if (!originalTag) {
-          setError('指定されたタグが見つかりません');
-          return;
-        }
-        setOriginalTagName(originalTag);
+        // URLデコードしてタグ名を取得
+        const decodedTagName = decodeURIComponent(tag);
+        setTagName(decodedTagName);
 
         // そのタグの書籍を取得
-        const booksResponse = await fetch(`${API_BASE_URL}/api/books/tag/${encodeURIComponent(originalTag)}`);
+        const booksResponse = await fetch(`${API_BASE_URL}/api/books/tag/${encodeURIComponent(decodedTagName)}`);
         if (!booksResponse.ok) {
-          throw new Error('書籍の取得に失敗しました');
+          if (booksResponse.status === 404) {
+            setError('指定されたタグが見つかりません');
+          } else {
+            throw new Error('書籍の取得に失敗しました');
+          }
+          return;
         }
         const booksData = await booksResponse.json();
         setBooks(booksData);
@@ -119,7 +112,7 @@ const TagPage: React.FC = () => {
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-orange-100">
             <div className="flex items-center mb-2">
               <span className="text-2xl mr-3">🏷️</span>
-              <h1 className="text-2xl font-bold text-gray-800">{originalTagName}</h1>
+              <h1 className="text-2xl font-bold text-gray-800">{tagName}</h1>
             </div>
             <p className="text-gray-600">
               {books.length}冊の書籍が登録されています
@@ -161,7 +154,7 @@ const TagPage: React.FC = () => {
                         <span
                           key={bookTag.id}
                           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            bookTag.name === originalTagName
+                            bookTag.name === tagName
                               ? 'bg-orange-200 text-orange-800'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
