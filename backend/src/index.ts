@@ -15,6 +15,7 @@ import {
     getAllBooks,
     getAllTags,
     getAllThemeReadingStats,
+    getBooksByTagName,
     getDailyThemeReadingTrends,
     getPromptTemplate,
     getReadingRecordById,
@@ -1530,6 +1531,23 @@ app.get('/api/tags', async (req, res) => {
     }
   } catch (error) {
     console.error('Get tags error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// タグ名で書籍取得API
+app.get('/api/books/tag/:tagName', async (req, res) => {
+  try {
+    const { tagName } = req.params;
+    const result = await getBooksByTagName(decodeURIComponent(tagName));
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Get books by tag error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

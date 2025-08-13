@@ -13,6 +13,8 @@ import QAPage from './components/QAPage';
 import ReadingPage from './components/ReadingPage';
 import SelectionScreen from './components/SelectionScreen';
 import SettingsPage from './components/SettingsPage';
+import TagPage from './components/TagPage';
+import TagsListPage from './components/TagsListPage';
 import BottomNavigationBar from './components/BottomNavigationBar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -128,6 +130,14 @@ function AppContent() {
                 ❓ Q&A
               </Link>
               
+              <Link
+                to="/tags"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
+              >
+                🏷️ タグ一覧
+              </Link>
+              
               <div className="border-t border-orange-100 mt-2 pt-2">
                 <a
                   href="https://ichidan-dokusho-place-frontend.onrender.com/"
@@ -222,6 +232,16 @@ function AppContent() {
           </div>
         } />
         <Route path="/admin/register" element={<BookRegisterPage />} />
+        <Route path="/tags" element={
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <TagsListPage />
+          </div>
+        } />
+        <Route path="/:tag" element={
+          <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+            <TagPage />
+          </div>
+        } />
 
       </Routes>
       
