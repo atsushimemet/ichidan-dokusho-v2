@@ -48,7 +48,7 @@ const getRandomColor = (tagName: string) => {
 const TagPage: React.FC = () => {
   const { tag } = useParams<{ tag: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [tagName, setTagName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
@@ -359,7 +359,7 @@ const TagPage: React.FC = () => {
                 </div>
 
                 {/* 第3セクション: 編集・削除ボタン */}
-                {isAuthenticated && (
+                {isAuthenticated && user?.userId === '115610079057789909588' && (
                   <div className="flex justify-end space-x-2">
                     <button
                       onClick={(e) => handleEditClick(book, e)}
