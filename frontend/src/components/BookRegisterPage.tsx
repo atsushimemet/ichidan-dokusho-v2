@@ -216,7 +216,7 @@ const BookRegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 pb-24 md:pb-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
@@ -335,7 +335,7 @@ const BookRegisterPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-3 pb-4 md:pb-0">
                 <button
                   type="button"
                   onClick={() => navigate('/')}
