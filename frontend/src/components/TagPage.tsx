@@ -392,13 +392,8 @@ const TagPage: React.FC = () => {
                         )}
                       </div>
                     )}
-                  </div>
-                  
-                  {/* 登録日 */}
-                  <p className="text-sm text-gray-500 mt-3">
-                    登録日: {new Date(book.created_at).toLocaleDateString('ja-JP')}
-                  </p>
-                </div>
+                                     </div>
+                 </div>
               </div>
             ))}
           </div>
