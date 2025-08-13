@@ -16,6 +16,33 @@ interface Book {
   tags: Tag[];
 }
 
+// ランダムカラーパレット（視認性を考慮した色の組み合わせ）
+const colorPalettes = [
+  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+  { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+  { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
+];
+
+// タグにランダムカラーを割り当てる関数
+const getRandomColor = (tagName: string) => {
+  // タグ名をハッシュ化して一貫した色を割り当て
+  let hash = 0;
+  for (let i = 0; i < tagName.length; i++) {
+    const char = tagName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 32bit整数に変換
+  }
+  const index = Math.abs(hash) % colorPalettes.length;
+  return colorPalettes[index];
+};
+
 const TagPage: React.FC = () => {
   const { tag } = useParams<{ tag: string }>();
   const navigate = useNavigate();
@@ -150,18 +177,23 @@ const TagPage: React.FC = () => {
                     
                     {/* タグ一覧 */}
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {book.tags.map((bookTag) => (
-                        <span
-                          key={bookTag.id}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            bookTag.name === tagName
-                              ? 'bg-orange-200 text-orange-800'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                          }`}
-                        >
-                          {bookTag.name}
-                        </span>
-                      ))}
+                      {book.tags.map((bookTag) => {
+                        const colors = getRandomColor(bookTag.name);
+                        const isCurrentTag = bookTag.name === tagName;
+                        return (
+                          <span
+                            key={bookTag.id}
+                            className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                              isCurrentTag
+                                ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300'
+                                : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105`
+                            }`}
+                          >
+                            <span className="mr-1">🏷️</span>
+                            {bookTag.name}
+                          </span>
+                        );
+                      })}
                     </div>
                     
                     {/* 登録日 */}
