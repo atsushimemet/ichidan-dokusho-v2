@@ -135,7 +135,7 @@ function AppContent() {
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-700 transition-colors"
               >
-                🏷️ タグ一覧
+                🔍探す
               </Link>
               
               <div className="border-t border-orange-100 mt-2 pt-2">
