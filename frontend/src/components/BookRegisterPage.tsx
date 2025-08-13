@@ -6,6 +6,33 @@ interface Tag {
   name: string;
 }
 
+// ランダムカラーパレット（視認性を考慮した色の組み合わせ）
+const colorPalettes = [
+  { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },
+  { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+  { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+  { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+  { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+  { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
+  { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+  { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+  { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+  { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
+];
+
+// タグにランダムカラーを割り当てる関数
+const getRandomColor = (tagName: string) => {
+  // タグ名をハッシュ化して一貫した色を割り当て
+  let hash = 0;
+  for (let i = 0; i < tagName.length; i++) {
+    const char = tagName.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 32bit整数に変換
+  }
+  const index = Math.abs(hash) % colorPalettes.length;
+  return colorPalettes[index];
+};
+
 const BookRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -278,21 +305,25 @@ const BookRegisterPage: React.FC = () => {
                 {bookForm.tags.length > 0 && (
                   <div className="mt-3">
                     <div className="flex flex-wrap gap-2">
-                      {bookForm.tags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                        >
-                          {tag.name}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(tag.id)}
-                            className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:text-blue-600 hover:bg-blue-200"
+                      {bookForm.tags.map((tag) => {
+                        const colors = getRandomColor(tag.name);
+                        return (
+                          <span
+                            key={tag.id}
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${colors.bg} ${colors.text} ${colors.border}`}
                           >
-                            ×
-                          </button>
-                        </span>
-                      ))}
+                            <span className="mr-1">🏷️</span>
+                            {tag.name}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag.id)}
+                              className={`ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full ${colors.text} hover:bg-red-200 hover:text-red-600 transition-colors`}
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
