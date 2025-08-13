@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface Tag {
@@ -36,6 +36,7 @@ const getRandomColor = (tagName: string) => {
 const BookRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [loginForm, setLoginForm] = useState({
     username: '',
     password: ''
@@ -49,6 +50,18 @@ const BookRegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // レスポンシブ対応のためのscreen size検出
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,7 +229,11 @@ const BookRegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 pb-24 md:pb-8">
+    <div className="bg-gray-50" style={{ 
+      minHeight: '100vh',
+      paddingTop: '2rem',
+      paddingBottom: isMobile ? '100px' : '2rem'
+    }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
@@ -335,7 +352,7 @@ const BookRegisterPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-end space-x-3 pb-4 md:pb-0">
+              <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => navigate('/')}
