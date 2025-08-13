@@ -95,7 +95,7 @@ const TagPage: React.FC = () => {
 
   const handleTagClick = (tagName: string, event: React.MouseEvent) => {
     event.stopPropagation(); // イベントの伝播を停止してbook clickを防ぐ
-    navigate(`/${encodeURIComponent(tagName)}`);
+    navigate(`/tags/${encodeURIComponent(tagName)}`);
   };
 
   if (isLoading) {
