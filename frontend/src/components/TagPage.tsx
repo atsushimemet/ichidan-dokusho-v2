@@ -50,6 +50,7 @@ const TagPage: React.FC = () => {
   const [tagName, setTagName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [expandedTags, setExpandedTags] = useState<{ [key: number]: boolean }>({});
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
@@ -96,6 +97,14 @@ const TagPage: React.FC = () => {
   const handleTagClick = (tagName: string, event: React.MouseEvent) => {
     event.stopPropagation(); // イベントの伝播を停止してbook clickを防ぐ
     navigate(`/tags/${encodeURIComponent(tagName)}`);
+  };
+
+  const toggleTagAccordion = (bookId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // イベントの伝播を停止してbook clickを防ぐ
+    setExpandedTags(prev => ({
+      ...prev,
+      [bookId]: !prev[bookId]
+    }));
   };
 
   if (isLoading) {
@@ -181,25 +190,90 @@ const TagPage: React.FC = () => {
                     </h3>
                     
                     {/* タグ一覧 */}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {book.tags.map((bookTag) => {
-                        const colors = getRandomColor(bookTag.name);
-                        const isCurrentTag = bookTag.name === tagName;
-                        return (
-                          <span
-                            key={bookTag.id}
-                            onClick={(e) => handleTagClick(bookTag.name, e)}
-                            className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
-                              isCurrentTag
-                                ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
-                                : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
-                            }`}
+                    <div className="mb-3">
+                      {book.tags.length <= 3 ? (
+                        // 3つ以下のタグはそのまま表示
+                        <div className="flex flex-wrap gap-2">
+                          {book.tags.map((bookTag) => {
+                            const colors = getRandomColor(bookTag.name);
+                            const isCurrentTag = bookTag.name === tagName;
+                            return (
+                              <span
+                                key={bookTag.id}
+                                onClick={(e) => handleTagClick(bookTag.name, e)}
+                                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
+                                  isCurrentTag
+                                    ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
+                                    : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
+                                }`}
+                              >
+                                <span className="mr-1">🏷️</span>
+                                {bookTag.name}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        // 4つ以上のタグはアコーディオン形式で表示
+                        <div>
+                          {/* 最初の3つのタグを表示 */}
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {book.tags.slice(0, 3).map((bookTag) => {
+                              const colors = getRandomColor(bookTag.name);
+                              const isCurrentTag = bookTag.name === tagName;
+                              return (
+                                <span
+                                  key={bookTag.id}
+                                  onClick={(e) => handleTagClick(bookTag.name, e)}
+                                  className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
+                                    isCurrentTag
+                                      ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
+                                      : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
+                                  }`}
+                                >
+                                  <span className="mr-1">🏷️</span>
+                                  {bookTag.name}
+                                </span>
+                              );
+                            })}
+                          </div>
+
+                          {/* アコーディオントグルボタン */}
+                          <button
+                            onClick={(e) => toggleTagAccordion(book.id, e)}
+                            className="inline-flex items-center px-3 py-1 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
                           >
-                            <span className="mr-1">🏷️</span>
-                            {bookTag.name}
-                          </span>
-                        );
-                      })}
+                            <span className="mr-1">
+                              {expandedTags[book.id] ? '▼' : '▶'}
+                            </span>
+                            {expandedTags[book.id] ? 'タグを隠す' : `タグを見る (+${book.tags.length - 3})`}
+                          </button>
+
+                          {/* 展開された残りのタグ */}
+                          {expandedTags[book.id] && (
+                            <div className="flex flex-wrap gap-2 mt-2 pl-4 border-l-2 border-orange-200">
+                              {book.tags.slice(3).map((bookTag) => {
+                                const colors = getRandomColor(bookTag.name);
+                                const isCurrentTag = bookTag.name === tagName;
+                                return (
+                                  <span
+                                    key={bookTag.id}
+                                    onClick={(e) => handleTagClick(bookTag.name, e)}
+                                    className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
+                                      isCurrentTag
+                                        ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
+                                        : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
+                                    }`}
+                                  >
+                                    <span className="mr-1">🏷️</span>
+                                    {bookTag.name}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     {/* 登録日 */}
