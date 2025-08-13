@@ -93,6 +93,11 @@ const TagPage: React.FC = () => {
     window.open(amazonLink, '_blank', 'noopener,noreferrer');
   };
 
+  const handleTagClick = (tagName: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // イベントの伝播を停止してbook clickを防ぐ
+    navigate(`/${encodeURIComponent(tagName)}`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
@@ -183,10 +188,11 @@ const TagPage: React.FC = () => {
                         return (
                           <span
                             key={bookTag.id}
-                            className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                            onClick={(e) => handleTagClick(bookTag.name, e)}
+                            className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
                               isCurrentTag
-                                ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300'
-                                : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105`
+                                ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
+                                : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
                             }`}
                           >
                             <span className="mr-1">🏷️</span>
