@@ -61,6 +61,65 @@ const katakanaToRomaji: { [key: string]: string } = {
   'ピャ': 'pya', 'ピュ': 'pyu', 'ピョ': 'pyo'
 };
 
+// 漢字をローマ字に変換するマッピング（よく使われる漢字の読み方）
+const kanjiToRomaji: { [key: string]: string } = {
+  // 人名でよく使われる漢字
+  '江': 'e', '副': 'fuku', '浩': 'hiro', '正': 'masa',
+  '田': 'ta', '中': 'naka', '山': 'yama', '川': 'kawa',
+  '木': 'ki', '本': 'moto', '村': 'mura', '井': 'i',
+  '藤': 'fuji', '佐': 'sa', '加': 'ka', '藤': 'to',
+  '松': 'matsu', '竹': 'take', '梅': 'ume', '桜': 'sakura',
+  '花': 'hana', '美': 'mi', '子': 'ko', '男': 'o',
+  '雄': 'o', '夫': 'o', '郎': 'ro', '太': 'ta',
+  '一': 'ichi', '二': 'ni', '三': 'san', '四': 'shi',
+  '五': 'go', '六': 'roku', '七': 'nana', '八': 'hachi',
+  '九': 'kyu', '十': 'ju', '百': 'hyaku', '千': 'sen',
+  '万': 'man', '億': 'oku', '兆': 'cho',
+  
+  // ビジネス・企業関連
+  '起': 'ki', '業': 'gyo', '家': 'ka', '企': 'ki',
+  '会': 'kai', '社': 'sha', '株': 'kabu', '式': 'shiki',
+  '有': 'yu', '限': 'gen', '責': 'seki', '任': 'nin',
+  '合': 'go', '同': 'do', '資': 'shi', '本': 'hon',
+  '金': 'kin', '融': 'yu', '銀': 'gin', '行': 'ko',
+  '投': 'to', '資': 'shi', '経': 'kei', '営': 'ei',
+  '管': 'kan', '理': 'ri', '開': 'kai', '発': 'hatsu',
+  '製': 'sei', '造': 'zo', '販': 'han', '売': 'bai',
+  '営': 'ei', '業': 'gyo', '商': 'sho', '品': 'hin',
+  '技': 'gi', '術': 'jutsu', '情': 'jo', '報': 'ho',
+  '通': 'tsu', '信': 'shin', '電': 'den', '気': 'ki',
+  '機': 'ki', '械': 'kai', '自': 'ji', '動': 'do',
+  '車': 'sha', '交': 'ko', '通': 'tsu', '運': 'un',
+  '輸': 'yu', '物': 'butsu', '流': 'ryu', '建': 'ken',
+  '設': 'setsu', '不': 'fu', '動': 'do', '産': 'san',
+  
+  // 一般的な漢字
+  '人': 'jin', '大': 'dai', '小': 'sho', '中': 'chu',
+  '上': 'jo', '下': 'ka', '左': 'sa', '右': 'u',
+  '前': 'zen', '後': 'go', '内': 'nai', '外': 'gai',
+  '東': 'to', '西': 'sei', '南': 'nan', '北': 'hoku',
+  '新': 'shin', '古': 'ko', '今': 'kon', '昔': 'mukashi',
+  '年': 'nen', '月': 'getsu', '日': 'nichi', '時': 'ji',
+  '分': 'fun', '秒': 'byo', '週': 'shu', '間': 'kan',
+  '国': 'koku', '都': 'to', '府': 'fu', '県': 'ken',
+  '市': 'shi', '区': 'ku', '町': 'cho', '村': 'son',
+  '学': 'gaku', '校': 'ko', '生': 'sei', '先': 'sen',
+  '教': 'kyo', '授': 'ju', '研': 'ken', '究': 'kyu',
+  '文': 'bun', '書': 'sho', '読': 'doku', '語': 'go',
+  '話': 'wa', '聞': 'bun', '見': 'ken', '知': 'chi',
+  '思': 'shi', '考': 'ko', '感': 'kan', '心': 'shin',
+  '愛': 'ai', '好': 'ko', '楽': 'raku', '音': 'on',
+  '色': 'shoku', '白': 'haku', '黒': 'koku', '赤': 'aka',
+  '青': 'ao', '黄': 'ki', '緑': 'midori', '紫': 'murasaki',
+  '水': 'sui', '火': 'ka', '土': 'do', '風': 'fu',
+  '雨': 'ame', '雪': 'yuki', '雲': 'kumo', '空': 'sora',
+  '海': 'umi', '山': 'yama', '川': 'kawa', '森': 'mori',
+  '木': 'ki', '花': 'hana', '草': 'kusa', '石': 'ishi',
+  
+  // リクルート関連（既に成功している例）
+  'リ': 'ri', 'ク': 'ku', 'ル': 'ru', 'ー': '-', 'ト': 'to'
+};
+
 /**
  * 日本語のタグ名をローマ字に変換してURL-friendlyにする
  * @param tagName 日本語のタグ名
@@ -87,7 +146,11 @@ export const romanizeTagName = (tagName: string): string => {
     if (!found) {
       const oneChar = tagName.charAt(i);
       if (hiraganaToRomaji[oneChar] || katakanaToRomaji[oneChar]) {
+        // ひらがな・カタカナの変換
         result += hiraganaToRomaji[oneChar] || katakanaToRomaji[oneChar];
+      } else if (kanjiToRomaji[oneChar]) {
+        // 漢字の変換
+        result += kanjiToRomaji[oneChar];
       } else if (/[a-zA-Z0-9]/.test(oneChar)) {
         // 英数字はそのまま
         result += oneChar.toLowerCase();
@@ -95,8 +158,14 @@ export const romanizeTagName = (tagName: string): string => {
         // スペースはハイフンに変換
         result += '-';
       } else {
-        // その他の文字は無視するか、必要に応じて処理
-        result += oneChar;
+        // その他の文字（未対応の漢字など）は音読みの推測を試みる
+        const fallbackRomaji = getFallbackRomaji(oneChar);
+        if (fallbackRomaji) {
+          result += fallbackRomaji;
+        } else {
+          // 最終的に変換できない場合は文字コードベースの識別子を生成
+          result += 'kanji' + oneChar.charCodeAt(0).toString(16);
+        }
       }
       i++;
     }
@@ -104,6 +173,30 @@ export const romanizeTagName = (tagName: string): string => {
   
   // 連続するハイフンを1つにまとめ、前後のハイフンを削除
   return result.replace(/-+/g, '-').replace(/^-|-$/g, '');
+};
+
+/**
+ * 未対応の漢字に対するフォールバック変換
+ * 基本的な音読み・訓読みパターンを推測
+ */
+const getFallbackRomaji = (kanji: string): string | null => {
+  const code = kanji.charCodeAt(0);
+  
+  // CJK統合漢字の範囲内かチェック
+  if (code >= 0x4E00 && code <= 0x9FAF) {
+    // 簡単な音読みパターンの推測（実際の読み方とは異なる場合があります）
+    // これは非常に基本的な推測で、正確性は保証されません
+    const patterns = ['ka', 'ki', 'ku', 'ke', 'ko', 'sa', 'shi', 'su', 'se', 'so', 
+                     'ta', 'chi', 'tsu', 'te', 'to', 'na', 'ni', 'nu', 'ne', 'no',
+                     'ha', 'hi', 'fu', 'he', 'ho', 'ma', 'mi', 'mu', 'me', 'mo',
+                     'ya', 'yu', 'yo', 'ra', 'ri', 'ru', 're', 'ro', 'wa', 'wo', 'n'];
+    
+    // 文字コードに基づいて音読みパターンを選択（疑似ランダム）
+    const index = code % patterns.length;
+    return patterns[index];
+  }
+  
+  return null;
 };
 
 /**
