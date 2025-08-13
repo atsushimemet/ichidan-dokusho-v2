@@ -251,28 +251,92 @@ const TagPage: React.FC = () => {
               <div
                 key={book.id}
                 onClick={() => handleBookClick(book.amazon_link)}
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-orange-100 hover:shadow-xl hover:bg-white/90 transition-all duration-200 cursor-pointer group"
+                className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-orange-100 hover:shadow-xl hover:bg-white/90 transition-all duration-200 cursor-pointer group"
               >
-                <div className="flex items-start space-x-4">
-                  {/* 書籍アイコン */}
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center text-white text-2xl shadow-md group-hover:shadow-lg transition-shadow">
+                {/* カードの1行目: 書籍アイコン、タイトル、リンクアイコン */}
+                <div className="flex items-center space-x-3 sm:space-x-4 mb-4">
+                  {/* 左側: 書籍アイコンとアクションボタン */}
+                  <div className="flex flex-col items-center space-y-2">
+                    {/* 書籍アイコン */}
+                    <div className="w-12 h-16 sm:w-16 sm:h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center text-white text-lg sm:text-2xl shadow-md group-hover:shadow-lg transition-shadow">
                       📖
                     </div>
+                    
+                    {/* 編集・削除ボタン（縦並び） */}
+                    {isAuthenticated && (
+                      <div className="flex flex-col space-y-1">
+                        <button
+                          onClick={(e) => handleEditClick(book, e)}
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
+                          title="編集"
+                        >
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(book, e)}
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
+                          title="削除"
+                        >
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* 書籍情報 */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 group-hover:text-orange-700 transition-colors">
+                  {/* 中央: 書籍タイトル */}
+                  <div className="flex-1 min-w-0 px-2 sm:px-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 group-hover:text-orange-700 transition-colors leading-tight line-clamp-2">
                       {book.title}
                     </h3>
-                    
-                    {/* タグ一覧 */}
-                    <div className="mb-3">
-                      {book.tags.length <= 3 ? (
-                        // 3つ以下のタグはそのまま表示
-                        <div className="flex flex-wrap gap-2">
-                          {book.tags.map((bookTag) => {
+                  </div>
+                  
+                  {/* 右側: 外部リンクアイコン */}
+                  <div className="flex-shrink-0">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* カードの2行目以降: タグと登録日 */}
+                <div className="ml-16 sm:ml-20"> {/* 書籍アイコンの幅に合わせてインデント */}
+                  
+                  {/* タグ一覧 */}
+                  <div className="mb-3">
+                    {book.tags.length <= 3 ? (
+                      // 3つ以下のタグはそのまま表示
+                      <div className="flex flex-wrap gap-2">
+                        {book.tags.map((bookTag) => {
+                          const colors = getRandomColor(bookTag.name);
+                          const isCurrentTag = bookTag.name === tagName;
+                          return (
+                            <span
+                              key={bookTag.id}
+                              onClick={(e) => handleTagClick(bookTag.name, e)}
+                              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
+                                isCurrentTag
+                                  ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
+                                  : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
+                              }`}
+                            >
+                              <span className="mr-1">🏷️</span>
+                              {bookTag.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      // 4つ以上のタグはアコーディオン形式で表示
+                      <div>
+                        {/* 最初の3つのタグを表示 */}
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {book.tags.slice(0, 3).map((bookTag) => {
                             const colors = getRandomColor(bookTag.name);
                             const isCurrentTag = bookTag.name === tagName;
                             return (
@@ -291,12 +355,22 @@ const TagPage: React.FC = () => {
                             );
                           })}
                         </div>
-                      ) : (
-                        // 4つ以上のタグはアコーディオン形式で表示
-                        <div>
-                          {/* 最初の3つのタグを表示 */}
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {book.tags.slice(0, 3).map((bookTag) => {
+
+                        {/* アコーディオントグルボタン */}
+                        <button
+                          onClick={(e) => toggleTagAccordion(book.id, e)}
+                          className="inline-flex items-center px-3 py-1 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+                        >
+                          <span className="mr-1">
+                            {expandedTags[book.id] ? '▼' : '▶'}
+                          </span>
+                          {expandedTags[book.id] ? 'タグを隠す' : `タグを見る (+${book.tags.length - 3})`}
+                        </button>
+
+                        {/* 展開された残りのタグ */}
+                        {expandedTags[book.id] && (
+                          <div className="flex flex-wrap gap-2 mt-2 pl-4 border-l-2 border-orange-200">
+                            {book.tags.slice(3).map((bookTag) => {
                               const colors = getRandomColor(bookTag.name);
                               const isCurrentTag = bookTag.name === tagName;
                               return (
@@ -315,84 +389,15 @@ const TagPage: React.FC = () => {
                               );
                             })}
                           </div>
-
-                          {/* アコーディオントグルボタン */}
-                          <button
-                            onClick={(e) => toggleTagAccordion(book.id, e)}
-                            className="inline-flex items-center px-3 py-1 text-sm text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-                          >
-                            <span className="mr-1">
-                              {expandedTags[book.id] ? '▼' : '▶'}
-                            </span>
-                            {expandedTags[book.id] ? 'タグを隠す' : `タグを見る (+${book.tags.length - 3})`}
-                          </button>
-
-                          {/* 展開された残りのタグ */}
-                          {expandedTags[book.id] && (
-                            <div className="flex flex-wrap gap-2 mt-2 pl-4 border-l-2 border-orange-200">
-                              {book.tags.slice(3).map((bookTag) => {
-                                const colors = getRandomColor(bookTag.name);
-                                const isCurrentTag = bookTag.name === tagName;
-                                return (
-                                  <span
-                                    key={bookTag.id}
-                                    onClick={(e) => handleTagClick(bookTag.name, e)}
-                                    className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
-                                      isCurrentTag
-                                        ? 'bg-orange-200 text-orange-800 border-orange-300 ring-2 ring-orange-300 hover:bg-orange-300'
-                                        : `${colors.bg} ${colors.text} ${colors.border} hover:scale-105 hover:shadow-sm`
-                                    }`}
-                                  >
-                                    <span className="mr-1">🏷️</span>
-                                    {bookTag.name}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* 登録日 */}
-                    <p className="text-sm text-gray-500">
-                      登録日: {new Date(book.created_at).toLocaleDateString('ja-JP')}
-                    </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
-                  {/* アクションボタン */}
-                  <div className="flex-shrink-0 flex items-center space-x-2">
-                    {/* 認証済みユーザーのみ編集・削除ボタンを表示 */}
-                    {isAuthenticated && (
-                      <>
-                        <button
-                          onClick={(e) => handleEditClick(book, e)}
-                          className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
-                          title="編集"
-                        >
-                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteClick(book, e)}
-                          className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
-                          title="削除"
-                        >
-                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </>
-                    )}
-                    
-                    {/* 外部リンクアイコン */}
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </div>
-                  </div>
+                  {/* 登録日 */}
+                  <p className="text-sm text-gray-500 mt-3">
+                    登録日: {new Date(book.created_at).toLocaleDateString('ja-JP')}
+                  </p>
                 </div>
               </div>
             ))}
