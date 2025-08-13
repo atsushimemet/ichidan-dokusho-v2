@@ -109,10 +109,10 @@ const TagsListPage: React.FC = () => {
       {/* ヘッダー - 固定位置 */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-orange-100 shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="relative flex items-center">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-orange-600 hover:text-orange-700 transition-colors"
+              className="absolute left-0 flex items-center text-orange-600 hover:text-orange-700 transition-colors"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -120,10 +120,10 @@ const TagsListPage: React.FC = () => {
               戻る
             </button>
             
-            <div className="flex items-center">
+            <div className="flex items-center mx-auto">
               <span className="text-2xl mr-3">🏷️</span>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">タグ一覧</h1>
+                <h1 className="text-xl font-bold text-gray-800">🔍探す</h1>
                 <p className="text-sm text-gray-600">{tags.length}個のタグ</p>
               </div>
             </div>
