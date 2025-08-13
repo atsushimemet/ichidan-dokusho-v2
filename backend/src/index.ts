@@ -12,6 +12,7 @@ import {
     deleteUserPromptTemplate,
     deleteWishlistItem,
     deleteWritingTheme,
+    updateBook,
     getAllBooks,
     getAllTags,
     getAllThemeReadingStats,
@@ -1548,6 +1549,52 @@ app.get('/api/books/tag/:tagName', async (req, res) => {
     }
   } catch (error) {
     console.error('Get books by tag error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 書籍更新API（認証必要）
+app.put('/api/books/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, amazon_link, tags } = req.body;
+    
+    if (!title && !amazon_link && !tags) {
+      return res.status(400).json({ error: 'At least one field (title, amazon_link, or tags) is required' });
+    }
+
+    const updateData: { title?: string; amazon_link?: string; tags?: string[] } = {};
+    if (title !== undefined) updateData.title = title;
+    if (amazon_link !== undefined) updateData.amazon_link = amazon_link;
+    if (tags !== undefined) updateData.tags = tags;
+
+    const result = await updateBook(parseInt(id), updateData);
+    
+    if (result.success) {
+      res.json(result.data);
+    } else {
+      res.status(result.error === 'Book not found' ? 404 : 500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Update book error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 書籍削除API（認証必要）
+app.delete('/api/books/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await deleteBook(parseInt(id));
+    
+    if (result.success) {
+      res.json({ message: 'Book deleted successfully', data: result.data });
+    } else {
+      res.status(result.error === 'Book not found' ? 404 : 500).json({ error: result.error });
+    }
+  } catch (error) {
+    console.error('Delete book error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

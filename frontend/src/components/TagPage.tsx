@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import EditBookModal from './EditBookModal';
 
 interface Tag {
   id: number;
@@ -46,11 +48,15 @@ const getRandomColor = (tagName: string) => {
 const TagPage: React.FC = () => {
   const { tag } = useParams<{ tag: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated, token } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [tagName, setTagName] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [expandedTags, setExpandedTags] = useState<{ [key: number]: boolean }>({});
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [deleteConfirmBook, setDeleteConfirmBook] = useState<Book | null>(null);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
@@ -105,6 +111,78 @@ const TagPage: React.FC = () => {
       ...prev,
       [bookId]: !prev[bookId]
     }));
+  };
+
+  const handleEditClick = (book: Book, event: React.MouseEvent) => {
+    event.stopPropagation(); // イベントの伝播を停止してbook clickを防ぐ
+    setEditingBook(book);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteClick = (book: Book, event: React.MouseEvent) => {
+    event.stopPropagation(); // イベントの伝播を停止してbook clickを防ぐ
+    setDeleteConfirmBook(book);
+  };
+
+  const handleEditSave = async (updatedBook: { title: string; amazon_link: string; tags: string[] }) => {
+    if (!editingBook || !token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/books/${editingBook.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedBook),
+      });
+
+      if (!response.ok) {
+        throw new Error('書籍の更新に失敗しました');
+      }
+
+      const updatedBookData = await response.json();
+      
+      // ローカル状態を更新
+      setBooks(prevBooks =>
+        prevBooks.map(book =>
+          book.id === editingBook.id ? updatedBookData : book
+        )
+      );
+
+      setShowEditModal(false);
+      setEditingBook(null);
+    } catch (error) {
+      console.error('Edit book error:', error);
+      alert('書籍の更新に失敗しました');
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmBook || !token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/books/${deleteConfirmBook.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('書籍の削除に失敗しました');
+      }
+
+      // ローカル状態を更新
+      setBooks(prevBooks =>
+        prevBooks.filter(book => book.id !== deleteConfirmBook.id)
+      );
+
+      setDeleteConfirmBook(null);
+    } catch (error) {
+      console.error('Delete book error:', error);
+      alert('書籍の削除に失敗しました');
+    }
   };
 
   if (isLoading) {
@@ -282,8 +360,33 @@ const TagPage: React.FC = () => {
                     </p>
                   </div>
                   
-                  {/* 外部リンクアイコン */}
-                  <div className="flex-shrink-0">
+                  {/* アクションボタン */}
+                  <div className="flex-shrink-0 flex items-center space-x-2">
+                    {/* 認証済みユーザーのみ編集・削除ボタンを表示 */}
+                    {isAuthenticated && (
+                      <>
+                        <button
+                          onClick={(e) => handleEditClick(book, e)}
+                          className="w-8 h-8 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors"
+                          title="編集"
+                        >
+                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(book, e)}
+                          className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition-colors"
+                          title="削除"
+                        >
+                          <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* 外部リンクアイコン */}
                     <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                       <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -293,6 +396,44 @@ const TagPage: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* 編集モーダル */}
+        {showEditModal && editingBook && (
+          <EditBookModal
+            book={editingBook}
+            onSave={handleEditSave}
+            onCancel={() => {
+              setShowEditModal(false);
+              setEditingBook(null);
+            }}
+          />
+        )}
+
+        {/* 削除確認ダイアログ */}
+        {deleteConfirmBook && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">書籍を削除しますか？</h3>
+              <p className="text-gray-600 mb-6">
+                「{deleteConfirmBook.title}」を削除します。この操作は取り消せません。
+              </p>
+              <div className="flex space-x-3 justify-end">
+                <button
+                  onClick={() => setDeleteConfirmBook(null)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  削除
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -1006,6 +1006,110 @@ export const getAllBooks = async () => {
   }
 };
 
+// 書籍を更新
+export const updateBook = async (id: number, bookData: { title?: string; amazon_link?: string; tags?: string[] }) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 書籍が存在するかチェック
+    const checkQuery = 'SELECT id FROM books WHERE id = $1';
+    const checkResult = await client.query(checkQuery, [id]);
+    if (checkResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return { success: false, error: 'Book not found' };
+    }
+
+    // 書籍の基本情報を更新
+    const updateFields = [];
+    const updateValues = [];
+    let paramCount = 1;
+
+    if (bookData.title !== undefined) {
+      updateFields.push(`title = $${paramCount}`);
+      updateValues.push(bookData.title);
+      paramCount++;
+    }
+
+    if (bookData.amazon_link !== undefined) {
+      updateFields.push(`amazon_link = $${paramCount}`);
+      updateValues.push(bookData.amazon_link);
+      paramCount++;
+    }
+
+    if (updateFields.length > 0) {
+      updateValues.push(id);
+      const bookQuery = `
+        UPDATE books 
+        SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $${paramCount}
+        RETURNING *
+      `;
+      await client.query(bookQuery, updateValues);
+    }
+
+    // タグを更新（提供された場合）
+    if (bookData.tags !== undefined) {
+      // 既存のタグ関連を削除
+      const deleteTagsQuery = 'DELETE FROM book_tags WHERE book_id = $1';
+      await client.query(deleteTagsQuery, [id]);
+
+      // 新しいタグを追加
+      if (bookData.tags.length > 0) {
+        for (const tagName of bookData.tags) {
+          // タグが存在しない場合は作成
+          const tagQuery = `
+            INSERT INTO tags (name) 
+            VALUES ($1) 
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id
+          `;
+          const tagResult = await client.query(tagQuery, [tagName.trim()]);
+          const tagId = tagResult.rows[0].id;
+
+          // 書籍とタグを関連付け
+          const bookTagQuery = `
+            INSERT INTO book_tags (book_id, tag_id)
+            VALUES ($1, $2)
+            ON CONFLICT (book_id, tag_id) DO NOTHING
+          `;
+          await client.query(bookTagQuery, [id, tagId]);
+        }
+      }
+    }
+
+    // 更新された書籍とタグを取得
+    const getUpdatedBookQuery = `
+      SELECT 
+        b.*,
+        COALESCE(
+          json_agg(
+            CASE 
+              WHEN t.id IS NOT NULL THEN json_build_object('id', t.id, 'name', t.name, 'created_at', t.created_at)
+              ELSE NULL 
+            END
+          ) FILTER (WHERE t.id IS NOT NULL), 
+          '[]'::json
+        ) as tags
+      FROM books b
+      LEFT JOIN book_tags bt ON b.id = bt.book_id
+      LEFT JOIN tags t ON bt.tag_id = t.id
+      WHERE b.id = $1
+      GROUP BY b.id, b.title, b.amazon_link, b.created_at, b.updated_at
+    `;
+    const updatedBookResult = await client.query(getUpdatedBookQuery, [id]);
+
+    await client.query('COMMIT');
+    return { success: true, data: updatedBookResult.rows[0] };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Update book error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  } finally {
+    client.release();
+  }
+};
+
 // 書籍を削除
 export const deleteBook = async (id: number) => {
   try {
