@@ -15,6 +15,7 @@ import SelectionScreen from './components/SelectionScreen';
 import SettingsPage from './components/SettingsPage';
 import TagPage from './components/TagPage';
 import TagsListPage from './components/TagsListPage';
+import Timeline from './components/Timeline';
 import BottomNavigationBar from './components/BottomNavigationBar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
@@ -219,8 +220,14 @@ function AppContent() {
             </div>
           } 
         />
-        {/* 旧タイムラインURL → MyPageにリダイレクト */}
-        <Route path="/timeline" element={<Navigate to="/mypage" replace />} />
+        <Route 
+          path="/timeline" 
+          element={
+            <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
+              <Timeline />
+            </div>
+          } 
+        />
         <Route path="/qa" element={
           <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <QAPage />
