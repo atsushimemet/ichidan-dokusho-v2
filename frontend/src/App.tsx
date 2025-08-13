@@ -221,7 +221,7 @@ function AppContent() {
           path="/mypage" 
           element={
             <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
-              <MyPage />
+              {isAuthenticated ? <MyPage /> : <Navigate to="/" replace />}
             </div>
           } 
         />
