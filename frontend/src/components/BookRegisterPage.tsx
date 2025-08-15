@@ -59,8 +59,15 @@ const BookRegisterPage: React.FC = () => {
   // コンポーネントマウント時に認証状態をチェック
   useEffect(() => {
     const authStatus = localStorage.getItem('adminAuthenticated');
-    if (authStatus === 'true') {
+    const savedUsername = localStorage.getItem('adminUsername');
+    const savedPassword = localStorage.getItem('adminPassword');
+    
+    if (authStatus === 'true' && savedUsername && savedPassword) {
       setIsAuthenticated(true);
+      setLoginForm({
+        username: savedUsername,
+        password: savedPassword
+      });
     }
   }, []);
 
@@ -74,6 +81,8 @@ const BookRegisterPage: React.FC = () => {
       if (loginForm.username === 'noap3b69n' && loginForm.password === '19930322') {
         setIsAuthenticated(true);
         localStorage.setItem('adminAuthenticated', 'true');
+        localStorage.setItem('adminUsername', loginForm.username);
+        localStorage.setItem('adminPassword', loginForm.password);
         setSuccess('認証に成功しました');
       } else {
         setError('ユーザー名またはパスワードが間違っています');
@@ -278,6 +287,20 @@ const BookRegisterPage: React.FC = () => {
                 aria-label="書籍一覧"
               >
                 📚
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('adminAuthenticated');
+                  localStorage.removeItem('adminUsername');
+                  localStorage.removeItem('adminPassword');
+                  setIsAuthenticated(false);
+                  setLoginForm({ username: '', password: '' });
+                }}
+                className="bg-red-600 text-white w-10 h-10 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+                title="ログアウト"
+                aria-label="ログアウト"
+              >
+                🚪
               </button>
             </div>
           </div>
