@@ -4,6 +4,7 @@ import { Link, Navigate, Route, BrowserRouter as Router, Routes, useLocation, us
 import './App.css';
 import AuthScreen from './components/AuthScreen';
 import BookRegisterPage from './components/BookRegisterPage';
+import AdminBooksPage from './components/AdminBooksPage';
 import Dashboard from './components/Dashboard';
 import DraftOutputPage from './components/DraftOutputPage';
 import InputForm from './components/InputForm';
@@ -246,6 +247,7 @@ function AppContent() {
           </div>
         } />
         <Route path="/admin/register" element={<BookRegisterPage />} />
+        <Route path="/admin/books" element={<AdminBooksPage />} />
         <Route path="/tags" element={
           <div className="container mx-auto px-1 sm:px-4 pt-0 pb-2 sm:pb-8 max-w-2xl w-full overflow-x-hidden">
             <TagsListPage />
