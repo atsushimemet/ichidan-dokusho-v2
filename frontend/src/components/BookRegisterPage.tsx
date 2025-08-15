@@ -233,7 +233,7 @@ const BookRegisterPage: React.FC = () => {
               <h1 className="text-xl font-bold text-gray-800">📝 書籍登録</h1>
               <p className="text-sm text-gray-600">新しい書籍を登録できます</p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 pr-16">
               <button
                 onClick={() => navigate('/admin/register')}
                 className="bg-blue-600 text-white w-10 h-10 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
