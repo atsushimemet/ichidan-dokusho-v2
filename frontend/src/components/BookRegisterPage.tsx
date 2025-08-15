@@ -36,7 +36,6 @@ const getRandomColor = (tagName: string) => {
 const BookRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [loginForm, setLoginForm] = useState({
     username: '',
     password: ''
@@ -53,18 +52,6 @@ const BookRegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  // レスポンシブ対応のためのscreen size検出
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
 
   // コンポーネントマウント時に認証状態をチェック
   useEffect(() => {
