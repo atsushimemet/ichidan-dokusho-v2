@@ -15,6 +15,9 @@ interface Book {
   created_at: string;
   updated_at: string;
   tags: Tag[];
+  summary_link1?: string | null;
+  summary_link2?: string | null;
+  summary_link3?: string | null;
 }
 
 const AdminBooksPage: React.FC = () => {
@@ -73,7 +76,7 @@ const AdminBooksPage: React.FC = () => {
   };
 
   // 書籍編集
-  const handleEditBook = async (updatedBook: { title: string; amazon_link: string; tags: string[] }) => {
+  const handleEditBook = async (updatedBook: { title: string; amazon_link: string; tags: string[]; summary_link1?: string | null; summary_link2?: string | null; summary_link3?: string | null; }) => {
     if (!editingBook) return;
 
     try {

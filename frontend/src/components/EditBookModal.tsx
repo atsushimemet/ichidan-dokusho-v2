@@ -13,11 +13,14 @@ interface Book {
   created_at: string;
   updated_at: string;
   tags: Tag[];
+  summary_link1?: string | null;
+  summary_link2?: string | null;
+  summary_link3?: string | null;
 }
 
 interface EditBookModalProps {
   book: Book;
-  onSave: (updatedBook: { title: string; amazon_link: string; tags: string[] }) => void;
+  onSave: (updatedBook: { title: string; amazon_link: string; tags: string[]; summary_link1?: string | null; summary_link2?: string | null; summary_link3?: string | null; }) => void;
   onCancel: () => void;
 }
 
@@ -25,6 +28,9 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onSave, onCancel })
   const [title, setTitle] = useState(book.title);
   const [amazonLink, setAmazonLink] = useState(book.amazon_link);
   const [tags, setTags] = useState(book.tags.map(tag => tag.name).join(', '));
+  const [summaryLink1, setSummaryLink1] = useState(book.summary_link1 || '');
+  const [summaryLink2, setSummaryLink2] = useState(book.summary_link2 || '');
+  const [summaryLink3, setSummaryLink3] = useState(book.summary_link3 || '');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +58,9 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onSave, onCancel })
         title: title.trim(),
         amazon_link: amazonLink.trim(),
         tags: tagList,
+        summary_link1: summaryLink1.trim() || null,
+        summary_link2: summaryLink2.trim() || null,
+        summary_link3: summaryLink3.trim() || null,
       });
     } catch (error) {
       console.error('Save error:', error);
@@ -113,6 +122,51 @@ const EditBookModal: React.FC<EditBookModalProps> = ({ book, onSave, onCancel })
             <p className="text-sm text-gray-500 mt-1">
               カンマ区切りで複数のタグを入力できます
             </p>
+          </div>
+
+          {/* 要約リンク1 */}
+          <div>
+            <label htmlFor="summaryLink1" className="block text-sm font-medium text-gray-700 mb-2">
+              要約リンク1 <span className="text-gray-500 text-xs">(任意)</span>
+            </label>
+            <input
+              type="url"
+              id="summaryLink1"
+              value={summaryLink1}
+              onChange={(e) => setSummaryLink1(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="https://example.com/summary または https://www.youtube.com/watch?v=..."
+            />
+          </div>
+
+          {/* 要約リンク2 */}
+          <div>
+            <label htmlFor="summaryLink2" className="block text-sm font-medium text-gray-700 mb-2">
+              要約リンク2 <span className="text-gray-500 text-xs">(任意)</span>
+            </label>
+            <input
+              type="url"
+              id="summaryLink2"
+              value={summaryLink2}
+              onChange={(e) => setSummaryLink2(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="https://example.com/summary または https://www.youtube.com/watch?v=..."
+            />
+          </div>
+
+          {/* 要約リンク3 */}
+          <div>
+            <label htmlFor="summaryLink3" className="block text-sm font-medium text-gray-700 mb-2">
+              要約リンク3 <span className="text-gray-500 text-xs">(任意)</span>
+            </label>
+            <input
+              type="url"
+              id="summaryLink3"
+              value={summaryLink3}
+              onChange={(e) => setSummaryLink3(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="https://example.com/summary または https://www.youtube.com/watch?v=..."
+            />
           </div>
 
           {/* ボタン */}
