@@ -650,6 +650,42 @@ app.delete('/api/reading-records/:id', async (req, res) => {
 // タイムライン機能除却: セッション管理APIを削除
 // 匿名アクセス機能の廃止により、セッション管理を完全停止
 
+// 管理者ログインエンドポイント
+app.post('/api/auth/admin', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    // 管理者認証
+    if (username === 'noap3b69n' && password === '19930322') {
+      // JWTトークンを生成（管理者用の固定ID）
+      const token = generateToken('admin-user', 'admin@example.com');
+      
+      res.json({
+        message: 'Admin authentication successful',
+        token,
+        user: {
+          userId: 'admin-user',
+          email: 'admin@example.com',
+          name: 'Admin',
+          role: 'admin'
+        }
+      });
+    } else {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+  } catch (error) {
+    console.error('Admin authentication error:', error);
+    res.status(500).json({ 
+      message: 'Authentication failed', 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+  }
+});
+
 // Google認証エンドポイント
 app.post('/api/auth/google', async (req, res) => {
   try {
