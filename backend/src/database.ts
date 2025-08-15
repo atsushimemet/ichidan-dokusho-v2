@@ -915,6 +915,9 @@ export interface Book {
   id?: number;
   title: string;
   amazon_link: string;
+  summary_link1?: string | null;
+  summary_link2?: string | null;
+  summary_link3?: string | null;
   created_at?: string;
   updated_at?: string;
 }

@@ -13,6 +13,9 @@ interface Book {
   id: number;
   title: string;
   amazon_link: string;
+  summary_link1?: string | null;
+  summary_link2?: string | null;
+  summary_link3?: string | null;
   created_at: string;
   updated_at: string;
   tags: Tag[];
@@ -357,6 +360,50 @@ const TagPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                {/* 新規追加: 要約リンクセクション */}
+                {(book.summary_link1 || book.summary_link2 || book.summary_link3) && (
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {book.summary_link1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(book.summary_link1!, '_blank', 'noopener,noreferrer');
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-200 rounded-lg transition-colors"
+                        >
+                          <span className="mr-1">📝</span>
+                          要約1
+                        </button>
+                      )}
+                      {book.summary_link2 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(book.summary_link2!, '_blank', 'noopener,noreferrer');
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-200 rounded-lg transition-colors"
+                        >
+                          <span className="mr-1">📝</span>
+                          要約2
+                        </button>
+                      )}
+                      {book.summary_link3 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(book.summary_link3!, '_blank', 'noopener,noreferrer');
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-200 rounded-lg transition-colors"
+                        >
+                          <span className="mr-1">📝</span>
+                          要約3
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* 第3セクション: 編集・削除ボタン */}
                 {isAuthenticated && user?.userId === '115610079057789909588' && (
