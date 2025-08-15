@@ -412,6 +412,47 @@ const AdminBooksPage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* 要約リンクセクション */}
+                  {(book.summary_link1 || book.summary_link2 || book.summary_link3) && (
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {book.summary_link1 && (
+                          <a
+                            href={book.summary_link1}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-200 rounded-lg transition-colors"
+                          >
+                            <span className="mr-1">📝</span>
+                            要約1
+                          </a>
+                        )}
+                        {book.summary_link2 && (
+                          <a
+                            href={book.summary_link2}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-200 rounded-lg transition-colors"
+                          >
+                            <span className="mr-1">📝</span>
+                            要約2
+                          </a>
+                        )}
+                        {book.summary_link3 && (
+                          <a
+                            href={book.summary_link3}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-200 rounded-lg transition-colors"
+                          >
+                            <span className="mr-1">📝</span>
+                            要約3
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Amazon リンク */}
                   <div className="mb-3">
                     <a
