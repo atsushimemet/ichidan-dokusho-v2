@@ -38,24 +38,67 @@ const AdminBooksPage: React.FC = () => {
   // コンポーネントマウント時に認証状態をチェック
   useEffect(() => {
     const authStatus = localStorage.getItem('adminAuthenticated');
-    if (authStatus === 'true') {
+    const authToken = localStorage.getItem('authToken');
+    
+    if (authStatus === 'true' && authToken) {
       setIsAuthenticated(true);
       fetchBooks();
     } else {
+      // 認証状態が不完全な場合はクリア
+      localStorage.removeItem('adminAuthenticated');
+      localStorage.removeItem('authToken');
       setIsLoading(false);
     }
   }, []);
 
   // 管理者認証
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginForm.username === 'noap3b69n' && loginForm.password === '19930322') {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      
+      console.log('管理者ログインを開始しています...', {
+        username: loginForm.username,
+        api_url: `${API_BASE_URL}/api/auth/admin`
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/api/auth/admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: loginForm.username,
+          password: loginForm.password,
+        }),
+      });
+
+      console.log('管理者ログインAPIレスポンス:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('管理者ログインエラー:', errorData);
+        setError('ユーザー名またはパスワードが間違っています');
+        return;
+      }
+
+      const authData = await response.json();
+      console.log('管理者ログイン成功:', authData);
+
+      // 認証トークンをローカルストレージに保存
+      localStorage.setItem('authToken', authData.token);
+      localStorage.setItem('adminAuthenticated', 'true');
+      
       setIsAuthenticated(true);
       setError('');
-      localStorage.setItem('adminAuthenticated', 'true');
       fetchBooks();
-    } else {
-      setError('ユーザー名またはパスワードが間違っています');
+    } catch (err) {
+      console.error('管理者ログインエラー:', err);
+      setError('ログインに失敗しました。ネットワーク接続を確認してください。');
     }
   };
 
@@ -193,6 +236,15 @@ const AdminBooksPage: React.FC = () => {
     setIsMobileConsoleVisible(!isMobileConsoleVisible);
   };
 
+  // ログアウト機能
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuthenticated');
+    localStorage.removeItem('authToken');
+    setIsAuthenticated(false);
+    setBooks([]);
+    setError('');
+  };
+
   // 管理者認証画面
   if (!isAuthenticated) {
     return (
@@ -276,6 +328,14 @@ const AdminBooksPage: React.FC = () => {
                 aria-label="書籍一覧"
               >
                 📚
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-gray-600 text-white w-10 h-10 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
+                title="ログアウト"
+                aria-label="ログアウト"
+              >
+                🚪
               </button>
             </div>
           </div>
