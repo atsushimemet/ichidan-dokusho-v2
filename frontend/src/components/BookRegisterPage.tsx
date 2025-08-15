@@ -44,7 +44,10 @@ const BookRegisterPage: React.FC = () => {
   const [bookForm, setBookForm] = useState({
     title: '',
     amazon_link: '',
-    tags: [] as Tag[]
+    tags: [] as Tag[],
+    summary_link1: '',
+    summary_link2: '',
+    summary_link3: ''
   });
   const [currentTag, setCurrentTag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +89,7 @@ const BookRegisterPage: React.FC = () => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setLoginForm({ username: '', password: '' });
-    setBookForm({ title: '', amazon_link: '', tags: [] });
+    setBookForm({ title: '', amazon_link: '', tags: [], summary_link1: '', summary_link2: '', summary_link3: '' });
     setSuccess('');
   };
 
@@ -129,6 +132,9 @@ const BookRegisterPage: React.FC = () => {
           title: bookForm.title,
           amazon_link: bookForm.amazon_link,
           tags: bookForm.tags.map(tag => tag.name),
+          summary_link1: bookForm.summary_link1 || null,
+          summary_link2: bookForm.summary_link2 || null,
+          summary_link3: bookForm.summary_link3 || null,
           username: loginForm.username,
           password: loginForm.password
         }),
@@ -140,7 +146,7 @@ const BookRegisterPage: React.FC = () => {
 
       await response.json();
       setSuccess('書籍が正常に登録されました');
-      setBookForm({ title: '', amazon_link: '', tags: [] });
+      setBookForm({ title: '', amazon_link: '', tags: [], summary_link1: '', summary_link2: '', summary_link3: '' });
     } catch (err) {
       setError(err instanceof Error ? err.message : '書籍登録に失敗しました');
     } finally {
@@ -286,6 +292,57 @@ const BookRegisterPage: React.FC = () => {
                     onChange={(e) => setBookForm(prev => ({ ...prev, amazon_link: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="https://www.amazon.co.jp/dp/..."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="summary_link1" className="block text-sm font-medium text-gray-700">
+                  要約リンク1 <span className="text-gray-500 text-xs">(任意)</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="summary_link1"
+                    name="summary_link1"
+                    type="url"
+                    value={bookForm.summary_link1}
+                    onChange={(e) => setBookForm(prev => ({ ...prev, summary_link1: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="https://example.com/summary または https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="summary_link2" className="block text-sm font-medium text-gray-700">
+                  要約リンク2 <span className="text-gray-500 text-xs">(任意)</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="summary_link2"
+                    name="summary_link2"
+                    type="url"
+                    value={bookForm.summary_link2}
+                    onChange={(e) => setBookForm(prev => ({ ...prev, summary_link2: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="https://example.com/summary または https://www.youtube.com/watch?v=..."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="summary_link3" className="block text-sm font-medium text-gray-700">
+                  要約リンク3 <span className="text-gray-500 text-xs">(任意)</span>
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="summary_link3"
+                    name="summary_link3"
+                    type="url"
+                    value={bookForm.summary_link3}
+                    onChange={(e) => setBookForm(prev => ({ ...prev, summary_link3: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="https://example.com/summary または https://www.youtube.com/watch?v=..."
                   />
                 </div>
               </div>

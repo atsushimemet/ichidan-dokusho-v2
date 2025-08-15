@@ -1457,7 +1457,7 @@ const authenticateAdmin = (req: any, res: any, next: any) => {
 // 書籍登録API
 app.post('/api/admin/books', authenticateAdmin, async (req, res) => {
   try {
-    const { title, amazon_link, tags } = req.body;
+    const { title, amazon_link, tags, summary_link1, summary_link2, summary_link3 } = req.body;
     
     if (!title || !amazon_link) {
       return res.status(400).json({ error: 'Title and Amazon link are required' });
@@ -1466,7 +1466,10 @@ app.post('/api/admin/books', authenticateAdmin, async (req, res) => {
     const result = await createBook({ 
       title, 
       amazon_link, 
-      tags: tags || [] 
+      tags: tags || [],
+      summary_link1: summary_link1 || null,
+      summary_link2: summary_link2 || null,
+      summary_link3: summary_link3 || null
     });
     
     if (result.success) {
