@@ -1023,7 +1023,7 @@ export const getAllBooks = async () => {
 };
 
 // 書籍を更新
-export const updateBook = async (id: number, bookData: { title?: string; amazon_link?: string; tags?: string[] }) => {
+export const updateBook = async (id: number, bookData: { title?: string; amazon_link?: string; tags?: string[]; summary_link1?: string | null; summary_link2?: string | null; summary_link3?: string | null; }) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -1050,6 +1050,24 @@ export const updateBook = async (id: number, bookData: { title?: string; amazon_
     if (bookData.amazon_link !== undefined) {
       updateFields.push(`amazon_link = $${paramCount}`);
       updateValues.push(bookData.amazon_link);
+      paramCount++;
+    }
+
+    if (bookData.summary_link1 !== undefined) {
+      updateFields.push(`summary_link1 = $${paramCount}`);
+      updateValues.push(bookData.summary_link1);
+      paramCount++;
+    }
+
+    if (bookData.summary_link2 !== undefined) {
+      updateFields.push(`summary_link2 = $${paramCount}`);
+      updateValues.push(bookData.summary_link2);
+      paramCount++;
+    }
+
+    if (bookData.summary_link3 !== undefined) {
+      updateFields.push(`summary_link3 = $${paramCount}`);
+      updateValues.push(bookData.summary_link3);
       paramCount++;
     }
 

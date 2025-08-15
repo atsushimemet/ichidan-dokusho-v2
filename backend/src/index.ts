@@ -1560,16 +1560,19 @@ app.get('/api/books/tag/:tagName', async (req, res) => {
 app.put('/api/books/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, amazon_link, tags } = req.body;
+    const { title, amazon_link, tags, summary_link1, summary_link2, summary_link3 } = req.body;
     
-    if (!title && !amazon_link && !tags) {
-      return res.status(400).json({ error: 'At least one field (title, amazon_link, or tags) is required' });
+    if (!title && !amazon_link && !tags && summary_link1 === undefined && summary_link2 === undefined && summary_link3 === undefined) {
+      return res.status(400).json({ error: 'At least one field (title, amazon_link, tags, or summary links) is required' });
     }
 
-    const updateData: { title?: string; amazon_link?: string; tags?: string[] } = {};
+    const updateData: { title?: string; amazon_link?: string; tags?: string[]; summary_link1?: string | null; summary_link2?: string | null; summary_link3?: string | null; } = {};
     if (title !== undefined) updateData.title = title;
     if (amazon_link !== undefined) updateData.amazon_link = amazon_link;
     if (tags !== undefined) updateData.tags = tags;
+    if (summary_link1 !== undefined) updateData.summary_link1 = summary_link1;
+    if (summary_link2 !== undefined) updateData.summary_link2 = summary_link2;
+    if (summary_link3 !== undefined) updateData.summary_link3 = summary_link3;
 
     const result = await updateBook(parseInt(id), updateData);
     
