@@ -932,18 +932,31 @@ export interface BookWithTags extends Book {
 }
 
 // 書籍を作成
-export const createBook = async (bookData: { title: string; amazon_link: string; tags: string[] }) => {
+export const createBook = async (bookData: { 
+  title: string; 
+  amazon_link: string; 
+  tags: string[];
+  summary_link1?: string | null;
+  summary_link2?: string | null;
+  summary_link3?: string | null;
+}) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // 書籍を作成
     const bookQuery = `
-      INSERT INTO books (title, amazon_link)
-      VALUES ($1, $2)
+      INSERT INTO books (title, amazon_link, summary_link1, summary_link2, summary_link3)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *
     `;
-    const bookResult = await client.query(bookQuery, [bookData.title, bookData.amazon_link]);
+    const bookResult = await client.query(bookQuery, [
+      bookData.title, 
+      bookData.amazon_link,
+      bookData.summary_link1,
+      bookData.summary_link2,
+      bookData.summary_link3
+    ]);
     const book = bookResult.rows[0];
 
     // タグを処理
