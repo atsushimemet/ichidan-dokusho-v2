@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MobileConsole from './MobileConsole';
+import AdminFooter from './AdminFooter';
 
 interface Tag {
   id: string;
@@ -52,6 +54,7 @@ const BookRegisterPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isMobileConsoleVisible, setIsMobileConsoleVisible] = useState(false);
 
   // コンポーネントマウント時に認証状態をチェック
   useEffect(() => {
@@ -112,6 +115,13 @@ const BookRegisterPage: React.FC = () => {
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       
+      console.log('書籍登録を開始しています...', {
+        title: bookForm.title,
+        amazon_link: bookForm.amazon_link,
+        tags: bookForm.tags.map(tag => tag.name),
+        api_url: `${API_BASE_URL}/api/admin/books`
+      });
+      
       const response = await fetch(`${API_BASE_URL}/api/admin/books`, {
         method: 'POST',
         headers: {
@@ -129,18 +139,37 @@ const BookRegisterPage: React.FC = () => {
         }),
       });
 
+      console.log('APIレスポンス受信:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('書籍登録に失敗しました');
+        const errorText = await response.text();
+        console.error('書籍登録エラー:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText
+        });
+        throw new Error(`書籍登録に失敗しました (${response.status}: ${response.statusText})`);
       }
 
-      await response.json();
+      const result = await response.json();
+      console.log('書籍登録成功:', result);
       setSuccess('書籍が正常に登録されました');
       setBookForm({ title: '', amazon_link: '', tags: [], summary_link1: '', summary_link2: '', summary_link3: '' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '書籍登録に失敗しました');
+      const errorMessage = err instanceof Error ? err.message : '書籍登録に失敗しました';
+      console.error('書籍登録エラー:', err);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleMobileConsole = () => {
+    setIsMobileConsoleVisible(!isMobileConsoleVisible);
   };
 
   if (!isAuthenticated) {
@@ -256,7 +285,7 @@ const BookRegisterPage: React.FC = () => {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20">
         <div className="bg-white/90 backdrop-blur-sm shadow-xl sm:rounded-2xl border border-orange-100">
           <div className="px-4 py-5 sm:p-6">
             {success && (
@@ -435,6 +464,18 @@ const BookRegisterPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 管理者フッター */}
+      <AdminFooter 
+        onMobileConsoleToggle={toggleMobileConsole}
+        isMobileConsoleVisible={isMobileConsoleVisible}
+      />
+
+      {/* モバイルコンソール */}
+      <MobileConsole
+        isVisible={isMobileConsoleVisible}
+        onToggle={toggleMobileConsole}
+      />
     </div>
   );
 };

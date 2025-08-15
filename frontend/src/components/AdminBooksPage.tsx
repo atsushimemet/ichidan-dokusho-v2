@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EditBookModal from './EditBookModal';
+import MobileConsole from './MobileConsole';
+import AdminFooter from './AdminFooter';
 
 interface Tag {
   id: number;
@@ -27,6 +29,7 @@ const AdminBooksPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [isMobileConsoleVisible, setIsMobileConsoleVisible] = useState(false);
   const [loginForm, setLoginForm] = useState({
     username: '',
     password: ''
@@ -61,15 +64,29 @@ const AdminBooksPage: React.FC = () => {
     try {
       setIsLoading(true);
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      console.log('書籍一覧を取得しています...', { api_url: `${API_BASE_URL}/api/books` });
+      
       const response = await fetch(`${API_BASE_URL}/api/books`);
+      
+      console.log('書籍一覧APIレスポンス:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
       if (!response.ok) {
+        console.error('書籍一覧取得エラー:', {
+          status: response.status,
+          statusText: response.statusText
+        });
         throw new Error('書籍の取得に失敗しました');
       }
       const booksData = await response.json();
+      console.log('書籍一覧取得成功:', { count: booksData.length });
       setBooks(booksData);
     } catch (err) {
+      console.error('書籍一覧取得エラー:', err);
       setError('書籍の取得に失敗しました');
-      console.error('Error fetching books:', err);
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +99,13 @@ const AdminBooksPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      
+      console.log('書籍更新を開始しています...', {
+        bookId: editingBook.id,
+        updatedData: updatedBook,
+        api_url: `${API_BASE_URL}/api/books/${editingBook.id}`
+      });
+      
       const response = await fetch(`${API_BASE_URL}/api/books/${editingBook.id}`, {
         method: 'PUT',
         headers: {
@@ -91,16 +115,29 @@ const AdminBooksPage: React.FC = () => {
         body: JSON.stringify(updatedBook),
       });
 
+      console.log('書籍更新APIレスポンス:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('書籍の更新に失敗しました');
+        const errorText = await response.text();
+        console.error('書籍更新エラー:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText
+        });
+        throw new Error(`書籍の更新に失敗しました (${response.status}: ${response.statusText})`);
       }
 
+      console.log('書籍更新成功');
       // 書籍一覧を再取得
       await fetchBooks();
       setEditingBook(null);
     } catch (err) {
+      console.error('書籍更新エラー:', err);
       setError('書籍の更新に失敗しました');
-      console.error('Error updating book:', err);
     }
   };
 
@@ -113,6 +150,13 @@ const AdminBooksPage: React.FC = () => {
     try {
       const token = localStorage.getItem('authToken');
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      
+      console.log('書籍削除を開始しています...', {
+        bookId,
+        bookTitle,
+        api_url: `${API_BASE_URL}/api/books/${bookId}`
+      });
+      
       const response = await fetch(`${API_BASE_URL}/api/books/${bookId}`, {
         method: 'DELETE',
         headers: {
@@ -120,16 +164,33 @@ const AdminBooksPage: React.FC = () => {
         },
       });
 
+      console.log('書籍削除APIレスポンス:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('書籍の削除に失敗しました');
+        const errorText = await response.text();
+        console.error('書籍削除エラー:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText
+        });
+        throw new Error(`書籍の削除に失敗しました (${response.status}: ${response.statusText})`);
       }
 
+      console.log('書籍削除成功');
       // 書籍一覧を再取得
       await fetchBooks();
     } catch (err) {
+      console.error('書籍削除エラー:', err);
       setError('書籍の削除に失敗しました');
-      console.error('Error deleting book:', err);
     }
+  };
+
+  const toggleMobileConsole = () => {
+    setIsMobileConsoleVisible(!isMobileConsoleVisible);
   };
 
   // 管理者認証画面
@@ -222,7 +283,7 @@ const AdminBooksPage: React.FC = () => {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="container mx-auto px-4 py-6 max-w-4xl pb-20">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}
@@ -325,6 +386,18 @@ const AdminBooksPage: React.FC = () => {
           onCancel={() => setEditingBook(null)}
         />
       )}
+
+      {/* 管理者フッター */}
+      <AdminFooter 
+        onMobileConsoleToggle={toggleMobileConsole}
+        isMobileConsoleVisible={isMobileConsoleVisible}
+      />
+
+      {/* モバイルコンソール */}
+      <MobileConsole
+        isVisible={isMobileConsoleVisible}
+        onToggle={toggleMobileConsole}
+      />
     </div>
   );
 };
