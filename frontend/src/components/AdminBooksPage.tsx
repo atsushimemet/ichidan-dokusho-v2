@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EditBookModal from './EditBookModal';
 
@@ -29,12 +29,24 @@ const AdminBooksPage: React.FC = () => {
     password: ''
   });
 
+  // コンポーネントマウント時に認証状態をチェック
+  useEffect(() => {
+    const authStatus = localStorage.getItem('adminAuthenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+      fetchBooks();
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
+
   // 管理者認証
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (loginForm.username === 'noap3b69n' && loginForm.password === '19930322') {
       setIsAuthenticated(true);
       setError('');
+      localStorage.setItem('adminAuthenticated', 'true');
       fetchBooks();
     } else {
       setError('ユーザー名またはパスワードが間違っています');
@@ -45,7 +57,8 @@ const AdminBooksPage: React.FC = () => {
   const fetchBooks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/books');
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/books`);
       if (!response.ok) {
         throw new Error('書籍の取得に失敗しました');
       }
@@ -65,7 +78,8 @@ const AdminBooksPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/books/${editingBook.id}`, {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/books/${editingBook.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +109,8 @@ const AdminBooksPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/books/${bookId}`, {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_BASE_URL}/api/books/${bookId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -112,14 +127,6 @@ const AdminBooksPage: React.FC = () => {
       setError('書籍の削除に失敗しました');
       console.error('Error deleting book:', err);
     }
-  };
-
-  // ログアウト
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginForm({ username: '', password: '' });
-    setBooks([]);
-    setError('');
   };
 
   // 管理者認証画面
@@ -181,26 +188,26 @@ const AdminBooksPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-      {/* ヘッダー */}
+      {/* 管理者ナビゲーションヘッダー */}
       <div className="bg-white/90 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-800">📚 書籍管理</h1>
+              <h1 className="text-xl font-bold text-gray-800">📚 書籍管理システム</h1>
               <p className="text-sm text-gray-600">{books.length}冊の書籍</p>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => navigate('/admin/register')}
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
-                ＋ 新規登録
+                📝 書籍登録
               </button>
               <button
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-gray-800 transition-colors text-sm"
+                onClick={() => navigate('/admin/books')}
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
               >
-                ログアウト
+                📚 書籍一覧
               </button>
             </div>
           </div>
@@ -224,12 +231,6 @@ const AdminBooksPage: React.FC = () => {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
             <p className="text-gray-600 mb-4">登録された書籍がありません</p>
-            <button
-              onClick={() => navigate('/admin/register')}
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              最初の書籍を登録する
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

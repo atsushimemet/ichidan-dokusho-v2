@@ -66,6 +66,14 @@ const BookRegisterPage: React.FC = () => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+  // コンポーネントマウント時に認証状態をチェック
+  useEffect(() => {
+    const authStatus = localStorage.getItem('adminAuthenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -75,6 +83,7 @@ const BookRegisterPage: React.FC = () => {
       // 認証チェック（フロントエンドでのチェック）
       if (loginForm.username === 'noap3b69n' && loginForm.password === '19930322') {
         setIsAuthenticated(true);
+        localStorage.setItem('adminAuthenticated', 'true');
         setSuccess('認証に成功しました');
       } else {
         setError('ユーザー名またはパスワードが間違っています');
@@ -84,13 +93,6 @@ const BookRegisterPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginForm({ username: '', password: '' });
-    setBookForm({ title: '', amazon_link: '', tags: [], summary_link1: '', summary_link2: '', summary_link3: '' });
-    setSuccess('');
   };
 
   const addTag = () => {
@@ -235,24 +237,37 @@ const BookRegisterPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-50" style={{ 
-      minHeight: '100vh',
-      paddingTop: '2rem',
-      paddingBottom: isMobile ? '100px' : '2rem'
-    }}>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">書籍登録</h1>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+      {/* 管理者ナビゲーションヘッダー */}
+      <div className="bg-white/90 backdrop-blur-sm border-b border-orange-100 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">📝 書籍登録</h1>
+              <p className="text-sm text-gray-600">新しい書籍を登録できます</p>
+            </div>
+            <div className="flex items-center space-x-3">
               <button
-                onClick={handleLogout}
-                className="text-sm text-gray-600 hover:text-gray-500"
+                onClick={() => navigate('/admin/register')}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
-                ログアウト
+                📝 書籍登録
+              </button>
+              <button
+                onClick={() => navigate('/admin/books')}
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+              >
+                📚 書籍一覧
               </button>
             </div>
+          </div>
+        </div>
+      </div>
 
+      {/* メインコンテンツ */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-white/90 backdrop-blur-sm shadow-xl sm:rounded-2xl border border-orange-100">
+          <div className="px-4 py-5 sm:p-6">
             {success && (
               <div className="mb-6 bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md">
                 {success}
@@ -412,10 +427,10 @@ const BookRegisterPage: React.FC = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/admin/books')}
                   className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  キャンセル
+                  書籍一覧へ
                 </button>
                 <button
                   type="submit"
