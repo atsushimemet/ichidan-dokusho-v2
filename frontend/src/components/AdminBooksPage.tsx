@@ -199,18 +199,22 @@ const AdminBooksPage: React.FC = () => {
               <h1 className="text-xl font-bold text-gray-800">📚 書籍管理システム</h1>
               <p className="text-sm text-gray-600">{books.length}冊の書籍</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => navigate('/admin/register')}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="bg-blue-600 text-white w-10 h-10 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                title="書籍登録"
+                aria-label="書籍登録"
               >
-                📝 書籍登録
+                📝
               </button>
               <button
                 onClick={() => navigate('/admin/books')}
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                className="bg-orange-600 text-white w-10 h-10 rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center"
+                title="書籍一覧"
+                aria-label="書籍一覧"
               >
-                📚 書籍一覧
+                📚
               </button>
             </div>
           </div>

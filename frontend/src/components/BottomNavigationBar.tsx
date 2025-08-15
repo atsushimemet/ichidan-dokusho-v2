@@ -30,6 +30,13 @@ const BottomNavigationBar: React.FC<BottomNavigationBarProps> = ({ closeMenu }) 
     return null;
   }
   
+  // 管理者ページ(/admin配下)ではボトムナビゲーションを非表示
+  const isAdminPage = location.pathname.startsWith('/admin');
+  if (isAdminPage) {
+    console.log('🚫 Admin page detected - hiding Bottom Navigation Bar to prevent modal overlay issues');
+    return null;
+  }
+  
   const navigationItems: NavigationItem[] = [
     {
       id: 'mypage',
