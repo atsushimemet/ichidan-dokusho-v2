@@ -45,8 +45,12 @@ const AuthScreen: React.FC = () => {
     trackAuthFunnelStep('4_google_login_click');
   };
 
-  const handleGoogleSuccess = async (credentialResponse: { credential: string }) => {
+  const handleGoogleSuccess = async (credentialResponse: { credential?: string }) => {
     try {
+      if (!credentialResponse.credential) {
+        throw new Error('認証情報が取得できませんでした');
+      }
+
       trackAuthFunnelStep('5_auth_api_start');
       
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
