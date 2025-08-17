@@ -49,4 +49,37 @@ export const trackLike = (action: 'like' | 'unlike') => {
 export const trackError = (errorType: string, errorMessage: string) => {
   trackEvent('error', 'error', errorType);
   console.error(`Analytics Error: ${errorType} - ${errorMessage}`);
+};
+
+// 認証ファネル追跡関数群
+export const trackAuthFunnelStart = () => {
+  trackEvent('auth_funnel_start', 'authentication', '1_selection_screen_view');
+};
+
+export const trackAuthFunnelStep = (step: string) => {
+  trackEvent('auth_funnel_step', 'authentication', step);
+};
+
+export const trackAuthFunnelComplete = () => {
+  trackEvent('auth_funnel_complete', 'authentication', '6_auth_success');
+};
+
+// WebView関連追跡
+export const trackWebViewDetected = (webViewType: string) => {
+  trackEvent('webview_detected', 'authentication', webViewType);
+};
+
+export const trackExternalBrowserClick = () => {
+  trackEvent('external_browser_click', 'authentication');
+};
+
+// 認証エラー追跡
+export const trackAuthError = (errorType: string, errorMessage: string) => {
+  trackEvent('auth_error', 'authentication', errorType);
+  console.error(`Auth Error: ${errorType} - ${errorMessage}`);
+};
+
+// ページ離脱追跡
+export const trackPageExit = (page: string, timeOnPage: number) => {
+  trackEvent('auth_page_exit', 'authentication', page, timeOnPage);
 }; 

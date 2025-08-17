@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BookIcon from './BookIcon';
-import { isWebView, handleExternalBrowserOpen } from '../utils/webview';
+import { isWebView, handleExternalBrowserOpen, getWebViewInfo } from '../utils/webview';
+import { trackAuthFunnelStart, trackAuthFunnelStep, trackWebViewDetected, trackExternalBrowserClick } from '../utils/analytics';
 
 const SelectionScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -9,8 +10,26 @@ const SelectionScreen: React.FC = () => {
   // タイムライン機能除却: 「見るだけ」導線を廃止
   // プライバシー保護のため、認証なしアクセスを完全停止
 
+  // コンポーネントマウント時の追跡
+  useEffect(() => {
+    // 認証ファネル開始を追跡
+    trackAuthFunnelStart();
+    
+    // WebView検知とその追跡
+    if (isWebView()) {
+      const webViewInfo = getWebViewInfo();
+      trackWebViewDetected(webViewInfo.webViewType);
+    }
+  }, []);
+
   const handleUse = () => {
+    trackAuthFunnelStep('2_start_button_click');
     navigate('/auth');
+  };
+
+  const handleExternalBrowserClickWithTracking = (event: React.MouseEvent) => {
+    trackExternalBrowserClick();
+    handleExternalBrowserOpen(event);
   };
 
   return (
@@ -41,7 +60,7 @@ const SelectionScreen: React.FC = () => {
                   ログイン機能を正常に利用するには外部ブラウザをご利用ください
                 </p>
                 <button
-                  onClick={handleExternalBrowserOpen}
+                  onClick={handleExternalBrowserClickWithTracking}
                   className="text-xs text-yellow-800 underline hover:text-yellow-900 mt-2"
                 >
                   → 外部ブラウザで開く

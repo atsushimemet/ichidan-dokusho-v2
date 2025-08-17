@@ -1,16 +1,32 @@
 import { GoogleLogin } from '@react-oauth/google';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { trackError, trackUserLogin } from '../utils/analytics';
+import { trackError, trackUserLogin, trackAuthFunnelStep, trackAuthFunnelComplete, trackAuthError, trackPageExit, trackExternalBrowserClick } from '../utils/analytics';
 import { isWebView, getWebViewInfo, handleExternalBrowserOpen } from '../utils/webview';
 
 const AuthScreen: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [pageStartTime] = useState(Date.now());
+  
+  // コンポーネントマウント時の追跡とページ離脱追跡
+  useEffect(() => {
+    // 認証画面表示を追跡
+    trackAuthFunnelStep('3_auth_screen_view');
+    
+    // ページ離脱時の処理
+    const handleBeforeUnload = () => {
+      const timeOnPage = Date.now() - pageStartTime;
+      trackPageExit('/auth', timeOnPage);
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [pageStartTime]);
   
   // WebView検知ログ出力のみ
-  React.useEffect(() => {
+  useEffect(() => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     const webViewInfo = getWebViewInfo();
     
@@ -25,8 +41,14 @@ const AuthScreen: React.FC = () => {
     }
   }, []);
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  const handleGoogleLoginClick = () => {
+    trackAuthFunnelStep('4_google_login_click');
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: { credential: string }) => {
     try {
+      trackAuthFunnelStep('5_auth_api_start');
+      
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
       
       const response = await fetch(`${API_BASE_URL}/api/auth/google`, {
@@ -48,14 +70,17 @@ const AuthScreen: React.FC = () => {
       // 認証情報を保存
       login(data.token, data.user);
       
-      // Google Analytics ログイン追跡
+      // 認証完了追跡
+      trackAuthFunnelComplete();
       trackUserLogin('google');
       
       // ホームページ（タイムライン）に遷移
       navigate('/');
     } catch (error) {
       console.error('Authentication error:', error);
-      trackError('authentication_failed', error instanceof Error ? error.message : 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      trackAuthError('api_error', errorMessage);
+      trackError('authentication_failed', errorMessage);
       alert('認証に失敗しました。もう一度お試しください。');
     }
   };
@@ -64,8 +89,14 @@ const AuthScreen: React.FC = () => {
     console.error('🚨 Google login failed');
     console.error('🚨 User Agent:', navigator.userAgent);
     console.error('🚨 Current URL:', window.location.href);
+    trackAuthError('google_auth_failed', 'Google login popup failed');
     trackError('google_login_failed', 'Google OAuth error');
     alert('Google認証に失敗しました。もう一度お試しください。');
+  };
+
+  const handleExternalBrowserClickWithTracking = (event: React.MouseEvent) => {
+    trackExternalBrowserClick();
+    handleExternalBrowserOpen(event);
   };
 
 
@@ -94,7 +125,7 @@ const AuthScreen: React.FC = () => {
                   ログイン機能を正常に利用するには外部ブラウザをご利用ください
                 </p>
                 <button
-                  onClick={handleExternalBrowserOpen}
+                  onClick={handleExternalBrowserClickWithTracking}
                   className="text-xs text-yellow-800 underline hover:text-yellow-900 mt-2"
                 >
                   → 外部ブラウザで開く
@@ -104,10 +135,12 @@ const AuthScreen: React.FC = () => {
           </div>
         ) : (
           <div className="flex justify-center mb-6">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-            />
+            <div onClick={handleGoogleLoginClick}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+              />
+            </div>
           </div>
         )}
 
