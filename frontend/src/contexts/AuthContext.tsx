@@ -37,23 +37,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // ローカルストレージから認証情報を復元
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-    
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
+    const initializeAuth = async () => {
+      // ローカルストレージから認証情報を復元
+      const storedToken = localStorage.getItem('authToken');
+      const storedUser = localStorage.getItem('authUser');
+
+      if (storedToken && storedUser) {
+        try {
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+
+          // トークンの有効性を検証（無効なら自動ログアウト）
+          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+          const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+            },
+          });
+
+          if (!response.ok) {
+            // 無効トークンのためログアウト
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('authUser');
+            setToken(null);
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error verifying token:', error);
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          setToken(null);
+          setUser(null);
+        }
+      } else {
+        // 保存されたデータが不完全な場合はクリア
+        if (!storedToken || !storedUser) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+        }
       }
-    }
-    
-    // 初期化完了
-    setIsLoading(false);
+
+      // 初期化完了
+      setIsLoading(false);
+    };
+
+    void initializeAuth();
   }, []);
 
   const login = (newToken: string, newUser: User) => {
